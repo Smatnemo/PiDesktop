@@ -1,7 +1,7 @@
 
 import time
 
-from lds.utils import LOGGER 
+from LDS.utils import LOGGER 
 class StatesMachine(object):
 
     """
