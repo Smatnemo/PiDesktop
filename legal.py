@@ -32,7 +32,7 @@ try:
     from LDS.videoplayer import VideoPlayer, Video
     print("imported pyvideoplayer successfully!")
 except ImportError:
-    print("Could not Import pyvidplayer2")  
+    print("Could not Import videoplayer")  
     pass
 # Set the default pin factory to a mock factory if pibooth is not started a Raspberry Pi
 try:
