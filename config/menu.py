@@ -1,0 +1,4 @@
+
+
+class PiConfigMenu(object):
+    pass
