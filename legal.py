@@ -1,12 +1,20 @@
 # To be moved to setup.py
 import sys
 import os
+import os.path as osp
 import multiprocessing
 import argparse 
 import logging
+import pygame
+import tempfile
+from warnings import filterwarnings
 
 user = os.getlogin()
 sys.path.append('/home/{}'.format(user))
+
+
+from gpiozero import Device, ButtonBoard, LEDBoard, pi_info
+from gpiozero.exc import BadPinFactory, PinFactoryFallback
 
 import LDS
 from LDS import language
@@ -17,12 +25,33 @@ from LDS.view.window import PiWindow
 from LDS.states import StatesMachine
 from LDS.plugins import create_plugin_manager
 from LDS.printer import PRINTER_TASKS_UPDATED, Printer
+from LDS.config import PiConfigParser, PiConfigMenu
 
+# Try importing pyvidplayer2
+try: 
+    from LDS.videoplayer import VideoPlayer, Video
+    print("imported pyvideoplayer successfully!")
+except ImportError:
+    print("Could not Import pyvidplayer2")  
+    pass
+# Set the default pin factory to a mock factory if pibooth is not started a Raspberry Pi
+try:
+    filterwarnings("ignore", category=PinFactoryFallback)
+    GPIO_INFO = "on Raspberry pi {0}".format(pi_info().model)
+except BadPinFactory:
+    from gpiozero.pins.mock import MockFactory
+    Device.pin_factory = MockFactory()
+    GPIO_INFO = "without physical GPIO, fallback to GPIO mock"
+
+
+BUTTONDOWN = pygame.USEREVENT + 1
 
 
 class PiApplication:
 
-    def __init__(self):
+    def __init__(self, config, plugin_manager):
+        self._pm = plugin_manager
+        self._config = config
        # Define states of the application
         self._machine = StatesMachine(self._pm, self._config, self, self._window)
         self._machine.add_state('videoplayback') # Add this state
@@ -100,7 +129,7 @@ def main():
     plugin_manager = create_plugin_manager()
 
     # Load the configuration
-    config = PiConfigParser(osp.join(options.config_directory, "pibooth.cfg"), plugin_manager, not options.reset)
+    config = PiConfigParser(osp.join(options.config_directory, "LDS.cfg"), plugin_manager, not options.reset)
 
     # Register plugins
     plugin_manager.load_all_plugins(config.gettuple('GENERAL', 'plugins', 'path'),
@@ -133,6 +162,7 @@ def main():
         LOGGER.info("Starting the photo booth application %s", GPIO_INFO)
         app = PiApplication(config, plugin_manager)
         app.main_loop()
+
 
 
 if __name__ == "__main__":
