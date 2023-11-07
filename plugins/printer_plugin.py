@@ -3,13 +3,12 @@ from LDS.utils import LOGGER
 
 
 class PrinterPlugin(object):
-    pass
 
 
     """Plugin to manage the printer.
     """
 
-    name = 'pibooth-core:printer'
+    name = 'LDS-core:printer'
 
     def __init__(self, plugin_manager):
         self._pm = plugin_manager
@@ -30,3 +29,33 @@ class PrinterPlugin(object):
         """Reset variables set in this plugin.
         """
         app.count.remaining_duplicates = cfg.getint('PRINTER', 'max_duplicates')
+
+    @LDS.hookimpl
+    def state_wait_do(self, cfg, app, events):
+        if app.find_print_event(events) and app.previous_picture_file and app.printer.is_installed():
+
+            if app.count.remaining_duplicates <= 0:
+                LOGGER.warning("Too many duplicates sent to the printer (%s max)",
+                               cfg.getint('PRINTER', 'max_duplicates'))
+                return
+
+            elif not app.printer.is_ready():
+                LOGGER.warning("Maximum number of printed pages reached (%s/%s max)", app.count.printed,
+                               cfg.getint('PRINTER', 'max_pages'))
+                return
+
+            self.print_picture(cfg, app)
+
+    @LDS.hookimpl
+    def state_processing_enter(self, cfg, app):
+        app.count.remaining_duplicates = cfg.getint('PRINTER', 'max_duplicates')
+
+    @LDS.hookimpl
+    def state_processing_do(self, cfg, app):
+        if app.previous_picture_file and app.printer.is_ready():
+            number = cfg.gettyped('PRINTER', 'auto_print')
+            if number == 'max':
+                number = cfg.getint('PRINTER', 'max_duplicates')
+            for i in range(number):
+                if app.count.remaining_duplicates > 0:
+                    self.print_picture(cfg, app)
