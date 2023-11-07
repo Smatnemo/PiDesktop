@@ -72,3 +72,23 @@ class ViewPlugin(object):
             win.show_intro(previous_picture, app.printer.is_ready()
                            and app.count.remaining_duplicates > 0)
 
+    @LDS.hookimpl
+    def state_wait_validate(self, cfg, app, events):
+        if app.find_capture_event(events):
+            if len(app.capture_choices) > 1:
+                return 'choose'
+            if cfg.getfloat('WINDOW', 'chosen_delay') > 0:
+                return 'chosen'
+            return 'preview'
+
+    @LDS.hookimpl
+    def state_wait_exit(self, win):
+        self.count = 0
+        win.show_image(None)  # Clear currently displayed image
+
+    @LDS.hookimpl
+    def state_choose_enter(self, app, win):
+        LOGGER.info("Show picture choice (nothing selected)")
+        win.set_print_number(0, False)  # Hide printer status
+        win.show_choice(app.capture_choices)
+        self.choose_timer.start()
