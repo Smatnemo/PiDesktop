@@ -6,6 +6,7 @@ import multiprocessing
 import argparse 
 import logging
 import pygame
+import time
 import tempfile
 from warnings import filterwarnings
 
@@ -19,6 +20,7 @@ from gpiozero.exc import BadPinFactory, PinFactoryFallback
 import LDS
 from LDS import language
 from LDS.database import DataBase 
+from LDS.counters import Counters
 from LDS.utils import (LOGGER, PoolingTimer, configure_logging, get_crash_message,
                            set_logging_level, get_event_pos)
 from LDS.view.window import PiWindow
@@ -93,20 +95,59 @@ class PiApplication:
         self._machine.add_state('finish')
         self._machine.add_state('logout') # log out 
 
+        self.count = Counters(self._config.join_path("counters.pickle"),
+                              taken=0, printed=0, forgotten=0,
+                              remaining_duplicates=self._config.getint('PRINTER', 'max_duplicates'))
+
+
+        self.printer = Printer(config.get('PRINTER', 'printer_name'),
+                               config.getint('PRINTER', 'max_pages'),
+                               config.gettyped('PRINTER', 'printer_options'),
+                               self.count)
+
     def _initialize(self):
         print(self._machine.states)
         
 
     def main_loop(self):
         try:
+            fps = 40
+            clock = pygame.time.Clock()
             self._initialize()
+            self._pm.hook.pibooth_startup(cfg=self._config, app=self)
+            self._machine.set_state('wait')
+            start = True
+            
+            while start:
+                events = list(pygame.event.get())
+
+                # if not self._menu and self.find_settings_event(events):
+                #     self.camera.stop_preview()
+                #     self.leds.off()
+                #     self._menu = PiConfigMenu(self._pm, self._config, self, self._window)
+                #     self._menu.show()
+                #     self.leds.blink(on_time=0.1, off_time=1)
+                # elif self._menu and self._menu.is_shown():
+                #     self._menu.process(events)
+                # elif self._menu and not self._menu.is_shown():
+                #     self.leds.off()
+                #     self._initialize()
+                #     self._machine.set_state('wait')
+                #     self.start = time.time()
+                #     self._menu = None
+                # else:
+                #     self._machine.process(events)
+                    
+                pygame.display.update()
+                clock.tick(fps)                
         except Exception as e:
             # Log error
             LOGGER.error()
             # Get crash message
             LOGGER.error()
         finally:
-            pass
+            self._pm.hook.pibooth_cleanup(app=self)
+            pygame.quit()
 
 
 def main():
