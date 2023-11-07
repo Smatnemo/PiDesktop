@@ -36,4 +36,21 @@ class ViewPlugin(object):
     def state_failsafe_validate(self):
         if self.failed_view_timer.is_timeout():
             return 'wait'
+        
+    @LDS.hookimpl
+    def state_wait_enter(self, cfg, app, win):
+        self.forgotten = False
+        if app.previous_animated:
+            previous_picture = next(app.previous_animated)
+            # Reset timeout in case of settings changed
+            self.animated_frame_timer.timeout = cfg.getfloat('WINDOW', 'animate_delay')
+            self.animated_frame_timer.start()
+        else:
+            previous_picture = app.previous_picture
+
+        win.show_intro(previous_picture, app.printer.is_ready()
+                       and app.count.remaining_duplicates > 0)
+        if app.printer.is_installed():
+            win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
+
 
