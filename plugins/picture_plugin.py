@@ -3,9 +3,9 @@ import os
 import os.path as osp
 import itertools
 from datetime import datetime
-import pibooth
+import LDS
 from LDS.utils import LOGGER, PoolingTimer
-# from LDS.pictures import get_picture_factory
+from LDS.pictures import get_picture_factory
 from LDS.pictures.pool import PicturesFactoryPool
 
 class PicturePlugin(object):
@@ -29,7 +29,7 @@ class PicturePlugin(object):
         app.previous_animated = None
         app.previous_picture_file = None
 
-    @pibooth.hookimpl(hookwrapper=True)
+    @LDS.hookimpl(hookwrapper=True)
     def pibooth_setup_picture_factory(self, cfg, opt_index, factory):
 
         outcome = yield  # all corresponding hookimpls are invoked here
@@ -60,3 +60,36 @@ class PicturePlugin(object):
             factory.set_outlines()
 
         outcome.force_result(factory)
+
+    @LDS.hookimpl
+    def pibooth_cleanup(self):
+        self.factory_pool.quit()
+
+    @LDS.hookimpl
+    def state_failsafe_enter(self, app):
+        self._reset_vars(app)
+
+    @LDS.hookimpl
+    def state_wait_enter(self, cfg, app):
+        animated = self.factory_pool.get()
+        if cfg.getfloat('WINDOW', 'wait_picture_delay') == 0:
+            # Do it here to avoid a transient display of the picture
+            self._reset_vars(app)
+        elif animated:
+            app.previous_animated = itertools.cycle(animated)
+
+        # Reset timeout in case of settings changed
+        self.picture_destroy_timer.timeout = max(0, cfg.getfloat('WINDOW', 'wait_picture_delay'))
+        self.picture_destroy_timer.start()
+
+    @LDS.hookimpl
+    def state_wait_do(self, cfg, app):
+        if cfg.getfloat('WINDOW', 'wait_picture_delay') > 0 and self.picture_destroy_timer.is_timeout()\
+                and app.previous_picture_file:
+            self._reset_vars(app)
+
+    @LDS.hookimpl
+    def state_processing_enter(self, app):
+        self.second_previous_picture = app.previous_picture
+        self._reset_vars(app)
+
