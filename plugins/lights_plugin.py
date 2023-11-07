@@ -52,3 +52,8 @@ class LightsPlugin(object):
     @LDS.hookimpl
     def state_chosen_exit(self, app):
         app.leds.off()
+
+    @LDS.hookimpl
+    def state_print_enter(self, app):
+        app.leds.blink(on_time=self.blink_time, off_time=self.blink_time)
+
