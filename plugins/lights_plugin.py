@@ -63,5 +63,6 @@ class LightsPlugin(object):
             app.leds.printer.on()
             app.leds.capture.off()
 
-
-
+    @LDS.hookimpl
+    def state_finish_enter(self, app):
+        app.leds.off()
