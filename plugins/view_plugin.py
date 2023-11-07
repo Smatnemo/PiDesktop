@@ -25,3 +25,9 @@ class ViewPlugin(object):
         self.print_view_timer = PoolingTimer(0)
         # Seconds to display the selected layout
         self.finish_timer = PoolingTimer(1)
+
+    @LDS.hookimpl
+    def state_failsafe_enter(self, win):
+        win.show_oops()
+        self.failed_view_timer.start()
+        LOGGER.error(get_crash_message())
