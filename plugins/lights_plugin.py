@@ -31,3 +31,7 @@ class LightsPlugin(object):
 
         if not app.previous_picture_file and app.leds.printer._controller:  # _controller == blinking
             app.leds.printer.off()
+
+    @LDS.hookimpl
+    def state_wait_exit(self, app):
+        app.leds.off()
