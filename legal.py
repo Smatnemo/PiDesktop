@@ -95,6 +95,16 @@ class PiApplication:
         self._machine.add_state('finish')
         self._machine.add_state('logout') # log out 
 
+        # Variables shared with plugins
+        # Change them may break plugins compatibility
+        self.capture_nbr = None
+        self.capture_date = None
+        self.capture_choices = (4, 1)
+        # self.db_capture_choices = (6, 4, 2, 1)
+        self.previous_picture = None
+        self.previous_animated = None
+        self.previous_picture_file = None
+
         self.count = Counters(self._config.join_path("counters.pickle"),
                               taken=0, printed=0, forgotten=0,
                               remaining_duplicates=self._config.getint('PRINTER', 'max_duplicates'))
@@ -140,11 +150,11 @@ class PiApplication:
                     
                 pygame.display.update()
                 clock.tick(fps)                
-        except Exception as e:
+        except Exception as ex:
             # Log error
-            LOGGER.error()
+            LOGGER.error(str(ex), exc_info=True)
             # Get crash message
-            LOGGER.error()
+            LOGGER.error(get_crash_message())
         finally:
             self._pm.hook.pibooth_cleanup(app=self)
             pygame.quit()
@@ -159,7 +169,7 @@ def main():
 
     parser = argparse.ArgumentParser(usage="%(prog)s [options]", description=LDS.__doc__)
 
-    parser.add_argument("config_directory", nargs='?', default="~/.config/pibooth",
+    parser.add_argument("config_directory", nargs='?', default="~/.config/LDS",
                         help=u"path to configuration directory (default: %(default)s)")
 
     parser.add_argument('--version', action='version', version=LDS.__version__,
@@ -186,7 +196,7 @@ def main():
     options = parser.parse_args()
 
     if not options.nolog:
-        filename = osp.join(tempfile.gettempdir(), 'pibooth.log')
+        filename = osp.join(tempfile.gettempdir(), 'lds.log')
     else:
         filename = None
     configure_logging(options.logging, '[ %(levelname)-8s] %(name)-18s: %(message)s', filename=filename)
