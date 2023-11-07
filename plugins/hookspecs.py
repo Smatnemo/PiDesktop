@@ -234,6 +234,24 @@ def state_wait_exit(cfg, app, win):
     :param win: graphical window instance
     """
 
+# --- Login State --------------------------------------------------------------
+
+@hookspec
+def state_login_enter():
+    pass
+
+@hookspec
+def state_login_do():
+    pass
+
+@hookspec
+def state_login_validate():
+    pass
+
+@hookspec 
+def state_login_exit():
+    pass
+
 
 # --- Choose State -------------------------------------------------------------
 
