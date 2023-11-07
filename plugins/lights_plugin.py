@@ -57,3 +57,11 @@ class LightsPlugin(object):
     def state_print_enter(self, app):
         app.leds.blink(on_time=self.blink_time, off_time=self.blink_time)
 
+    @LDS.hookimpl
+    def state_print_do(self, app, events):
+        if app.find_print_event(events):
+            app.leds.printer.on()
+            app.leds.capture.off()
+
+
+
