@@ -20,6 +20,13 @@ class PrinterPlugin(object):
         app.count.printed += 1
         app.count.remaining_duplicates -= 1
 
+    def print_document(self, cfg, app):
+        LOGGER.info("Send final picture to printer")
+        app.printer.print_file(app.previous_picture_file,
+                               cfg.getint('PRINTER', 'pictures_per_page'))
+        app.count.printed += 1
+        app.count.remaining_duplicates -= 1
+        
     @LDS.hookimpl
     def pibooth_cleanup(self, app):
         app.printer.quit()
