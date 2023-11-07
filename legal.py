@@ -52,6 +52,34 @@ class PiApplication:
     def __init__(self, config, plugin_manager):
         self._pm = plugin_manager
         self._config = config
+
+        # Experiment with database module
+        self.db = DataBase()
+        self.db._initialize_app_settings()
+        self.settings = self.db.settings
+
+        # Create window of (width, height)
+        init_size = self._config.gettyped('WINDOW', 'size')
+        init_debug = self._config.getboolean('GENERAL', 'debug')
+        # init_color = self._config.gettyped('WINDOW', 'background')
+        init_color = self.settings['background']
+        init_text_color = self._config.gettyped('WINDOW', 'text_color')
+        if isinstance(init_color, str):
+            if not osp.isfile(init_color):
+                init_color = self._config.gettyped('WINDOW', 'background')
+        elif not isinstance(init_color, (tuple, list)):
+            init_color = self._config.getpath('WINDOW', 'background')
+            # init_color = self.settings['backgroundpath']
+
+        title = 'Pibooth v{}'.format(LDS.__version__)
+        img = pygame.image.load(self.settings['watermarkpath'])
+        if not isinstance(init_size, str):
+            self._window = PiWindow(title, init_size, color=init_color,
+                                    text_color=init_text_color, debug=init_debug, app_icon = img)
+        else:
+            self._window = PiWindow(title, color=init_color,
+                                    text_color=init_text_color, debug=init_debug, app_icon = img)
+
        # Define states of the application
         self._machine = StatesMachine(self._pm, self._config, self, self._window)
         self._machine.add_state('wait')
