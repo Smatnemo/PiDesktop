@@ -116,3 +116,33 @@ class ViewPlugin(object):
     def state_chosen_validate(self):
         if self.layout_timer.is_timeout():
             return 'preview'
+        
+    @LDS.hookimpl
+    def state_preview_enter(self, app, win):
+        self.count += 1
+        win.set_capture_number(self.count, app.capture_nbr)
+
+    @LDS.hookimpl
+    def state_preview_validate(self):
+        return 'capture'
+
+    @LDS.hookimpl
+    def state_capture_do(self, app, win):
+        win.set_capture_number(self.count, app.capture_nbr)
+
+    @LDS.hookimpl
+    def state_capture_validate(self, app):
+        if self.count >= app.capture_nbr:
+            return 'processing'
+        return 'preview'
+
+    @LDS.hookimpl
+    def state_processing_enter(self, win):
+        win.show_work_in_progress()
+
+    @LDS.hookimpl
+    def state_processing_validate(self, cfg, app):
+        if app.printer.is_ready() and cfg.getfloat('PRINTER', 'printer_delay') > 0\
+                and app.count.remaining_duplicates > 0:
+            return 'print'
+        return 'finish'  # Can not print
