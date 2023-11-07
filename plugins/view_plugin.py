@@ -92,3 +92,27 @@ class ViewPlugin(object):
         win.set_print_number(0, False)  # Hide printer status
         win.show_choice(app.capture_choices)
         self.choose_timer.start()
+
+    @LDS.hookimpl
+    def state_choose_validate(self, cfg, app):
+        if app.capture_nbr:
+            if cfg.getfloat('WINDOW', 'chosen_delay') > 0:
+                return 'chosen'
+            else:
+                return 'preview'
+        elif self.choose_timer.is_timeout():
+            return 'wait'
+
+    @LDS.hookimpl
+    def state_chosen_enter(self, cfg, app, win):
+        LOGGER.info("Show picture choice (%s captures selected)", app.capture_nbr)
+        win.show_choice(app.capture_choices, selected=app.capture_nbr)
+
+        # Reset timeout in case of settings changed
+        self.layout_timer.timeout = cfg.getfloat('WINDOW', 'chosen_delay')
+        self.layout_timer.start()
+
+    @LDS.hookimpl
+    def state_chosen_validate(self):
+        if self.layout_timer.is_timeout():
+            return 'preview'
