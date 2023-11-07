@@ -131,3 +131,27 @@ class PicturePlugin(object):
                                                                       factory=default_factory)
                 factory.set_margin(factory._margin // 3)  # 1/3 since DPI is divided by 3
                 self.factory_pool.add(factory)
+
+
+    @LDS.hookimpl
+    def state_processing_exit(self, app):
+        app.count.taken += 1  # Do it here because 'print' state can be skipped
+
+    @LDS.hookimpl
+    def state_print_do(self, cfg, app, events):
+        if app.find_capture_event(events):
+
+            LOGGER.info("Moving the picture in the forget folder")
+            for savedir in cfg.gettuple('GENERAL', 'directory', 'path'):
+                forgetdir = osp.join(savedir, "forget")
+                if not osp.isdir(forgetdir):
+                    os.makedirs(forgetdir)
+                os.rename(osp.join(savedir, app.picture_filename), osp.join(forgetdir, app.picture_filename))
+
+            self._reset_vars(app)
+            app.count.forgotten += 1
+            app.previous_picture = self.second_previous_picture
+
+            # Deactivate the print function for the backuped picture
+            # as we don't known how many times it has already been printed
+            app.count.remaining_duplicates = 0
