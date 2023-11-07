@@ -31,3 +31,9 @@ class ViewPlugin(object):
         win.show_oops()
         self.failed_view_timer.start()
         LOGGER.error(get_crash_message())
+
+    @LDS.hookimpl
+    def state_failsafe_validate(self):
+        if self.failed_view_timer.is_timeout():
+            return 'wait'
+
