@@ -35,3 +35,7 @@ class LightsPlugin(object):
     @LDS.hookimpl
     def state_wait_exit(self, app):
         app.leds.off()
+
+    @LDS.hookimpl
+    def state_choose_enter(self, app):
+        app.leds.blink(on_time=self.blink_time, off_time=self.blink_time)
