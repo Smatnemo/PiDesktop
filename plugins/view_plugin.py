@@ -53,4 +53,22 @@ class ViewPlugin(object):
         if app.printer.is_installed():
             win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
 
+    @LDS.hookimpl
+    def state_wait_do(self, app, win, events):
+        if app.previous_animated and self.animated_frame_timer.is_timeout():
+            previous_picture = next(app.previous_animated)
+            win.show_intro(previous_picture, app.printer.is_ready()
+                           and app.count.remaining_duplicates > 0)
+            self.animated_frame_timer.start()
+        else:
+            previous_picture = app.previous_picture
+
+        event = app.find_print_status_event(events)
+        if event and app.printer.is_installed():
+            tasks = app.printer.get_all_tasks()
+            win.set_print_number(len(tasks), not app.printer.is_ready())
+
+        if app.find_print_event(events) or (win.get_image() and not previous_picture):
+            win.show_intro(previous_picture, app.printer.is_ready()
+                           and app.count.remaining_duplicates > 0)
 
