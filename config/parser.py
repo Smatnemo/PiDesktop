@@ -258,7 +258,7 @@ DEFAULT = odict((
      ),
 ))
 
-class PiConfigParser(object):
+class PiConfigParser(RawConfigParser):
     
     def __init__(self, filename, plugin_manager, load=True):
         super(PiConfigParser, self).__init__()
