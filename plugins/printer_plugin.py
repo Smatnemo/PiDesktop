@@ -59,3 +59,8 @@ class PrinterPlugin(object):
             for i in range(number):
                 if app.count.remaining_duplicates > 0:
                     self.print_picture(cfg, app)
+
+    @LDS.hookimpl
+    def state_print_do(self, cfg, app, events):
+        if app.find_print_event(events) and app.previous_picture_file:
+            self.print_picture(cfg, app)
