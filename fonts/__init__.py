@@ -109,3 +109,4 @@ def get_pygame_font(text, font_name, max_width, max_height):
 
 
 CURRENT = get_filename('Amatic-Bold')  # Dynamically set at startup
+MONOID = get_filename('Monoid-Bold')
