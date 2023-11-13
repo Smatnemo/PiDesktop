@@ -64,7 +64,7 @@ def pibooth_startup(cfg, app):
 
 @hookspec
 def lds_startup(cfg, app):
-    """Actions performed at the startup of pibooth or when the plugin is enabled
+    """Actions performed at the startup of Legal Document System or when the plugin is enabled
     for the first time.
 
     :param cfg: application configuration
@@ -231,28 +231,66 @@ def state_wait_exit(cfg, app, win):
 
     :param cfg: application configuration
     :param app: application instance
-    :param win: graphical window instance
+    :param win: graphical window 
     """
 
 # --- Login State --------------------------------------------------------------
 
 @hookspec
-def state_login_enter():
-    pass
+def state_login_enter(win):
+    """Actions performed when application enters the login state.
+    :param win: graphical window 
+    """
 
 @hookspec
-def state_login_do():
-    pass
+def state_login_do(app, win, events):
+    """Actions performed when application is in Login state.
+    This hook is called in a loop until the application can switch
+    to the next state.
+
+    :param app: application instance
+    :param win: graphical window instance
+    :param events: pygame events generated since last call
+    """
 
 @hookspec
-def state_login_validate():
-    pass
+def state_login_validate(cfg, app, win, events):
+    """Actions performed when user enters login details.
+    This hook is called in a loop until the user details are verified and if so
+    return the next state otherwise return None.
+
+    :param cfg: application configuration
+    :param app: application instance
+    :param win: graphical window instance
+    :param events: pygame events generated since last call
+    """
 
 @hookspec 
-def state_login_exit():
+def state_login_exit(win):
+    """Actions performed when application exit Login state.
+
+    :param cfg: application configuration
+    :param app: application instance
+    :param win: graphical window 
+    """
+
+# --- logout state -------------------------------------------------------------
+
+@hookspec 
+def state_logout_enter():
+    pass 
+
+@hookspec 
+def state_logout_do():
+    pass 
+
+@hookspec 
+def state_logout_validate():
+    pass 
+
+@hookspec 
+def state_logout_exit():
     pass
-
-
 # --- Choose State -------------------------------------------------------------
 
 
