@@ -24,6 +24,7 @@ from LDS.counters import Counters
 from LDS.utils import (LOGGER, PoolingTimer, configure_logging, get_crash_message,
                            set_logging_level, get_event_pos)
 from LDS.view.window import PiWindow
+from LDS.view import LOGINEVENT
 from LDS.states import StatesMachine
 from LDS.plugins import create_plugin_manager
 from LDS.printer import PRINTER_TASKS_UPDATED, Printer
@@ -59,6 +60,7 @@ class PiApplication:
         self.db = DataBase()
         self.db._initialize_app_settings()
         self.settings = self.db.settings
+        self.settings['use_camera'] = False
 
         # Create window of (width, height)
         init_size = self._config.gettyped('WINDOW', 'size')
@@ -81,17 +83,19 @@ class PiApplication:
         else:
             self._window = PiWindow(title, color=init_color,
                                     text_color=init_text_color, debug=init_debug, app_icon = img)
-
+        self._menu = None
+        self._multipress_timer = PoolingTimer(config.getfloat('CONTROLS', 'multi_press_delay'), False)
+        self._fingerdown_events = []
        # Define states of the application
         self._machine = StatesMachine(self._pm, self._config, self, self._window)
         self._machine.add_state('wait')
         self._machine.add_state('login')
-        self._machine.add_state('choose')
-        self._machine.add_state('chosen')
-        self._machine.add_state('preview')
-        self._machine.add_state('capture')
+        self._machine.add_state('choose') # This state should be used to choose documents
+        self._machine.add_state('chosen') # This state should be used after document has been chosen
+        self._machine.add_state('preview') # This state should be used to see the chosen document
+        self._machine.add_state('capture') # This state should is either for capturing signature or image to prove that the document has been received
         self._machine.add_state('processing')
-        self._machine.add_state('print')
+        self._machine.add_state('print')# This state should be used to print document instead
         self._machine.add_state('finish')
         self._machine.add_state('logout') # log out 
 
@@ -105,10 +109,17 @@ class PiApplication:
         self.previous_animated = None
         self.previous_picture_file = None
 
+        self.password = ''
+        self.validated = None
+
         self.count = Counters(self._config.join_path("counters.pickle"),
                               taken=0, printed=0, forgotten=0,
                               remaining_duplicates=self._config.getint('PRINTER', 'max_duplicates'))
-
+        if self.settings['use_camera']:
+            self.camera = self._pm.hook.lds_setup_camera(cfg=self._config)
+        
+        self.leds = LEDBoard(capture="BOARD" + config.get('CONTROLS', 'picture_led_pin'),
+                             printer="BOARD" + config.get('CONTROLS', 'print_led_pin'))
 
         self.printer = Printer(config.get('PRINTER', 'printer_name'),
                                config.getint('PRINTER', 'max_pages'),
@@ -118,36 +129,180 @@ class PiApplication:
     def _initialize(self):
         print(self._machine.states)
         
+    def find_quit_event(self, events):
+        """Return the first found event if found in the list.
+        """
+        for event in events:
+            if event.type == pygame.QUIT:
+                return event
+        return None
 
+    def find_resize_event(self, events):
+        """Return the first found event if found in the list.
+        """
+        for event in events:
+            if event.type == pygame.VIDEORESIZE:
+                return event
+        return None
+
+    def find_fullscreen_event(self, events):
+        """Return the first found event if found in the list.
+        """
+        for event in events:
+            if event.type == pygame.KEYDOWN and \
+                    event.key == pygame.K_f and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                return event
+        return None
+    
+    def find_screen_event(self, events):
+        """
+        Should only be used in wait state to activate login state
+        """
+        for event in events:
+            if event.type == pygame.FINGERDOWN:
+                print('pygame.FINGERDOWN')
+                return event 
+            if event.type == pygame.FINGERUP:
+                print('pygame.FINGERUP')
+                return event
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                print('I am here')
+                return event
+        return None
+        
+    def find_login_event(self, events):
+        for event in events:
+            if event.type == LOGINEVENT:
+                return event
+        return None
+
+    def find_logout_event(self, events):
+        pass
+
+    def find_print_event(self, events):
+        """Return the first found event if found in the list.
+        """
+        for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_e\
+                    and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                return event
+            if (event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2, 3)) or event.type == pygame.FINGERUP:
+                pos = get_event_pos(self._window.display_size, event)
+                rect = self._window.get_rect()
+                if pygame.Rect(rect.width // 2, 0, rect.width // 2, rect.height).collidepoint(pos):
+                    return event
+            if event.type == BUTTONDOWN and event.printer:
+                return event
+        return None
+    
+    def find_print_status_event(self, events):
+        """Return the first found event if found in the list.
+        """
+        for event in events:
+            if event.type == PRINTER_TASKS_UPDATED:
+                return event
+        return None    
+    
+    def find_settings_event(self, events):
+        """Return the first found event if found in the list.
+        """
+        for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return event
+            if event.type == BUTTONDOWN and event.capture and event.printer:
+                return event
+            if event.type == pygame.FINGERDOWN:
+                # Press but not release
+                self._fingerdown_events.append(event)
+            if event.type == pygame.FINGERUP:
+                # Resetting touch_events
+                self._fingerdown_events = []
+            if len(self._fingerdown_events) > 3:
+                # 4 fingers on the screen trigger the menu
+                self._fingerdown_events = []
+                return pygame.event.Event(BUTTONDOWN, capture=1, printer=1,
+                                          button=self.buttons)
+        return None
+    
+    def find_choice_event(self, events):
+        """Return the first found event if found in the list.
+        """
+        for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+                return event
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+                return event
+            if (event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2, 3)) or event.type == pygame.FINGERUP:
+                pos = get_event_pos(self._window.display_size, event)
+                rect = self._window.get_rect()
+                if pygame.Rect(0, 0, rect.width // 2, rect.height).collidepoint(pos):
+                    event.key = pygame.K_LEFT
+                else:
+                    event.key = pygame.K_RIGHT
+                return event
+            if event.type == BUTTONDOWN:
+                if event.capture:
+                    event.key = pygame.K_LEFT
+                else:
+                    event.key = pygame.K_RIGHT
+                return event
+        return None
+
+    def find_capture_event(self, events):
+        """Return the first found event if found in the list.
+        """
+        for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                return event
+            if (event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2, 3)) or event.type == pygame.FINGERUP:
+                pos = get_event_pos(self._window.display_size, event)
+                rect = self._window.get_rect()
+                if pygame.Rect(0, 0, rect.width // 2, rect.height).collidepoint(pos):
+                    return event
+            if event.type == BUTTONDOWN and event.capture:
+                return event
+        return None
+        
     def main_loop(self):
         try:
             fps = 40
             clock = pygame.time.Clock()
             self._initialize()
-            self._pm.hook.pibooth_startup(cfg=self._config, app=self)
+            self._pm.hook.lds_startup(cfg=self._config, app=self)
             self._machine.set_state('wait')
             start = True
             
             while start:
                 events = list(pygame.event.get())
 
-                # if not self._menu and self.find_settings_event(events):
-                #     self.camera.stop_preview()
-                #     self.leds.off()
-                #     self._menu = PiConfigMenu(self._pm, self._config, self, self._window)
-                #     self._menu.show()
-                #     self.leds.blink(on_time=0.1, off_time=1)
-                # elif self._menu and self._menu.is_shown():
-                #     self._menu.process(events)
-                # elif self._menu and not self._menu.is_shown():
-                #     self.leds.off()
-                #     self._initialize()
-                #     self._machine.set_state('wait')
-                #     self.start = time.time()
-                #     self._menu = None
-                # else:
-                #     self._machine.process(events)
-                    
+                if self.find_quit_event(events):
+                    break 
+
+                if self.find_fullscreen_event(events):
+                    self._window.toggle_fullscreen()
+
+                event = self.find_resize_event(events)
+                if event:
+                    self._window.resize(event.size)
+
+                if not self._menu and self.find_settings_event(events):
+                    self.camera.stop_preview()
+                    self.leds.off()
+                    self._menu = PiConfigMenu(self._pm, self._config, self, self._window)
+                    self._menu.show()
+                    self.leds.blink(on_time=0.1, off_time=1)
+                elif self._menu and self._menu.is_shown():
+                    self._menu.process(events)
+                elif self._menu and not self._menu.is_shown():
+                    self.leds.off()
+                    self._initialize()
+                    self._machine.set_state('wait')
+                    self.start = time.time()
+                    self._menu = None
+                else:
+                    self._machine.process(events)
+                # self._machine.process(events)
+
                 pygame.display.update()
                 clock.tick(fps)                
         except Exception as ex:
@@ -156,7 +311,8 @@ class PiApplication:
             # Get crash message
             LOGGER.error(get_crash_message())
         finally:
-            self._pm.hook.pibooth_cleanup(app=self)
+            if self.settings['use_camera']:
+                self._pm.hook.lds_cleanup(app=self)
             pygame.quit()
 
 
