@@ -62,9 +62,9 @@ DEFAULT = {
         'oops': "Ups! Noget gik galt",
     },
     'en': {
-        'intro': "Take a photo",
+        'intro': "Legal Document System",
         'intro_print': "Or you can\nstill print\nthis photo",
-        'choose': "Choose your layout",
+        'choose': "Choose Document",
         '1': "1 photo",
         '2': "2 photos",
         '3': "3 photos",
@@ -76,6 +76,7 @@ DEFAULT = {
         'print_forget': "Please\nforget this\nphoto",
         'finished': "Thanks",
         'oops': "Oops something went wrong",
+        'wrong_password':"Oops! Wrong Password",
     },
     'es': {
         'intro': "Sacate Una Foto",
