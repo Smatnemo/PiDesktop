@@ -317,6 +317,7 @@ class PiConfigParser(RawConfigParser):
         """Handle desktop file to start pibooth at the Raspberry Pi startup.
         """
         filename = osp.expanduser('~/.config/autostart/pibooth.desktop')
+        # filename = osp.expanduser('~/.config/autostart/lds.desktop')
         dirname = osp.dirname(filename)
         enable = self.getboolean('GENERAL', 'autostart')
         delay = self.getint('GENERAL', 'autostart_delay')
