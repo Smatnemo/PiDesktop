@@ -1,6 +1,6 @@
 import LDS 
 from LDS.utils import LOGGER, get_crash_message, PoolingTimer
-
+from LDS.accounts import LogIn, LogOut
 class ViewPlugin(object):
 
     """Plugin to manage the LDS window dans transitions.
@@ -74,6 +74,8 @@ class ViewPlugin(object):
 
     @LDS.hookimpl
     def state_wait_validate(self, cfg, app, events):
+        if app.find_screen_event(events):
+            return 'login'
         if app.find_capture_event(events):
             if len(app.capture_choices) > 1:
                 return 'choose'
@@ -85,6 +87,51 @@ class ViewPlugin(object):
     def state_wait_exit(self, win):
         self.count = 0
         win.show_image(None)  # Clear currently displayed image
+
+    @LDS.hookimpl
+    def state_login_enter(self, win):
+        LOGGER.info("Attempting to Login")
+        win.surface.fill((255,255,255))
+        self.login_view = win.show_login(win.surface) # Create a function in window module to display login page
+        self.choose_timer.start()
+        
+    @LDS.hookimpl
+    def state_login_do(self, app, win, events):
+        self.login_view.passcode_box.handle_event(events)
+        
+        if app.find_login_event(events):
+            if self.login_view.passcode_box.input_text != '':
+                app.password = self.login_view.passcode_box.input_text 
+            else:
+                app.password = self.login_view.get_input_text() 
+            self.login_view.passcode_box.text=''
+            self.login_view.passcode_box.txt_surface = self.login_view.passcode_box.font.render(self.login_view.passcode_box.text, True, self.login_view.passcode_box.color)
+            print('From Login',app.password) 
+        win.surface.fill((255, 255, 255))
+        self.login_view.draw(win.surface)
+        
+        
+
+    @LDS.hookimpl 
+    def state_login_validate(self, cfg, app, win, events):
+        # Create a way to validate username and password
+        if app.find_login_event(events):
+            print('From Validate do',app.password)
+            LOGGER.info("Attempting to validate password")
+            login = LogIn()
+            app.validated = login.authenticate(app.password)
+            LOGGER.info(app.validated)
+            if app.validated:
+                app.validated = None
+                return 'choose'
+        elif self.choose_timer.is_timeout():
+            return 'wait'
+
+        
+    @LDS.hookimpl 
+    def state_login_exit(self, win):
+        self.count = 0
+        win.show_image(None) # Clear currently displayed image
 
     @LDS.hookimpl
     def state_choose_enter(self, app, win):
