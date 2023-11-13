@@ -372,13 +372,13 @@ def main():
     language.init(config.join_path("translations.cfg"), options.reset)
 
     # Update configuration with plugins ones
-    plugin_manager.hook.pibooth_configure(cfg=config)
+    plugin_manager.hook.lds_configure(cfg=config)
 
     # Ensure config files are present in case of first pibooth launch
     if not options.reset:
         if not osp.isfile(config.filename):
             config.save(default=True)
-        plugin_manager.hook.pibooth_reset(cfg=config, hard=False)
+        plugin_manager.hook.lds_reset(cfg=config, hard=False)
 
     if options.config:
         LOGGER.info("Editing the pibooth configuration...")
@@ -388,7 +388,7 @@ def main():
         language.edit()
     elif options.reset:
         config.save(default=True)
-        plugin_manager.hook.pibooth_reset(cfg=config, hard=True)
+        plugin_manager.hook.lds_reset(cfg=config, hard=True)
     else:
         LOGGER.info("Starting the photo booth application %s", GPIO_INFO)
         app = PiApplication(config, plugin_manager)
