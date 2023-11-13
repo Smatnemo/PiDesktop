@@ -4,7 +4,7 @@ import os.path as osp
 
 
 
-DB_PATH = "/home/pi/cpb.db"
+DB_PATH = "/home/pi/legal.db"
 
 # Database quries
 create_product_table = """
@@ -88,7 +88,18 @@ CREATE TABLE IF NOT EXISTS `Entity` (
 );
 """
 
-create_tables = [create_object_table, create_product_table, create_product_photos_table, create_templates_table, create_entity_table]
+create_documents_table = """
+CREATE TABLE IF NOT EXISTS 'Documents' (
+  'order' bigint PRIMARY KEY,
+  'document_path' VARCHAR(255) NOT NULL,
+  'width' int NOT NULL,
+  'height' int NOT NULL,
+  'created_by' bigint NOT NULL,
+  'downloaded_on' datetime NOT NULL,
+  'deleted_on' datetime NOT NULL
+);"""
+
+create_tables = [create_object_table, create_product_table, create_product_photos_table, create_templates_table, create_entity_table, create_documents_table]
 
 
 # A list of standard queries for settings
@@ -357,7 +368,9 @@ class DataBase(object):
         self.settings['coloured'] = True
         self.settings['background'] = self.get_object(self.entity[7])
 
-        
+    def get_passcode(self, passcode:str):
+        self.cursor.execute("SELECT passcode FROM entity WHERE passcode=(?)",(passcode,))
+        return self.cursor.fetchone()
 
     def create_tables(self):
         # create sql tables if the don't exists
