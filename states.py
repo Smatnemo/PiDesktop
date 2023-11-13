@@ -1,27 +1,14 @@
+# -*- coding: utf-8 -*-
+
+"""Pibooth base states.
+"""
 
 import time
-
 from LDS.utils import LOGGER, BlockConsoleHandler
 
 
 class StatesMachine(object):
 
-    """
-    :attr states: a set of states that the pi application goes through 
-    :type states: set
-    :attr failsafe_state: the state the application goes into when there is an error
-    :type failsafe_state: None or
-    :attr active_state: the current state of the application 
-    :type active_state: str or None
-    :attr app: the application object passed in at class instantiation
-    :type app: PiApplication
-    :attr win: This is the window created using pygame
-    :type win: PiWindow
-    :attr cfg: configuration from the database 
-    :type cfg: DataBase or ConfigParser
-    :attr pm: This is a plugin manager that uses the generic plugins designs
-    :type pm: 
-    """
     def __init__(self, plugins_manager, configuration, application, window):
         self.states = set()
         self.failsafe_state = None
@@ -35,56 +22,52 @@ class StatesMachine(object):
 
         self._start_time = time.time()
 
+    def add_state(self, name):
+        """Add a state to the internal dictionary.
+        """
+        self.states.add(name)
 
-    def add_state(self, state:str)->None:
+    def add_failsafe_state(self, name):
+        """Add a state that will be call in case of exception.
         """
-        Add state to the internal set of states
-        """
-        self.states.add(state)
+        self.failsafe_state = name
+        self.states.add(name)
 
-
-    def remove_state(self, state:str)-> None:
+    def remove_state(self, name):
+        """Remove a state to the internal dictionary.
         """
-        Remove state from the internal collection of states
-        """
-        self.states.discard(state)
-        if state == self.failsafe_state: # investigate why this is being used
+        self.states.discard(name)
+        if name == self.failsafe_state:
             self.failsafe_state = None
 
-
-    def add_failsafe_state(self, state:str)-> None:
+    def process(self, events):
+        """Let the current state do it's thing.
         """
-        Add a state that will be called in case of an exception
-        :attr state: the name of the state
-        :type state: str
-        """
-        self.failsafe_state = state
-        self.add_state(state)
-
-
-    def process(self, events:list):
-        """
-        Process events and let the current state do its thing
-        :attr events: This is a list of events
-        """
-        # Only proceed if there is an active state
+        # Only continue if there is an active state
         if self.active_state is None:
             return
-        
-        try:
-            # Perform the actions of the current state
-            hook = getattr()
-            hook()
-            
-            # Check conditions to activate the next state 
-            hook = getattr()
-            new_state_name = hook()
-        except Exception as ex:
-            LOGGER.error(str(ex))
-            LOGGER.error('Back to failsafe state due to error:', exc_info = True)
-        finally:
-            pass 
 
+        try:
+            # Perform the actions of the active state
+            hook = getattr(self.pm.hook, 'state_{}_do'.format(self.active_state))
+            hook(cfg=self.cfg, app=self.app, win=self.win, events=events)
+
+            # Check conditions to activate the next state
+            hook = getattr(self.pm.hook, 'state_{}_validate'.format(self.active_state))
+            new_state_name = hook(cfg=self.cfg, app=self.app, win=self.win, events=events)
+        except Exception as ex:
+            if self.failsafe_state and self.active_state != self.failsafe_state:
+                LOGGER.error(str(ex))
+                LOGGER.debug('Back to failsafe state due to error:', exc_info=True)
+                new_state_name = self.failsafe_state
+            else:
+                raise
+        if isinstance(new_state_name, list):
+            if not new_state_name:
+                new_state_name = None
+            else:
+                new_state_name = new_state_name[0]
+                
         if new_state_name is not None:
             self.set_state(new_state_name)
 
