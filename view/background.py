@@ -30,7 +30,7 @@ def multiline_text_to_surfaces(text, color, rect, align='center'):
     surfaces = []
     lines = text.splitlines()
 
-    font = fonts.get_pygame_font(max(lines, key=len), fonts.CURRENT,
+    font = fonts.get_pygame_font(max(lines, key=len), fonts.MONOID,
                                  rect.width, rect.height / len(lines))
     for i, line in enumerate(lines):
         surface = font.render(line, True, color)
