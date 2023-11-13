@@ -314,6 +314,9 @@ class IntroWithPrintBackground(IntroBackground):
         if self.arrow_location != ARROW_HIDDEN:
             screen.blit(self.right_arrow, self.right_arrow_pos)
 
+class LoginBackground(Background):
+    def __init__(self):
+        Background.__init__(self, "login")
 
 class ChooseBackground(Background):
 
@@ -679,3 +682,8 @@ class OopsBackground(Background):
 
     def __init__(self):
         Background.__init__(self, "oops")
+
+
+class WrongPasswordBackground(Background):
+    def __init__(self):
+        Background.__init__(self, "wrong_password")
