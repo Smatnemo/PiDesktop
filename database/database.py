@@ -371,6 +371,11 @@ class DataBase(object):
     def get_passcode(self, passcode:str):
         self.cursor.execute("SELECT passcode FROM entity WHERE passcode=(?)",(passcode,))
         return self.cursor.fetchone()
+    
+    
+    def get_decryption_key(self, table_name:str, decrypt_key:str):
+        self.cursor.execute("SELECT " + decrypt_key + " FROM " + table_name + " WHERE decrypt_key=(?)", (decrypt_key,))
+        return self.cursor.fetchone()
 
     def create_tables(self):
         # create sql tables if the don't exists
