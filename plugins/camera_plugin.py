@@ -1,7 +1,7 @@
 
 import time
 import pygame
-import pibooth
+import LDS
 from LDS import camera
 from LDS.utils import LOGGER
 
@@ -18,8 +18,8 @@ class CameraPlugin(object):
         self._pm = plugin_manager
         self.count = 0
 
-    @pibooth.hookimpl(hookwrapper=True)
-    def pibooth_setup_camera(self, cfg):
+    @LDS.hookimpl(hookwrapper=True)
+    def lds_setup_camera(self, cfg):
         outcome = yield  # all corresponding hookimpls are invoked here
         cam = outcome.get_result()
 
@@ -34,11 +34,11 @@ class CameraPlugin(object):
                        cfg.getboolean('CAMERA', 'delete_internal_memory'))
         outcome.force_result(cam)
 
-    @pibooth.hookimpl
-    def pibooth_cleanup(self, app):
+    @LDS.hookimpl
+    def lds_cleanup(self, app):
         app.camera.quit()
 
-    @pibooth.hookimpl
+    @LDS.hookimpl
     def state_failsafe_enter(self, app):
         """Reset variables set in this plugin.
         """
@@ -46,7 +46,7 @@ class CameraPlugin(object):
         app.capture_nbr = None
         app.camera.drop_captures()  # Flush previous captures
 
-    @pibooth.hookimpl
+    @LDS.hookimpl
     def state_wait_enter(self, app):
         app.capture_date = None
         if len(app.capture_choices) > 1:
@@ -54,7 +54,7 @@ class CameraPlugin(object):
         else:
             app.capture_nbr = app.capture_choices[0]
 
-    @pibooth.hookimpl
+    @LDS.hookimpl
     def state_choose_do(self, app, events):
         event = app.find_choice_event(events)
         if event:
@@ -63,7 +63,7 @@ class CameraPlugin(object):
             elif event.key == pygame.K_RIGHT:
                 app.capture_nbr = app.capture_choices[1]
 
-    @pibooth.hookimpl
+    @LDS.hookimpl
     def state_preview_enter(self, cfg, app, win):
         LOGGER.info("Show preview before next capture")
         if not app.capture_date:
@@ -71,7 +71,7 @@ class CameraPlugin(object):
         app.camera.preview(win)
 
 
-    @pibooth.hookimpl
+    @LDS.hookimpl
     def state_preview_do(self, cfg, app):
         pygame.event.pump()  # Before blocking actions
         if cfg.getboolean('WINDOW', 'preview_countdown'):
@@ -79,12 +79,12 @@ class CameraPlugin(object):
         else:
             app.camera.preview_wait(cfg.getint('WINDOW', 'preview_delay'))
 
-    @pibooth.hookimpl
+    @LDS.hookimpl
     def state_preview_exit(self, cfg, app):
         if cfg.getboolean('WINDOW', 'preview_stop_on_capture'):
             app.camera.stop_preview()
 
-    @pibooth.hookimpl
+    @LDS.hookimpl
     def state_capture_do(self, cfg, app, win):
         effects = cfg.gettyped('PICTURE', 'captures_effects')
         if not isinstance(effects, (list, tuple)):
@@ -107,11 +107,11 @@ class CameraPlugin(object):
 
         self.count += 1
 
-    @pibooth.hookimpl
+    @LDS.hookimpl
     def state_capture_exit(self, cfg, app):
         if not cfg.getboolean('WINDOW', 'preview_stop_on_capture'):
             app.camera.stop_preview()
 
-    @pibooth.hookimpl
+    @LDS.hookimpl
     def state_processing_enter(self, app):
         self.count = 0
