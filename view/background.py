@@ -1,398 +1,681 @@
 # -*- coding: utf-8 -*-
 
-"""Pibooth view management.
-"""
-
-import os
-import time
-import contextlib
+import os.path as osp
 import pygame
-from pygame import gfxdraw
-from PIL import Image
-from pibooth import pictures, fonts
-from pibooth.view import background
-from pibooth.utils import LOGGER
-from pibooth.pictures import sizing
+
+from LDS import fonts, pictures
+from LDS.language import get_translated_text
+
+ARROW_TOP = 'top'
+ARROW_BOTTOM = 'bottom'
+ARROW_HIDDEN = 'hidden'
+ARROW_TOUCH = 'touchscreen'
 
 
-class PiWindow(object):
+def multiline_text_to_surfaces(text, color, rect, align='center'):
+    """Return a list of surfaces corresponding to each line of the text.
+    The surfaces are next to each others in order to fit the given rect.
 
-    """Class to handle the window.
-    The following attributes are available for use in plugins:
-
-    :attr surface: surface on which sprites are displayed
-    :type surface: :py:class:`pygame.Surface`
-    :attr is_fullscreen: set to True if the window is display in full screen
-    :type is_fullscreen: bool
-    :attr display_size: tuple (width, height) represneting the size of the screen
-    :type display_size: tuple
-    
+    The ``align`` parameter can be one of:
+       * top-left
+       * top-center
+       * top-right
+       * center-left
+       * center
+       * center-right
+       * bottom-left
+       * bottom-center
+       * bottom-right
     """
+    surfaces = []
+    lines = text.splitlines()
 
-    """
-    :attr app_icon: icon to initialize the application
-    :type app_icon: str
-    """
+    font = fonts.get_pygame_font(max(lines, key=len), fonts.CURRENT,
+                                 rect.width, rect.height / len(lines))
+    for i, line in enumerate(lines):
+        surface = font.render(line, True, color)
 
-    CENTER = 'center'
-    RIGHT = 'right'
-    LEFT = 'left'
-    FULLSCREEN = 'fullscreen'
+        if align.endswith('left'):
+            x = rect.left
+        elif align.endswith('center'):
+            x = rect.centerx - surface.get_rect().width / 2
+        elif align.endswith('right'):
+            x = rect.right - surface.get_rect().width / 2
+        else:
+            raise ValueError("Invalid horizontal alignment '{}'".format(align))
 
-    def __init__(self, title,
-                 size=(800, 480),
-                 color=(0, 0, 0),
-                 text_color=(255, 255, 255),
-                 arrow_location=background.ARROW_BOTTOM,
-                 arrow_offset=0,
-                 debug=False,
-                 app_icon: str = None):
-        self.__size = size
-        self.debug = debug
-        self.bg_color = color
-        self.text_color = text_color
+        height = surface.get_rect().height
+        if align.startswith('top'):
+            y = rect.top + i * height
+        elif align.startswith('center'):
+            y = rect.centery - len(lines) * height / 2 + i * height
+        elif align.startswith('bottom'):
+            y = rect.bottom - (len(lines) - i) * height
+        else:
+            raise ValueError("Invalid vertical alignment '{}'".format(align))
+
+        surfaces.append((surface, surface.get_rect(x=x, y=y)))
+    return surfaces
+
+
+class Background(object):
+
+    def __init__(self, image_name, color=(0, 0, 0), text_color=(255, 255, 255)):
+        self._rect = None
+        self._name = image_name
+        self._need_update = False
+
+        self._background = None
+        self._background_color = color
+        self._background_image = None
+
+        self._overlay = None
+
+        self._texts = []  # List of (surface, rect)
+        self._text_border = 20  # Distance to other elements
+        self._text_color = text_color
+
+        # Build rectangles around some areas for debuging purpose
+        self._show_outlines = True
+        self._outlines = []
+
+    def __str__(self):
+        """Return background final name.
+
+        It is used in the main window to distinguish backgrounds in the cache
+        thus each background string shall be uniq.
+        """
+        return "{}({})".format(self.__class__.__name__, self._name)
+
+    def _make_outlines(self, size):
+        """Return a red rectangle surface.
+        """
+        outlines = pygame.Surface(size, pygame.SRCALPHA, 32)
+        pygame.draw.rect(outlines, pygame.Color(255, 0, 0), outlines.get_rect(), 2)
+        return outlines
+
+    def _write_text(self, text, rect=None, align='center'):
+        """Write a text in the given rectangle.
+        """
+        if not rect:
+            rect = self._rect.inflate(-self._text_border, -self._text_border)
+        if self._show_outlines:
+            self._outlines.append((self._make_outlines(rect.size), rect))
+        self._texts.extend(multiline_text_to_surfaces(text, self._text_color, rect, align))
+
+    def set_color(self, color_or_path):
+        """Set background color (RGB tuple) or path to an image that used to
+        fill the background.
+
+        :param color_or_path: RGB color tuple or image path
+        :type color_or_path: tuple or str
+        """
+        if isinstance(color_or_path, (tuple, list)):
+            assert len(color_or_path) == 3, "Length of 3 is required for RGB tuple"
+            if color_or_path != self._background_color:
+                self._background_color = color_or_path
+                self._need_update = True
+        else:
+            assert osp.isfile(color_or_path), "Invalid image for window background: '{}'".format(color_or_path)
+            if color_or_path != self._background_image:
+                self._background_image = color_or_path
+                self._background_color = (0, 0, 0)
+                self._need_update = True
+
+    def get_color(self):
+        """Return the background color (RGB tuple).
+        """
+        return self._background_color
+
+    def set_text_color(self, color):
+        """Set text color (RGB tuple) used to write the texts.
+
+        :param color: RGB color tuple
+        :type color: tuple
+        """
+        assert len(color) == 3, "Length of 3 is required for RGB tuple"
+        if color != self._text_color:
+            self._text_color = color
+            self._need_update = True
+
+    def set_outlines(self, outlines=True):
+        """Draw outlines for each rectangle available for drawing
+        texts.
+
+        :param outlines: enable / disable outlines
+        :type outlines: bool
+        """
+        if outlines != self._show_outlines:
+            self._show_outlines = outlines
+            self._need_update = True
+
+    def resize(self, screen):
+        """Resize objects to fit to the screen.
+        """
+        if self._rect != screen.get_rect():
+            self._rect = screen.get_rect()
+            self._outlines = []
+
+            if self._background_image:
+                self._background = pictures.get_pygame_image(
+                    self._background_image, (self._rect.width, self._rect.height), crop=True, color=None)
+                self._background_color = pictures.get_pygame_main_color(self._background)
+
+            overlay_name = "{}.png".format(self._name)
+            if osp.isfile(pictures.get_filename(overlay_name)):
+                self._overlay = pictures.get_pygame_image(
+                    pictures.get_filename(overlay_name), (self._rect.width, self._rect.height), color=self._text_color, bg_color=self._background_color)
+
+            self.resize_texts()
+            self._need_update = True
+
+    def resize_texts(self, rect=None, align='center'):
+        """Update text surfaces.
+        """
+        self._texts = []
+        text = get_translated_text(self._name)
+        if text:
+            self._write_text(text, rect, align)
+
+    def paint(self, screen):
+        """Paint and animate the surfaces on the screen.
+        """
+        if self._background:
+            screen.blit(self._background, (0, 0))
+        else:
+            screen.fill(self._background_color)
+        if self._overlay:
+            screen.blit(self._overlay, self._overlay.get_rect(center=self._rect.center))
+        for text_surface, pos in self._texts:
+            screen.blit(text_surface, pos)
+        for outline_surface, pos in self._outlines:
+            screen.blit(outline_surface, pos)
+        self._need_update = False
+
+
+class IntroBackground(Background):
+
+    def __init__(self, arrow_location=ARROW_BOTTOM, arrow_offset=0):
+        Background.__init__(self, "intro")
         self.arrow_location = arrow_location
         self.arrow_offset = arrow_offset
-        
-        pygame.display.set_icon(app_icon)
+        self.left_arrow = None
+        self.left_arrow_pos = None
 
-        # Prepare the pygame module for use
-        if 'SDL_VIDEO_WINDOW_POS' not in os.environ:
-            os.environ['SDL_VIDEO_CENTERED'] = '1'
-        pygame.init()
+    def resize(self, screen):
+        Background.resize(self, screen)
+        if self._need_update and self.arrow_location != ARROW_HIDDEN:
+            if self.arrow_location == ARROW_TOUCH:
+                size = (self._rect.width * 0.2, self._rect.height * 0.2)
 
-        # Save the desktop mode, shall be done before `setmode` (SDL 1.2.10, and pygame 1.8.0)
-        info = pygame.display.Info()
+                self.left_arrow = pictures.get_pygame_image("camera.png", size, vflip=False, color=self._text_color)
 
-        pygame.display.set_caption(title)
-        self.is_fullscreen = False
-        self.display_size = (info.current_w, info.current_h)
-        self.surface = pygame.display.set_mode(self.__size, pygame.NOFRAME)
-        # self.surface = pygame.display.set_mode(self.display_size, pygame.NOFRAME)
-
-        self._buffered_images = {}
-        self._current_background = None
-        self._current_foreground = None
-        self._print_number = 0
-        self._print_failure = False
-        self._capture_number = (0, 4)  # (current, max)
-
-        self._pos_map = {self.CENTER: self._center_pos,
-                         self.RIGHT: self._right_pos,
-                         self.LEFT: self._left_pos,
-                         self.FULLSCREEN: self._center_pos}
-
-        # Don't use pygame.mouse.get_cursor() because will be removed in pygame2
-        self._cursor = ((16, 16), (0, 0),
-                        (0, 0, 64, 0, 96, 0, 112, 0, 120, 0, 124, 0, 126, 0, 127, 0,
-                         127, 128, 124, 0, 108, 0, 70, 0, 6, 0, 3, 0, 3, 0, 0, 0),
-                        (192, 0, 224, 0, 240, 0, 248, 0, 252, 0, 254, 0, 255, 0, 255,
-                         128, 255, 192, 255, 224, 254, 0, 239, 0, 207, 0, 135, 128, 7, 128, 3, 0))
-
-    def _update_foreground(self, pil_image, pos=CENTER, resize=True):
-        """Show a PIL image on the foreground.
-        Only one is bufferized to avoid memory leak.
-        """
-        image_name = id(pil_image)
-
-        if pos == self.FULLSCREEN:
-            image_size_max = (self.surface.get_size()[0] * 0.9, self.surface.get_size()[1] * 0.9)
-        else:
-            image_size_max = (self.surface.get_size()[0] * 0.48, self.surface.get_size()[1])
-
-        buff_size, buff_image = self._buffered_images.get(image_name, (None, None))
-        if buff_image and image_size_max == buff_size:
-            image = buff_image
-        else:
-            if resize:
-                image = pil_image.resize(sizing.new_size_keep_aspect_ratio(
-                    pil_image.size, image_size_max), Image.ANTIALIAS)
+                x = int(self._rect.width * 0.2)
+                y = int(self._rect.height // 2)
             else:
-                image = pil_image
-            image = pygame.image.frombuffer(image.tobytes(), image.size, image.mode)
-            if self._current_foreground:
-                self._buffered_images.pop(id(self._current_foreground[0]), None)
-            LOGGER.debug("Add to buffer the image '%s'", image_name)
-            self._buffered_images[image_name] = (image_size_max, image)
+                size = (int(self._rect.width * 0.3), int(self._rect.height * 0.3))
 
-        self._current_foreground = (pil_image, pos, resize)
+                vflip = True if self.arrow_location == ARROW_TOP else False
+                self.left_arrow = pictures.get_pygame_image("arrow.png", size, vflip=vflip, color=self._text_color)
 
-        if self.debug and resize:
-            # Build rectangle around picture area for debuging purpose
-            outlines = pygame.Surface(image_size_max, pygame.SRCALPHA, 32)
-            pygame.draw.rect(outlines, pygame.Color(255, 0, 0), outlines.get_rect(), 2)
-            self.surface.blit(outlines, self._pos_map[pos](outlines))
+                x = int(self._rect.left + self._rect.width // 4
+                        - self.left_arrow.get_rect().width // 2)
+                if self.arrow_location == ARROW_TOP:
+                    y = self._rect.top + 10
+                else:
+                    y = int(self._rect.top + 2 * self._rect.height // 3)
 
-        return self.surface.blit(image, self._pos_map[pos](image))
+            self.left_arrow_pos = (x - self.arrow_offset, y)
 
-    def _update_background(self, bkgd):
-        """Show image on the background.
+    def resize_texts(self):
+        """Update text surfaces.
         """
-        self._current_background = self._buffered_images.setdefault(str(bkgd), bkgd)
-        self._current_background.set_color(self.bg_color)
-        self._current_background.set_outlines(self.debug)
-        self._current_background.set_text_color(self.text_color)
-        self._current_background.resize(self.surface)
-        self._current_background.paint(self.surface)
-        self._update_capture_number()
-        self._update_print_number()
+        if self.arrow_location == ARROW_HIDDEN:
+            rect = pygame.Rect(self._text_border, self._text_border,
+                               self._rect.width / 2 - 2 * self._text_border,
+                               self._rect.height - 2 * self._text_border)
+            align = 'center'
+        elif self.arrow_location == ARROW_BOTTOM:
+            rect = pygame.Rect(self._text_border, self._text_border,
+                               self._rect.width / 2 - 2 * self._text_border,
+                               self._rect.height * 0.6 - self._text_border)
+            align = 'bottom-center'
+        elif self.arrow_location == ARROW_TOUCH:
+            rect = pygame.Rect(self._text_border, self._text_border,
+                               self._rect.width / 2 - 2 * self._text_border,
+                               self._rect.height * 0.4 - self._text_border)
+            align = 'bottom-center'
+        else:
+            rect = pygame.Rect(self._text_border, self._rect.height * 0.4,
+                               self._rect.width / 2 - 2 * self._text_border,
+                               self._rect.height * 0.6 - self._text_border)
+            align = 'top-center'
+        Background.resize_texts(self, rect, align)
 
-    def _update_capture_number(self):
-        """Update the captures counter displayed.
+    def paint(self, screen):
+        Background.paint(self, screen)
+        if self.arrow_location != ARROW_HIDDEN:
+            screen.blit(self.left_arrow, self.left_arrow_pos)
+
+
+class IntroWithPrintBackground(IntroBackground):
+
+    def __init__(self, arrow_location=ARROW_BOTTOM, arrow_offset=0):
+        IntroBackground.__init__(self, arrow_location, arrow_offset)
+        self.right_arrow = None
+        self.right_arrow_pos = None
+
+    def __str__(self):
+        """Return background final name.
+
+        It is used in the main window to distinguish backgrounds in the cache
+        thus each background string shall be uniq.
         """
-        if not self._capture_number[0]:
-            return  # Dont show counter: no picture taken
+        return "{}({})".format(self.__class__.__name__, "intro_print")
 
-        center = self.surface.get_rect().center
-        radius = 10
-        border = 20
-        x = center[0] - (2 * radius * self._capture_number[1] + border * (self._capture_number[1] - 1)) // 2
-        y = self.surface.get_size()[1] - radius - border
-        for nbr in range(self._capture_number[1]):
-            gfxdraw.aacircle(self.surface, x, y, radius, self.text_color)
-            if self._capture_number[0] > nbr:
-                # Because anti-aliased filled circle doesn't exist
-                gfxdraw.aacircle(self.surface, x, y, radius - 3, self.text_color)
-                gfxdraw.filled_circle(self.surface, x, y, radius - 3, self.text_color)
-            x += (2 * radius + border)
-
-    def _update_print_number(self):
-        """Update the number of files in the printer queue.
-        """
-        if not self._print_number and not self._print_failure:
-            return  # Dont show counter: no file in queue, no failure
-
-        smaller = self.surface.get_size()[1] if self.surface.get_size(
-        )[1] < self.surface.get_size()[0] else self.surface.get_size()[0]
-        side = int(smaller * 0.05)  # 5% of the window
-
-        if side > 0:
-            if self._print_failure:
-                image = pictures.get_pygame_image('printer_failure.png', (side, side), color=self.text_color)
+    def resize(self, screen):
+        IntroBackground.resize(self, screen)
+        if self._need_update and self.arrow_location != ARROW_HIDDEN:
+            size = (self._rect.width * 0.1, self._rect.height * 0.1)
+            if self.arrow_location == ARROW_TOUCH:
+                self.right_arrow = pictures.get_pygame_image("hand.png", size, hflip=False,
+                                                             vflip=False, angle=-70, color=self._text_color)
             else:
-                image = pictures.get_pygame_image('printer.png', (side, side), color=self.text_color)
-            font = pygame.font.Font(fonts.CURRENT, side)
-            label = font.render(str(self._print_number), True, self.text_color)
+                vflip = True if self.arrow_location == ARROW_TOP else False
+                angle = -70 if self.arrow_location == ARROW_TOP else 70
+                self.right_arrow = pictures.get_pygame_image("arrow.png", size, hflip=False,
+                                                             vflip=vflip, angle=angle, color=self._text_color)
 
-            height = max((image.get_rect().height, label.get_rect().height)) + 20
-            bg = pygame.Surface((image.get_rect().width + label.get_rect().width + side + 10, height))
-            bg.fill(self._current_background.get_color())
-            rect = bg.get_rect()
-            rect.bottomleft = self.get_rect().bottomleft
-            rect_image = image.get_rect(left=10, centery=rect.centery)
-            rect_label = label.get_rect(centerx=rect_image.right + (rect.width -
-                                        rect_image.right) // 2, centery=rect.centery)
-            self.surface.blit(bg, rect.topleft)
-            self.surface.blit(image, rect_image.topleft)
-            self.surface.blit(label, rect_label.topleft)
-
-    def _center_pos(self, image):
-        """
-        Return the position of the given image to be centered on window.
-        """
-        pos = self.surface.get_rect().center
-        return image.get_rect(center=pos) if image else pos
-
-    def _left_pos(self, image):
-        """
-        Return the position of the given image to be put on the left of the screen
-        """
-        pos = (self.surface.get_rect().centerx // 2, self.surface.get_rect().centery)
-        return image.get_rect(center=pos) if image else pos
-
-    def _right_pos(self, image):
-        """
-        Return the position of the given image to be put on the right of the screen
-        """
-        pos = (self.surface.get_rect().centerx + self.surface.get_rect().centerx // 2, self.surface.get_rect().centery)
-        return image.get_rect(center=pos) if image else pos
-
-    def get_rect(self, absolute=False):
-        """Return a Rect object (as defined in pygame) for this window.
-
-        :param absolute: absolute position considering the window centered on screen
-        :type absolute: bool
-        """
-        if absolute:
-            return self.surface.get_rect(center=(self.display_size[0] / 2, self.display_size[1] / 2))
-        return self.surface.get_rect()
-
-    def get_image(self):
-        """Return the currently displayed foreground image.
-        """
-        if self._current_foreground:
-            return self._current_foreground[0]
-        return None
-
-    def resize(self, size):
-        """Resize the window keeping aspect ratio.
-        """
-        if not self.is_fullscreen:
-            self.__size = size  # Manual resizing
-            # self.surface = pygame.display.set_mode(self.__size, pygame.RESIZABLE)
-            self.surface = pygame.display.set_mode(self.__size, pygame.NOFRAME)
-        self.update()
-
-    def update(self):
-        """Repaint the window with currently displayed images.
-        """
-        if self._current_background:
-            self._update_background(self._current_background)
-        else:
-            self._update_capture_number()
-            self._update_print_number()
-        if self._current_foreground:
-            self._update_foreground(*self._current_foreground)
-
-    def show_oops(self):
-        """Show failure view in case of exception.
-        """
-        self._capture_number = (0, self._capture_number[1])
-        self._update_background(background.OopsBackground())
-
-    def show_intro(self, pil_image=None, with_print=True):
-        """Show introduction view.
-        """
-        self._capture_number = (0, self._capture_number[1])
-        if with_print and pil_image:
-            self._update_background(background.IntroWithPrintBackground(self.arrow_location, self.arrow_offset))
-        else:
-            self._update_background(background.IntroBackground(self.arrow_location, self.arrow_offset))
-
-        if pil_image:
-            self._update_foreground(pil_image, self.RIGHT)
-        elif self._current_foreground:
-            self._buffered_images.pop(id(self._current_foreground[0]), None)
-            self._current_foreground = None
-
-    def show_choice(self, choices, selected=None):
-        """Show the choice view.
-        """
-        self._capture_number = (0, self._capture_number[1])
-        if not selected:
-            self._update_background(background.ChooseBackground(choices, self.arrow_location, self.arrow_offset))
-        else:
-            self._update_background(background.ChosenBackground(choices, selected))
-
-    def show_image(self, pil_image=None, pos=CENTER):
-        """Show PIL image as it (no resize).
-        """
-        if not pil_image:
-            # Clear the currently displayed image
-            if self._current_foreground:
-                _, image = self._buffered_images.pop(id(self._current_foreground[0]))
-                _, pos, _ = self._current_foreground
-                self._current_foreground = None
-                image.fill((0, 0, 0))
-                return self.surface.blit(image, self._pos_map[pos](image))
-        else:
-            return self._update_foreground(pil_image, pos, False)
-
-    def show_work_in_progress(self):
-        """Show wait view.
-        """
-        self._capture_number = (0, self._capture_number[1])
-        self._update_background(background.ProcessingBackground())
-
-    def show_print(self, pil_image=None):
-        """Show print view (image resized on the left).
-        """
-        self._capture_number = (0, self._capture_number[1])
-        self._update_background(background.PrintBackground(self.arrow_location,
-                                                           self.arrow_offset))
-        if pil_image:
-            self._update_foreground(pil_image, self.LEFT)
-
-    def show_finished(self, pil_image=None):
-        """Show finished view (image resized fullscreen).
-        """
-        self._capture_number = (0, self._capture_number[1])
-        if pil_image:
-            bg = background.FinishedWithImageBackground(pil_image.size)
-            if self._buffered_images.get(str(bg), bg).foreground_size != pil_image.size:
-                self._buffered_images.pop(str(bg))  # Drop cache, foreground size ratio has changed
-            self._update_background(background.FinishedWithImageBackground(pil_image.size))
-            self._update_foreground(pil_image, self.FULLSCREEN)
-        else:
-            self._update_background(background.FinishedBackground())
-
-    @contextlib.contextmanager
-    def flash(self, count):
-        """Flash the window content.
-        """
-        if count < 1:
-            raise ValueError("The flash counter shall be greater than 0")
-
-        for i in range(count):
-            self.surface.fill((255, 255, 255))
-            if self._current_foreground:
-                # Flash only the background, keep foreground at the top
-                self._update_foreground(*self._current_foreground)
-            pygame.event.pump()
-            pygame.display.update()
-            time.sleep(0.02)
-            if i == count - 1:
-                yield  # Let's do actions before end of flash
-                self.update()
-                pygame.event.pump()
-                pygame.display.update()
+            x = int(self._rect.left + self._rect.width // 2
+                    - self.right_arrow.get_rect().width // 2)
+            if self.arrow_location == ARROW_TOP:
+                y = self._rect.top + 10
             else:
-                self.update()
-                pygame.event.pump()
-                pygame.display.update()
-                time.sleep(0.02)
+                y = int(self._rect.bottom - self.right_arrow.get_rect().height * 1.1)
+            self.right_arrow_pos = (x - self.arrow_offset, y)
 
-    def set_capture_number(self, current_nbr, total_nbr):
-        """Set the current number of captures taken.
+    def resize_texts(self):
+        """Update text surfaces.
         """
-        if total_nbr < 1:
-            raise ValueError("Total number of captures shall be greater than 0")
+        IntroBackground.resize_texts(self)
+        text = get_translated_text("intro_print")
+        if text:
+            rect = pygame.Rect(self._rect.width * 0.30 + self._text_border, 0,
+                               self._rect.width * 0.20 - 2 * self._text_border,
+                               self._rect.height * 0.3 - 2 * self._text_border)
+            if self.arrow_location == ARROW_TOP:
+                rect.top = self._rect.height * 0.08
+            else:
+                rect.bottom = self._rect.height - self._rect.height * 0.08
+            self._write_text(text, rect)
 
-        self._capture_number = (current_nbr, total_nbr)
-        self._update_background(background.CaptureBackground())
-        if self._current_foreground:
-            self._update_foreground(*self._current_foreground)
-        pygame.display.update()
+    def paint(self, screen):
+        IntroBackground.paint(self, screen)
+        if self.arrow_location != ARROW_HIDDEN:
+            screen.blit(self.right_arrow, self.right_arrow_pos)
 
-    def set_print_number(self, current_nbr=None, failure=None):
-        """Set the current number of tasks in the printer queue.
+
+class ChooseBackground(Background):
+
+    def __init__(self, choices, arrow_location=ARROW_BOTTOM, arrow_offset=0):
+        Background.__init__(self, "choose")
+        self.arrow_location = arrow_location
+        self.arrow_offset = arrow_offset
+        self.choices = choices
+        self.layout0 = None
+        self.layout0_pos = None
+        self.layout1 = None
+        self.layout1_pos = None
+        self.left_arrow = None
+        self.left_arrow_pos = None
+        self.right_arrow = None
+        self.right_arrow_pos = None
+
+    def resize(self, screen):
+        Background.resize(self, screen)
+        if self._need_update:
+            size = (self._rect.width * 0.45, self._rect.height * 0.6)
+            self.layout0 = pictures.get_pygame_layout_image(
+                self._text_color, self._background_color, self.choices[0], size)
+            self.layout1 = pictures.get_pygame_layout_image(
+                self._text_color, self._background_color, self.choices[1], size)
+
+            inter = (self._rect.width - 2 * self.layout0.get_rect().width) // 3
+
+            x0 = int(self._rect.left + inter)
+            x1 = int(self._rect.left + 2 * inter + self.layout0.get_rect().width)
+            y = int(self._rect.top + self._rect.height * 0.3)
+
+            self.layout0_pos = (x0, y)
+            self.layout1_pos = (x1, y)
+
+            if self.arrow_location in [ARROW_TOP, ARROW_BOTTOM]:
+                if self.arrow_location == ARROW_TOP:
+                    y = 5
+                    x_offset = 30
+                    size = (self._rect.width * 0.1, self._rect.top + y + 30)
+                else:
+                    x_offset = 0
+                    y = self.layout0_pos[1] + self.layout0.get_rect().height + 5
+                    size = (self._rect.width * 0.1, self._rect.bottom - y - 5)
+
+                vflip = True if self.arrow_location == ARROW_TOP else False
+                self.left_arrow = pictures.get_pygame_image("arrow.png", size, vflip=vflip,
+                                                            color=self._text_color)
+                self.right_arrow = pictures.get_pygame_image("arrow.png", size, hflip=True,
+                                                             vflip=vflip, color=self._text_color)
+
+                inter = (self._rect.width - 2 * self.left_arrow.get_rect().width) // 4
+
+                x0 = int(self._rect.left + inter) - x_offset
+                x1 = int(self._rect.left + 3 * inter + self.left_arrow.get_rect().width) + x_offset
+
+                self.left_arrow_pos = (x0 - self.arrow_offset, y)
+                self.right_arrow_pos = (x1 + self.arrow_offset, y)
+
+    def resize_texts(self):
+        """Update text surfaces.
         """
-        update = False
+        rect = pygame.Rect(self._text_border, self._text_border,
+                           self._rect.width - 2 * self._text_border, self._rect.height * 0.2)
+        Background.resize_texts(self, rect)
 
-        if current_nbr is not None and self._print_number != current_nbr:
-            self._print_number = current_nbr
-            update = True
+    def paint(self, screen):
+        Background.paint(self, screen)
+        screen.blit(self.layout0, self.layout0_pos)
+        screen.blit(self.layout1, self.layout1_pos)
+        if self.arrow_location in [ARROW_TOP, ARROW_BOTTOM]:
+            screen.blit(self.left_arrow, self.left_arrow_pos)
+            screen.blit(self.right_arrow, self.right_arrow_pos)
 
-        if failure is not None and self._print_failure != failure:
-            self._print_failure = failure
-            update = True
 
-        if update:
-            self._update_background(self._current_background)
-            if self._current_foreground:
-                self._update_foreground(*self._current_foreground)
-            pygame.display.update()
+class ChosenBackground(Background):
 
-    def toggle_fullscreen(self):
-        """Set window to full screen or initial size.
+    def __init__(self, choices, selected):
+        Background.__init__(self, "chosen")
+        self.choices = choices
+        self.selected = selected
+        self.layout = None
+        self.layout_pos = None
+
+    def __str__(self):
+        """Return background final name.
+        It is used in the main window to distinguish background in the cache.
         """
-        if self.is_fullscreen:
-            self.is_fullscreen = False  # Set before resize
-            pygame.mouse.set_cursor(*self._cursor)
-            self.surface = pygame.display.set_mode(self.__size, pygame.RESIZABLE)
+        return "{}({}{})".format(self.__class__.__name__, self._name, self.selected)
+
+    def resize(self, screen):
+        Background.resize(self, screen)
+        if self._need_update:
+            size = (self._rect.width * 0.6, self._rect.height * 0.6)
+
+            self.layout = pictures.get_pygame_layout_image(
+                self._text_color, self._background_color, self.selected, size)
+
+            x = self.layout.get_rect(center=self._rect.center).left
+            y = int(self._rect.top + self._rect.height * 0.3)
+
+            self.layout_pos = (x, y)
+
+    def resize_texts(self):
+        """Update text surfaces.
+        """
+        rect = pygame.Rect(self._text_border, self._text_border,
+                           self._rect.width - 2 * self._text_border, self._rect.height * 0.2)
+        Background.resize_texts(self, rect)
+
+    def paint(self, screen):
+        Background.paint(self, screen)
+        screen.blit(self.layout, self.layout_pos)
+
+
+class CaptureBackground(Background):
+
+    def __init__(self):
+        Background.__init__(self, "capture")
+        self.left_people = None
+        self.left_people_pos = None
+        self.right_people = None
+        self.right_people_pos = None
+
+    def resize(self, screen):
+        Background.resize(self, screen)
+        if self._need_update:
+            images_height = self._rect.height / 4
+            size = (images_height * 2, images_height)
+
+            self.left_people = pictures.get_pygame_image("capture_left.png", size=size,
+                                                         color=self._text_color)
+            self.right_people = pictures.get_pygame_image("capture_right.png", size=size,
+                                                          color=self._text_color)
+
+            x = int(self._rect.right - size[0])
+            y = int(self._rect.bottom - images_height)
+
+            self.left_people_pos = (0, y)
+            self.right_people_pos = (x + size[0] - 1.5 * self.right_people.get_rect().width, y)
+
+            if self._show_outlines:
+                self._outlines.append((self._make_outlines(size), (0, y)))
+                self._outlines.append((self._make_outlines(size), (x, y)))
+
+    def paint(self, screen):
+        Background.paint(self, screen)
+        screen.blit(self.left_people, self.left_people_pos)
+        screen.blit(self.right_people, self.right_people_pos)
+
+
+class ProcessingBackground(Background):
+
+    def __init__(self):
+        Background.__init__(self, "processing")
+
+    def resize_texts(self):
+        """Update text surfaces.
+        """
+        rect = pygame.Rect(self._text_border, self._rect.height * 0.8 - self._text_border,
+                           self._rect.width - 2 * self._text_border, self._rect.height * 0.2)
+        Background.resize_texts(self, rect)
+
+
+class PrintBackground(Background):
+
+    def __init__(self, arrow_location=ARROW_BOTTOM, arrow_offset=0):
+        Background.__init__(self, "print")
+        self.arrow_location = arrow_location
+        self.arrow_offset = arrow_offset
+        self.right_arrow = None
+        self.right_arrow_pos = None
+        self.left_arrow = None
+        self.left_arrow_pos = None
+
+    def resize(self, screen):
+        Background.resize(self, screen)
+        if self._need_update and self.arrow_location != ARROW_HIDDEN:
+
+            if self.arrow_location == ARROW_TOUCH:
+                size = (self._rect.width // 4, self._rect.height // 4)
+                # Right arrow
+                self.right_arrow = pictures.get_pygame_image(
+                    "printer_touch.png", size, hflip=False, vflip=False, color=self._text_color)
+                x = int(self._rect.left + self._rect.width * 0.70
+                        - self.right_arrow.get_rect().width // 2)
+                y = int(self._rect.top + self._rect.height * 0.45)
+            else:
+                size = (self._rect.width * 0.3, self._rect.height * 0.3)
+
+                vflip = True if self.arrow_location == ARROW_TOP else False
+
+                # Right arrow
+                self.right_arrow = pictures.get_pygame_image(
+                    "arrow.png", size, hflip=True, vflip=vflip, color=self._text_color)
+
+                x = int(self._rect.left + self._rect.width * 0.75
+                        - self.right_arrow.get_rect().width // 2)
+                if self.arrow_location == ARROW_TOP:
+                    y = self._rect.top + 10
+                else:
+                    y = int(self._rect.top + 2 * self._rect.height // 3)
+
+            self.right_arrow_pos = (x + self.arrow_offset, y)
+
+            # Left arrow
+            size = (self._rect.width * 0.1, self._rect.height * 0.1)
+
+            if self.arrow_location == ARROW_TOUCH:
+                self.left_arrow = pictures.get_pygame_image(
+                    "hand.png", size, hflip=False, vflip=False, angle=70, color=self._text_color)
+            else:
+                vflip = True if self.arrow_location == ARROW_TOP else False
+                angle = 70 if self.arrow_location == ARROW_TOP else -70
+                self.left_arrow = pictures.get_pygame_image(
+                    "arrow.png", size, hflip=False, vflip=vflip, angle=angle, color=self._text_color)
+
+            x = int(self._rect.left + self._rect.width // 2
+                    - self.left_arrow.get_rect().width // 2)
+
+            if self.arrow_location == ARROW_TOP:
+                y = self._rect.top + 10
+            else:
+                y = int(self._rect.bottom - self.left_arrow.get_rect().height * 1.1)
+
+            self.left_arrow_pos = (x - self.arrow_offset, y)
+
+    def resize_texts(self):
+        """Update text surfaces.
+        """
+        if self.arrow_location == ARROW_HIDDEN:
+            rect = pygame.Rect(self._rect.width / 2 + self._text_border, self._text_border,
+                               self._rect.width / 2 - 2 * self._text_border,
+                               self._rect.height - 2 * self._text_border)
+            align = 'center'
+        elif self.arrow_location == ARROW_BOTTOM:
+            rect = pygame.Rect(self._rect.width / 2 + self._text_border, self._text_border,
+                               self._rect.width / 2 - 2 * self._text_border,
+                               self._rect.height * 0.6 - self._text_border)
+            align = 'bottom-center'
+        elif self.arrow_location == ARROW_TOUCH:
+            rect = pygame.Rect(self._rect.width / 2 + self._text_border, self._text_border,
+                               self._rect.width / 2 - 2 * self._text_border,
+                               self._rect.height * 0.4 - self._text_border)
+            align = 'bottom-center'
         else:
-            self.is_fullscreen = True  # Set before resize
-            # Make an invisible cursor (don't use pygame.mouse.set_visible(False) because
-            # the mouse event will always return the window bottom-right coordinate)
-            pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
-            self.surface = pygame.display.set_mode(self.display_size, pygame.FULLSCREEN)
+            rect = pygame.Rect(self._rect.width / 2 + self._text_border, self._rect.height * 0.4,
+                               self._rect.width / 2 - 2 * self._text_border,
+                               self._rect.height * 0.6 - self._text_border)
+            align = 'top-center'
+        Background.resize_texts(self, rect, align)
 
-        self.update()
+        text = get_translated_text("print_forget")
+        if text:
+            rect = pygame.Rect(self._rect.width // 2, 0,
+                               self._rect.width // 5 - 2 * self._text_border,
+                               self._rect.height * 0.3 - 2 * self._text_border)
+            if self.arrow_location == ARROW_TOP:
+                rect.top = self._rect.height * 0.08
+            else:
+                rect.bottom = self._rect.height - self._rect.height * 0.08
 
-    def drop_cache(self):
-        """Drop all cached background and foreground to force
-        refreshing the view.
+            self._write_text(text, rect)
+
+    def paint(self, screen):
+        Background.paint(self, screen)
+        if self.arrow_location != ARROW_HIDDEN:
+            screen.blit(self.right_arrow, self.right_arrow_pos)
+            screen.blit(self.left_arrow, self.left_arrow_pos)
+
+
+class FinishedBackground(Background):
+
+    def __init__(self):
+        Background.__init__(self, "finished")
+        self.left_people = None
+        self.left_people_pos = None
+        self.right_people = None
+        self.right_people_pos = None
+
+    def resize(self, screen):
+        Background.resize(self, screen)
+        if self._need_update:
+            left_rect = pygame.Rect(10, 0, self._rect.width * 0.4, self._rect.height * 0.5)
+            left_rect.top = self._rect.centery - left_rect.centery
+            right_rect = pygame.Rect(0, 0, self._rect.width * 0.3, self._rect.height * 0.5)
+            right_rect.top = self._rect.centery - right_rect.centery
+            right_rect.right = self._rect.right - 10
+
+            self.left_people = pictures.get_pygame_image("finished_left.png", size=left_rect.size,
+                                                         color=self._text_color)
+            self.right_people = pictures.get_pygame_image("finished_right.png", size=right_rect.size,
+                                                          color=self._text_color)
+
+            self.left_people_pos = self.left_people.get_rect(center=left_rect.center).topleft
+            self.right_people_pos = self.right_people.get_rect(center=right_rect.center).topleft
+
+            if self._show_outlines:
+                self._outlines.append((self._make_outlines(left_rect.size), left_rect.topleft))
+                self._outlines.append((self._make_outlines(right_rect.size), right_rect.topleft))
+
+    def resize_texts(self):
+        """Update text surfaces.
         """
-        self._current_background = None
-        self._current_foreground = None
-        self._buffered_images = {}
+        rect = pygame.Rect(0, 0, self._rect.width * 0.35, self._rect.height * 0.4)
+        rect.center = self._rect.center
+        rect.bottom = self._rect.bottom - 10
+        Background.resize_texts(self, rect)
+
+    def paint(self, screen):
+        Background.paint(self, screen)
+        if self.left_people:
+            screen.blit(self.left_people, self.left_people_pos)
+        if self.right_people:
+            screen.blit(self.right_people, self.right_people_pos)
+
+
+class FinishedWithImageBackground(FinishedBackground):
+
+    def __init__(self, foreground_size):
+        FinishedBackground.__init__(self)
+        self._name = "finishedwithimage"
+        self.foreground_size = foreground_size
+
+    def resize(self, screen):
+        Background.resize(self, screen)
+        if self._need_update:
+            # Note: '0.9' ratio comes from PiWindow._update_foreground() method which
+            # lets a margin between window borders and fullscreen foreground picture
+            frgnd_rect = pygame.Rect(0, 0, *pictures.sizing.new_size_keep_aspect_ratio(
+                self.foreground_size, (self._rect.size[0] * 0.9, self._rect.size[1]*0.9)))
+            xmargin = abs(self._rect.width - frgnd_rect.width) // 2
+            ymargin = abs(self._rect.height - frgnd_rect.height) // 2
+
+            if xmargin > 50:
+                margin = min(xmargin, self._rect.height // 3)
+            elif ymargin > 50:
+                margin = min(ymargin, self._rect.width // 3)
+            else:  # Too small
+                self.left_people = None
+                self.right_people = None
+                return
+
+            left_rect = pygame.Rect(0, 0, margin, margin)
+            right_rect = pygame.Rect(0, 0, margin, margin)
+            left_rect.bottom = self._rect.bottom
+            right_rect.right = self._rect.right
+
+            self.left_people = pictures.get_pygame_image("finished_left.png", size=left_rect.size,
+                                                         color=self._text_color)
+            self.right_people = pictures.get_pygame_image("finished_right.png", size=right_rect.size,
+                                                          color=self._text_color)
+
+            self.left_people_pos = self.left_people.get_rect(center=left_rect.center).topleft
+            self.right_people_pos = self.right_people.get_rect(center=right_rect.center).topleft
+
+            if self._show_outlines and left_rect and right_rect:
+                self._outlines.append((self._make_outlines(left_rect.size), left_rect.topleft))
+                self._outlines.append((self._make_outlines(right_rect.size), right_rect.topleft))
+
+
+class OopsBackground(Background):
+
+    def __init__(self):
+        Background.__init__(self, "oops")
