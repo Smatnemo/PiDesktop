@@ -381,7 +381,7 @@ def main():
         plugin_manager.hook.lds_reset(cfg=config, hard=False)
 
     if options.config:
-        LOGGER.info("Editing the pibooth configuration...")
+        LOGGER.info("Editing the LDS configuration...")
         config.edit()
     elif options.translate:
         LOGGER.info("Editing the GUI translations...")
@@ -390,7 +390,7 @@ def main():
         config.save(default=True)
         plugin_manager.hook.lds_reset(cfg=config, hard=True)
     else:
-        LOGGER.info("Starting the photo booth application %s", GPIO_INFO)
+        LOGGER.info("Starting the LDS application %s", GPIO_INFO)
         app = PiApplication(config, plugin_manager)
         app.main_loop()
 
