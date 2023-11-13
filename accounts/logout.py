@@ -1,0 +1,3 @@
+
+class LogOut:
+    pass
