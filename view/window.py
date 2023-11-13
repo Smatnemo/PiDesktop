@@ -9,10 +9,11 @@ import contextlib
 import pygame
 from pygame import gfxdraw
 from PIL import Image
-from pibooth import pictures, fonts
-from pibooth.view import background
-from pibooth.utils import LOGGER
-from pibooth.pictures import sizing
+from LDS import pictures, fonts
+from LDS.view import background
+from LDS.utils import LOGGER
+from LDS.pictures import sizing
+from LDS.view.loginview import LoginView
 
 
 class PiWindow(object):
@@ -67,8 +68,8 @@ class PiWindow(object):
         pygame.display.set_caption(title)
         self.is_fullscreen = False
         self.display_size = (info.current_w, info.current_h)
-        self.surface = pygame.display.set_mode(self.__size, pygame.NOFRAME)
-        # self.surface = pygame.display.set_mode(self.display_size, pygame.NOFRAME)
+        # self.surface = pygame.display.set_mode(self.__size, pygame.NOFRAME)
+        self.surface = pygame.display.set_mode(self.display_size, pygame.RESIZABLE)
 
         self._buffered_images = {}
         self._current_background = None
@@ -264,6 +265,12 @@ class PiWindow(object):
         elif self._current_foreground:
             self._buffered_images.pop(id(self._current_foreground[0]), None)
             self._current_foreground = None
+
+    def show_login(self, win):
+        # Find logic to display login
+        lv = LoginView(win)
+        return lv
+        
 
     def show_choice(self, choices, selected=None):
         """Show the choice view.
