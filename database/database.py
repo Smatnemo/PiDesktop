@@ -374,7 +374,9 @@ class DataBase(object):
     
     
     def get_decryption_key(self, table_name:str, decrypt_key:str):
-        self.cursor.execute("SELECT " + decrypt_key + " FROM " + table_name + " WHERE decrypt_key=(?)", (decrypt_key,))
+        # When a document is clicked on the GUI, get its order number.
+        # Use the order number and decrypt key columns to get the decryption key from the database
+        self.cursor.execute("SELECT decrypt_key FROM " + table_name + " WHERE decrypt_key=(?)",(decrypt_key,))
         return self.cursor.fetchone()
 
     def create_tables(self):
