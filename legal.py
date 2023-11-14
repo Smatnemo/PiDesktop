@@ -75,7 +75,7 @@ class PiApplication:
             init_color = self._config.getpath('WINDOW', 'background')
             # init_color = self.settings['backgroundpath']
 
-        title = 'Pibooth v{}'.format(LDS.__version__)
+        title = 'Legal v{}'.format(LDS.__version__)
         img = pygame.image.load(self.settings['watermarkpath'])
         if not isinstance(init_size, str):
             self._window = PiWindow(title, init_size, color=init_color,
