@@ -266,9 +266,10 @@ class PiWindow(object):
             self._buffered_images.pop(id(self._current_foreground[0]), None)
             self._current_foreground = None
 
-    def show_login(self, win):
+    def show_login(self):
+        self._update_background(background.LoginBackground())
         # Find logic to display login
-        lv = LoginView(win)
+        lv = LoginView(self.surface)
         return lv
         
 
