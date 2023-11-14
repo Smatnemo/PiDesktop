@@ -14,13 +14,16 @@ COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font('freesansbold.ttf', 20)
 LOGINEVENT = pygame.USEREVENT + 3
-
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 
 class InputBox:
 
     def __init__(self, rect:tuple, label='label',input_text='', parent=None):
-        self.input_rect = pygame.Rect(rect)
+        self.input_rect_border = pygame.Rect(rect)
+        self.border_color = COLOR_INACTIVE
         self.color = COLOR_INACTIVE
+        self.text_field_color = WHITE
         self.font_size = 32
         self.text = input_text
         self.label = label
@@ -32,8 +35,11 @@ class InputBox:
             self.set_font()
         self.txt_surface = self.font.render(self.text, True, self.color)
         width, height = self.font.size(self.text)
-        self.input_rect.width, self.input_rect.height = width+6, height+6
+        self.input_rect_border.width, self.input_rect_border.height = width+6, height+6
         self.active = False
+
+        # Create input rectangle to be 2 pixels less than the input_rect_border
+        self.input_rect = pygame.Rect(rect[0]+2, rect[1]+2, rect[2]-4, rect[3]-4)
         
     def iniScreen(self):
         pygame.init()
@@ -53,13 +59,13 @@ class InputBox:
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # If the user clicked on the input_box rect.
-                if self.input_rect.collidepoint(event.pos):
+                if self.input_rect_border.collidepoint(event.pos):
                     # Toggle the active variable.
                     self.active = not self.active
                 else:
                     self.active = False
                 # Change the current color of the input box.
-                self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
+                self.border_color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
             if event.type == pygame.KEYDOWN:
                 if self.active:
                     if event.key == pygame.K_RETURN:
@@ -76,13 +82,18 @@ class InputBox:
     def update(self):
         # Resize the box if the text is too long.
         width = max(200, self.txt_surface.get_width()+10)
-        self.input_rect.w = width
+        self.input_rect_border.w = width
+        self.input_rect.w = width-4
 
     def draw(self, screen):
-        # Blit the text.
-        screen.blit(self.txt_surface, (self.input_rect.x+5, self.input_rect.y+5))
         # Blit the rect.
-        pygame.draw.rect(screen, self.color, self.input_rect, 2)
+        pygame.draw.rect(screen, self.border_color, self.input_rect_border, 2)
+        # self.input_rect.w = self.input_rect-2
+        pygame.draw.rect(screen, self.text_field_color, self.input_rect)
+        # Blit the text.
+        screen.blit(self.txt_surface, (self.input_rect_border.x+5, self.input_rect_border.y+5))
+        
+        
 
 
      
@@ -274,7 +285,6 @@ class LoginView(object):
 
     def draw(self, screen):
         self.passcode_box.update()
-        screen.fill((255, 255, 255))
         self.passcode_box.draw(screen)
         for button in self.numbers:
             button.draw(screen)
