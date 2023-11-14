@@ -97,8 +97,9 @@ class ViewPlugin(object):
         
     @LDS.hookimpl
     def state_login_do(self, app, win, events):
+        if events:
+            self.choose_timer.start()
         self.login_view.passcode_box.handle_event(events)
-        
         if app.find_login_event(events):
             if self.login_view.passcode_box.input_text != '':
                 app.password = self.login_view.passcode_box.input_text 
