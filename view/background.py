@@ -317,6 +317,23 @@ class IntroWithPrintBackground(IntroBackground):
 class LoginBackground(Background):
     def __init__(self):
         Background.__init__(self, "login")
+        self.layout0 = None
+        self.layout0_pos = None
+        self.layout1 = None
+        self.layout1_pos = None
+        
+    def resize(self, screen):
+        Background.resize(self, screen)      
+
+    def resize_texts(self):
+        """Update text surfaces.
+        """
+        rect = pygame.Rect(self._text_border, self._text_border,
+                           self._rect.width - 2 * self._text_border, self._rect.height * 0.2)
+        Background.resize_texts(self, rect)
+
+    def paint(self, screen):
+        Background.paint(self, screen)
 
 class ChooseBackground(Background):
 
