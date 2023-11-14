@@ -91,8 +91,8 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_login_enter(self, win):
         LOGGER.info("Attempting to Login")
-        win.surface.fill((255,255,255))
-        self.login_view = win.show_login(win.surface) # Create a function in window module to display login page
+        # win.surface.fill((255,255,255))
+        self.login_view = win.show_login() # Create a function in window module to display login page
         self.choose_timer.start()
         
     @LDS.hookimpl
@@ -108,7 +108,8 @@ class ViewPlugin(object):
             self.login_view.passcode_box.text=''
             self.login_view.passcode_box.txt_surface = self.login_view.passcode_box.font.render(self.login_view.passcode_box.text, True, self.login_view.passcode_box.color)
             print('From Login',app.password) 
-        win.surface.fill((255, 255, 255))
+        # win.surface.fill((255, 255, 255))
+        # wi
         self.login_view.draw(win.surface)
         
         
