@@ -135,10 +135,16 @@ class PushButton:
         mouse_pos = pygame.mouse.get_pos()
         left_click = pygame.mouse.get_pressed()[0]
         if left_click and self.button_rect.collidepoint(mouse_pos) and self.button_enabled:
-            return pygame.event.post(pygame.event.Event(LOGINEVENT))
+            return True
         else:
             return None
-        
+    
+    def hovered(self):
+        mouse_pos = pygame.mouse.get_pos()
+        if self.button_rect.collidepoint(mouse_pos) and self.button_enabled:
+            return True 
+        else:
+            return None
         
     def set_font(self):
         self.font = pygame.font.Font('freesansbold.ttf', self.font_size)
@@ -147,26 +153,119 @@ class PushButton:
         self.button_text = self.font.render(self.label, True, self.button_color)
         width, height = self.font.size(self.label)
         self.button_rect.width, self.button_rect.height = width+6, height+6
+        
         if self.button_enabled:
-            if self.clicked():
+            if self.hovered():
                 pygame.draw.rect(self.screen, 'dark gray', self.button_rect)
-                time.sleep(0.5)
             else:
                 pygame.draw.rect(self.screen, 'light gray', self.button_rect)
         else:
             pygame.draw.rect(self.screen, 'blue', self.button_rect)
         self.screen.blit(self.button_text, self.coord)
-        
 
+
+class button():
+    def __init__(self, color, x,y,width,height, text=''):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+        self.over = False
+        self.button_enabled = True
+        self.button_rect = pygame.Rect(self.x, self.y, self.width,self.height)
+
+    def draw(self,window):
+        #Call this method to draw the button on the screen
+        if self.button_enabled:
+            if self.hovered():
+                pygame.draw.rect(window, 'light gray', self.button_rect,0)
+            else:
+                pygame.draw.rect(window, 'light blue', self.button_rect,0)
+        else:   
+            pygame.draw.rect(window, 'blue', self.button_rect,0)    
+        if self.text != '':
+            font = pygame.font.SysFont('comicsans', 60)
+            text = font.render(self.text, 1, (0,0,0))
+            window.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
+
+    def isOver(self, pos):
+        #Pos is the mouse position or a tuple of (x,y) coordinates
+        if pos[0] > self.x and pos[0] < self.x + self.width:
+            if pos[1] > self.y and pos[1] < self.y + self.height:
+                return True
+        return False
+
+    def playSoundIfMouseIsOver(self, pos, sound):
+        if self.isOver(pos):            
+            if not self.over:
+                beepsound.play()
+                self.over = True
+        else:
+            self.over = False
+
+    def hovered(self):
+        mouse_pos = pygame.mouse.get_pos()
+        if self.button_rect.collidepoint(mouse_pos) and self.button_enabled:
+            return True 
+        else:
+            return None 
+        
+    def clicked(self):
+        mouse_pos = pygame.mouse.get_pos()
+        left_click = pygame.mouse.get_pressed()[0]
+        if left_click and self.button_rect.collidepoint(mouse_pos) and self.button_enabled:
+            return pygame.event.post(pygame.event.Event(LOGINEVENT))
+        else:
+            return None
 
 
 class LoginView(object):
     def __init__(self, screen):
         # Set up the input boxes
         # self.username_box = pg.Rect(200, 200, 400, 50)
-        self.passcode_box = InputBox((200, 200, 200, 38), parent=screen)
+        
+        passcode_box_width = 200
+        passcode_box_height = 38
+        x = screen.get_rect().center[0] - passcode_box_width//2
+        y = screen.get_rect().center[1] - passcode_box_height//2 - 200
+        
+        self.passcode_box = InputBox((x, y, passcode_box_width, passcode_box_height), parent=screen)
+        button_width = 60 
+        button_height = 56
+        row_margin = 6
+        column_margin = 6
+        first_row_y_position = y+58
+        second_row_y_position = first_row_y_position + button_height + column_margin
+        third_row_y_position = second_row_y_position + button_height + column_margin 
+        fourth_row_y_position = third_row_y_position + button_height + column_margin
+
+        first_column_x_position = x
+        second_column_x_position = first_column_x_position + button_width + row_margin
+        third_column_x_position = second_column_x_position + button_width + row_margin 
+        
+        # the numbers for the calcaltor
+        s_1s = button((0,255,0),first_column_x_position,first_row_y_position,button_width,button_height, '1')
+        s_2s = button((0,255,0),second_column_x_position,first_row_y_position,button_width,button_height, '2')
+        s_3s = button((0,255,0),third_column_x_position,first_row_y_position,button_width,button_height, '3')
+        s_4s = button((0,255,0),first_column_x_position,second_row_y_position,button_width,button_height, '4')
+        s_5s = button((0,255,0),second_column_x_position,second_row_y_position,button_width,button_height, '5')
+        s_6s = button((0,255,0),third_column_x_position,second_row_y_position,button_width,button_height, '6')
+        s_7s = button((0,255,0),first_column_x_position,third_row_y_position,button_width,button_height, '7')
+        s_8s = button((0,255,0),second_column_x_position,third_row_y_position,button_width,button_height, '8')
+        s_9s = button((0,255,0),third_column_x_position,third_row_y_position,button_width,button_height, '9')
+        s_xs = button((0,255,0),first_column_x_position,fourth_row_y_position,button_width,button_height, 'x')
+        s_0s = button((0,255,0),second_column_x_position,fourth_row_y_position,button_width,button_height, '0')
+        s_enter = button((0,255,0),third_column_x_position,fourth_row_y_position,button_width,button_height, '<-')
+        
+
+        self.numbers = [s_1s,s_2s,s_3s,s_4s,s_5s,s_6s,s_7s,s_8s,s_9s,s_xs,s_0s,s_enter]
         # Set up the buttons
-        self.login_button = PushButton((200, 338, 200, 38), label='LOG IN', parent=screen)
+        login_button_x = x + 50
+        login_button_y = fourth_row_y_position + button_width + column_margin
+
+        self.login_button = PushButton((login_button_x, login_button_y, 200, 38), label='LOG IN', parent=screen)
         self.login_button.enabled(True)
 
     def get_input_text(self):
@@ -177,10 +276,16 @@ class LoginView(object):
         self.passcode_box.update()
         screen.fill((255, 255, 255))
         self.passcode_box.draw(screen)
+        for button in self.numbers:
+            button.draw(screen)
         self.login_button.draw()
+
 
     def update(self):
         pass
+
+
+
 
 def main_loop():
     clock = pygame.time.Clock()
@@ -209,6 +314,7 @@ def main_loop():
         clock.tick(60)
 
 
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     main_loop()
-    pygame.quit()
