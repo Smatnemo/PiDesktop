@@ -99,11 +99,15 @@ class PiApplication:
         self._machine.add_state('finish')
         self._machine.add_state('logout') # log out 
 
+        # State to return to after screen is locked and logged back into
+        self.previous_state = None
+
         # Variables shared with plugins
         # Change them may break plugins compatibility
         self.capture_nbr = None
         self.capture_date = None
         self.capture_choices = (4, 1)
+        self.documents = self.settings['documents']
         # self.db_capture_choices = (6, 4, 2, 1)
         self.previous_picture = None
         self.previous_animated = None
@@ -273,6 +277,8 @@ class PiApplication:
             self._initialize()
             self._pm.hook.lds_startup(cfg=self._config, app=self)
             self._machine.set_state('wait')
+            self.previous_state = 'wait'
+
             start = True
             
             while start:
