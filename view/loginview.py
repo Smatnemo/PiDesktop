@@ -48,6 +48,7 @@ class InputBox:
         self.text_field_color = WHITE
         self.font_size = 32
         self.text = input_text
+        self.max_input_length = 5
         self.label = label
         self.input_text = ''
         if not parent:
@@ -76,15 +77,18 @@ class InputBox:
             if event.type >= BACKBUTTON: 
                 if self.active:
                     button_event, input_text = self.check_event(event)
-                    print(input_text)
                     if button_event:
-                        self.text = self.text + input_text
+                        if len(self.text) >= self.max_input_length:
+                            self.text = self.text
+                        else:
+                            self.text = self.text + input_text
                     elif event.type == ENTERBUTTON:
                         pygame.event.post(pygame.event.Event(LOGINEVENT))
                         self.input_text = self.text
                         self.text = ''
                     elif event.type==BACKBUTTON:
                         self.text = self.text[:-1]
+                    
                 # Render updated text on text surface
                 self.txt_surface = self.font.render(self.text, True, self.color)
             if event.type == pygame.MOUSEBUTTONDOWN:     
@@ -111,8 +115,12 @@ class InputBox:
                     elif event.key == pygame.K_BACKSPACE:
                         self.text = self.text[:-1] 
                     else:
-                        self.text += event.unicode
+                        if len(self.text) >= self.max_input_length:
+                            self.text = self.text
+                        else:
+                            self.text += event.unicode
                     # Re-render the text.
+                    
                     self.txt_surface = self.font.render(self.text, True, self.color)
 
     def check_event(self, event):
@@ -143,22 +151,24 @@ class InputBox:
 
 
 class PushButton:
-    def __init__(self, rect:tuple, label:str='Button', parent=None):
+    def __init__(self, rect:tuple, user_event, label:str='Button', parent=None):
         self.label = label
         self.button_color = COLOR_INACTIVE 
+        self.text_color = WHITE
         self.font_size = 32
         self.button_rect = pygame.Rect(rect)
         self.coord = self.button_rect.x+3, self.button_rect.y+3
         self.button_enabled = True
         self.button_clicked = False 
         self.button_released = True
+        self.event = user_event
         if not parent:
             self.iniScreen()
         else:
             self.screen = parent
             self.set_font()
         
-        self.draw()
+
 
     def iniScreen(self):
         pygame.init()
@@ -185,17 +195,21 @@ class PushButton:
 
         # Else log in error 
         
-    def clicked(self):
-        mouse_pos = pygame.mouse.get_pos()
-        left_click = pygame.mouse.get_pressed()[0]
-        if left_click and self.button_rect.collidepoint(mouse_pos) and self.button_enabled:
-            return True
+    def clicked(self, event):
+        if not event:
+            return None
+        if event.type==pygame.MOUSEBUTTONDOWN and self.button_rect.collidepoint(event.pos) and self.button_enabled:
+            return 'BUTTONDOWN'
+        if event.type==pygame.MOUSEBUTTONUP and self.button_rect.collidepoint(event.pos):
+            pygame.event.post(pygame.event.Event(self.event))
+            return 'BUTTONUP'
         else:
             return None
     
-    def hovered(self):
-        mouse_pos = pygame.mouse.get_pos()
-        if self.button_rect.collidepoint(mouse_pos) and self.button_enabled:
+    def hovered(self, event):
+        if not event:
+            return None
+        if self.button_rect.collidepoint(event.pos) and self.button_enabled:
             return True 
         else:
             return None
@@ -203,16 +217,19 @@ class PushButton:
     def set_font(self):
         self.font = pygame.font.Font('freesansbold.ttf', self.font_size)
 
-    def draw(self):
+    def draw(self, event):
         self.button_text = self.font.render(self.label, True, self.button_color)
         width, height = self.font.size(self.label)
         self.button_rect.width, self.button_rect.height = width+6, height+6
         
         if self.button_enabled:
-            if self.hovered():
+            if self.hovered(event):
                 pygame.draw.rect(self.screen, 'dark gray', self.button_rect)
-                if self.clicked():
+                clicked = self.clicked(event)
+                if clicked == 'BUTTONDOWN':
                     pygame.draw.rect(self.screen, 'black', self.button_rect)
+                elif clicked == 'BUTTONUP':
+                    pygame.draw.rect(self.screen, 'dark gray', self.button_rect)
             else:
                 pygame.draw.rect(self.screen, 'light gray', self.button_rect)
         else:
@@ -231,6 +248,8 @@ class button(object):
         self.over = False
         self.button_enabled = True
         self.button_rect = pygame.Rect(self.x, self.y, self.width,self.height)
+        self.text_color = WHITE
+
 
     def draw(self,window,event):
         #Call this method to draw the button on the screen
@@ -248,7 +267,7 @@ class button(object):
             pygame.draw.rect(window, 'blue', self.button_rect,0)    
         if self.text != '':
             font = pygame.font.SysFont('comicsans', 60)
-            text = font.render(self.text, 1, (0,0,0))
+            text = font.render(self.text, 1, WHITE)
             window.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
 
 
@@ -349,7 +368,7 @@ class LoginView(object):
         login_button_x = x + 50
         login_button_y = fourth_row_y_position + button_width + column_margin
 
-        self.login_button = PushButton((login_button_x, login_button_y, 200, 38), label='LOG IN', parent=screen)
+        self.login_button = PushButton((login_button_x, login_button_y, 200, 38),LOGINEVENT, label='LOG IN', parent=screen)
         self.login_button.enabled(True)
 
     def get_input_text(self):
@@ -361,7 +380,7 @@ class LoginView(object):
         self.passcode_box.draw(screen)
         for button in self.numbers:
             button.draw(screen, self.update_needed)
-        self.login_button.draw()
+        self.login_button.draw(self.update_needed)
 
 
     # def MouseOverNumbers(self):
