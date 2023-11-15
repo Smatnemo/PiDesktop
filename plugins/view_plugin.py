@@ -93,6 +93,8 @@ class ViewPlugin(object):
         LOGGER.info("Attempting to Login")
         # win.surface.fill((255,255,255))
         self.login_view = win.show_login() # Create a function in window module to display login page
+        # write code to query database and reveal the number of documents downloaded that are yet to be printed
+        # Find way to display it in the login window during login in activity
         self.choose_timer.start()
         
     @LDS.hookimpl
@@ -126,7 +128,8 @@ class ViewPlugin(object):
             if app.validated:
                 app.validated = None
                 return 'choose'
-        elif self.choose_timer.is_timeout():
+            # Write code to return to previous state if the last state was not choose
+        elif self.choose_timer.is_timeout():    
             return 'wait'
 
         
@@ -135,12 +138,39 @@ class ViewPlugin(object):
         self.count = 0
         win.show_image(None) # Clear currently displayed image
 
+# Default original
+    # @LDS.hookimpl
+    # def state_choose_enter(self, app, win):
+    #     LOGGER.info("Show picture choice (nothing selected)")
+    #     win.set_print_number(0, False)  # Hide printer status
+    #     win.show_choice(app.capture_choices)
+    #     self.choose_timer.start()
+
+    # @LDS.hookimpl
+    # def state_choose_validate(self, cfg, app):
+    #     if app.capture_nbr:
+    #         if cfg.getfloat('WINDOW', 'chosen_delay') > 0:
+    #             return 'chosen'
+    #         else:
+    #             return 'preview'
+    #     elif self.choose_timer.is_timeout():
+    #         return 'wait'
+
     @LDS.hookimpl
     def state_choose_enter(self, app, win):
-        LOGGER.info("Show picture choice (nothing selected)")
+        LOGGER.info("Show document choice (nothing selected)")
         win.set_print_number(0, False)  # Hide printer status
-        win.show_choice(app.capture_choices)
+        # Create logic to fetch documents from database
+        win.show_documents_choice(app.documents)
         self.choose_timer.start()
+
+    @LDS.hookimpl
+    def state_choose_do(self, app, win, events):
+        if events:
+            # If there is any event restart timer
+            LOGGER.info("Restarting timer in choose state")
+            self.choose_timer.start()
+
 
     @LDS.hookimpl
     def state_choose_validate(self, cfg, app):
@@ -150,6 +180,7 @@ class ViewPlugin(object):
             else:
                 return 'preview'
         elif self.choose_timer.is_timeout():
+            # once the time is reached return to wait state
             return 'wait'
 
     @LDS.hookimpl
