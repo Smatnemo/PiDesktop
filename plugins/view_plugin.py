@@ -99,7 +99,6 @@ class ViewPlugin(object):
     def state_login_do(self, app, win, events):
         if events:
             self.choose_timer.start()
-        self.login_view.passcode_box.handle_event(events)
         if app.find_login_event(events):
             if self.login_view.passcode_box.input_text != '':
                 app.password = self.login_view.passcode_box.input_text 
@@ -109,7 +108,8 @@ class ViewPlugin(object):
             self.login_view.passcode_box.txt_surface = self.login_view.passcode_box.font.render(self.login_view.passcode_box.text, True, self.login_view.passcode_box.color)
             print('From Login',app.password) 
         # win.surface.fill((255, 255, 255))
-        # wi
+        self.login_view.update_needed = app.update_needed
+        self.login_view.passcode_box.handle_event(events)
         self.login_view.draw(win.surface)
         
         
