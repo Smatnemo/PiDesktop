@@ -110,7 +110,9 @@ class PiApplication:
         self.previous_picture_file = None
 
         self.password = ''
-        self.validated = None
+        self.validated = None 
+        self.update_needed = None
+
 
         self.count = Counters(self._config.join_path("counters.pickle"),
                               taken=0, printed=0, forgotten=0,
@@ -176,6 +178,7 @@ class PiApplication:
                 return event
         return None
 
+            
     def find_logout_event(self, events):
         pass
 
@@ -284,6 +287,12 @@ class PiApplication:
                 event = self.find_resize_event(events)
                 if event:
                     self._window.resize(event.size)
+                # For keypad
+                for event in events:
+                    if event.type == pygame.MOUSEBUTTONDOWN or event.type==pygame.MOUSEMOTION or event.type==pygame.MOUSEBUTTONUP: 
+                        self.update_needed = event
+                    else:
+                        self.update_needed = None
 
                 if not self._menu and self.find_settings_event(events):
                     self.camera.stop_preview()
