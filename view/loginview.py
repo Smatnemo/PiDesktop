@@ -14,9 +14,10 @@ COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font('freesansbold.ttf', 20)
 
-BACKBUTTON = pygame.USEREVENT + 4
+
 LOGINEVENT = pygame.USEREVENT + 3
-ENTERBUTTON = pygame.USEREVENT + 5
+BACKBUTTON = pygame.USEREVENT + 4
+BUTTON_0 = pygame.USEREVENT + 5
 BUTTON_1 = pygame.USEREVENT + 6
 BUTTON_2 = pygame.USEREVENT + 7
 BUTTON_3 = pygame.USEREVENT + 8
@@ -26,8 +27,10 @@ BUTTON_6 = pygame.USEREVENT + 11
 BUTTON_7 = pygame.USEREVENT + 12
 BUTTON_8 = pygame.USEREVENT + 13
 BUTTON_9 = pygame.USEREVENT + 14
+ENTERBUTTON = pygame.USEREVENT + 15
 
-button_events = [BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8, BUTTON_9]
+
+button_events = [BUTTON_0,BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8, BUTTON_9]
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
@@ -71,7 +74,6 @@ class InputBox:
     def handle_event(self, events):
         for event in events:
             if event.type >= BACKBUTTON: 
-                print(event.type)
                 if self.active:
                     button_event, input_text = self.check_event(event)
                     print(input_text)
@@ -86,12 +88,15 @@ class InputBox:
                 # Render updated text on text surface
                 self.txt_surface = self.font.render(self.text, True, self.color)
             if event.type == pygame.MOUSEBUTTONDOWN:     
+                
                 # If the user clicked on the input_box rect.
                 if self.input_rect_border.collidepoint(event.pos):
                     # Toggle the active variable.
                     self.active = True
-                elif self.active and self.key_pad_rect.collidepoint(event.pos):
-                    self.active = True
+                elif self.active:
+                    for rect in self.key_pad_rect:
+                        if rect.collidepoint(event.pos):
+                            self.active = True
                 else:
                     self.active = False
                 # Change the current color of the input box.
@@ -113,8 +118,7 @@ class InputBox:
     def check_event(self, event):
         for text,button in enumerate(button_events):
             if event.type == button:
-                print(text)
-                return event, str(text+1)
+                return event, str(text)
         return None,""
         
 
@@ -262,7 +266,12 @@ class button(object):
         if event.type==pygame.MOUSEBUTTONDOWN and self.button_rect.collidepoint(event.pos) and self.button_enabled:  
             return 'BUTTONDOWN'
         if event.type==pygame.MOUSEBUTTONUP and self.button_rect.collidepoint(event.pos) and self.button_enabled:
-            BUTTON_EVENT = pygame.USEREVENT+5+int(self.text)
+            if self.text == 'x':
+                BUTTON_EVENT= BACKBUTTON
+            elif self.text == '<-':
+                BUTTON_EVENT = ENTERBUTTON
+            else:
+                BUTTON_EVENT = pygame.USEREVENT+5+int(self.text)
             pygame.event.post(pygame.event.Event(BUTTON_EVENT))
             return 'BUTTONUP'
         else:
