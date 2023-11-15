@@ -106,7 +106,7 @@ class ViewPlugin(object):
                 app.password = self.login_view.get_input_text() 
             self.login_view.passcode_box.text=''
             self.login_view.passcode_box.txt_surface = self.login_view.passcode_box.font.render(self.login_view.passcode_box.text, True, self.login_view.passcode_box.color)
-            print('From Login',app.password) 
+            # print('From Login',app.password) 
         # win.surface.fill((255, 255, 255))
         self.login_view.update_needed = app.update_needed
         self.login_view.passcode_box.handle_event(events)
@@ -118,7 +118,7 @@ class ViewPlugin(object):
     def state_login_validate(self, cfg, app, win, events):
         # Create a way to validate username and password
         if app.find_login_event(events):
-            print('From Validate do',app.password)
+            # print('From Validate do',app.password)
             LOGGER.info("Attempting to validate password")
             login = LogIn()
             app.validated = login.authenticate(app.password)
