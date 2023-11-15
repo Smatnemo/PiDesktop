@@ -56,7 +56,7 @@ class InputBox:
         width, height = self.font.size(self.text)
         self.input_rect_border.width, self.input_rect_border.height = width+6, height+6
         self.active = False
-        self.key_pad_rect = pygame.Rect(rect)
+        self.key_pad_rect = [pygame.Rect(rect)]
         # Create input rectangle to be 2 pixels less than the input_rect_border
         self.input_rect = pygame.Rect(rect[0]+2, rect[1]+2, rect[2]-4, rect[3]-4)
         
@@ -305,16 +305,33 @@ class LoginView(object):
 
         s_3s = button((0,255,0),third_column_x_position,first_row_y_position,button_width,button_height, '3')
         self.passcode_box.key_pad_rect.append(pygame.Rect(third_column_x_position,first_row_y_position,button_width,button_height))
-        
+
         s_4s = button((0,255,0),first_column_x_position,second_row_y_position,button_width,button_height, '4')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(first_column_x_position,second_row_y_position,button_width,button_height))
+
         s_5s = button((0,255,0),second_column_x_position,second_row_y_position,button_width,button_height, '5')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(second_column_x_position,second_row_y_position,button_width,button_height))
+
         s_6s = button((0,255,0),third_column_x_position,second_row_y_position,button_width,button_height, '6')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(third_column_x_position,second_row_y_position,button_width,button_height))
+
         s_7s = button((0,255,0),first_column_x_position,third_row_y_position,button_width,button_height, '7')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(first_column_x_position,third_row_y_position,button_width,button_height))
+
         s_8s = button((0,255,0),second_column_x_position,third_row_y_position,button_width,button_height, '8')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(second_column_x_position,third_row_y_position,button_width,button_height))
+
         s_9s = button((0,255,0),third_column_x_position,third_row_y_position,button_width,button_height, '9')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(third_column_x_position,third_row_y_position,button_width,button_height))
+
         s_xs = button((0,255,0),first_column_x_position,fourth_row_y_position,button_width,button_height, 'x')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(first_column_x_position,fourth_row_y_position,button_width,button_height))
+
         s_0s = button((0,255,0),second_column_x_position,fourth_row_y_position,button_width,button_height, '0')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(second_column_x_position,fourth_row_y_position,button_width,button_height))
+
         s_enter = button((0,255,0),third_column_x_position,fourth_row_y_position,button_width,button_height, '<-')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(third_column_x_position,fourth_row_y_position,button_width,button_height))
         
 
         self.numbers = [s_1s,s_2s,s_3s,s_4s,s_5s,s_6s,s_7s,s_8s,s_9s,s_xs,s_0s,s_enter]
