@@ -314,6 +314,8 @@ class IntroWithPrintBackground(IntroBackground):
         if self.arrow_location != ARROW_HIDDEN:
             screen.blit(self.right_arrow, self.right_arrow_pos)
 
+
+
 class LoginBackground(Background):
     def __init__(self):
         Background.__init__(self, "login")
@@ -334,6 +336,8 @@ class LoginBackground(Background):
 
     def paint(self, screen):
         Background.paint(self, screen)
+
+
 
 class ChooseBackground(Background):
 
@@ -409,11 +413,55 @@ class ChooseBackground(Background):
             screen.blit(self.right_arrow, self.right_arrow_pos)
 
 
+# Today's work
+class ChooseInmateDocumentBackground(Background):
+    def __init__(self):
+        Background.__init__(self, "choose")
+        self.layout0 = None 
+        self.layout0_pos = None 
+        self.layout1 = None 
+        self.layout1_pos = None 
+
+    def resize(self, screen):
+        Background.resize(self, screen) 
+
+    def resize_texts(self):
+        """Update text Surfaces
+        """
+        rect = pygame.Rect(self._text_border, self._text_border,
+                           self._rect.width - 2 * self._text_border, self._rect.height * 0.2)
+        Background.resize_texts(self, rect)
+    
+    def paint(self, screen):
+        Background.paint(self, screen)
+
+class ChosenInmateDocumentBackground(Background):
+    def __init__(self):
+        Background.__init__(self, "choose")
+        self.layout0 = None 
+        self.layout0_pos = None 
+        self.layout1 = None
+        self.layout1_pos = None 
+
+    def resize(self, screen):
+        Background.resize(self, screen) 
+
+    def resize_texts(self):
+        """Update text Surfaces
+        """
+        rect = pygame.Rect(self._text_border, self._text_border,
+                           self._rect.width - 2 * self._text_border, self._rect.height * 0.2)
+        Background.resize_texts(self, rect)
+    
+    def paint(self, screen):
+        Background.paint(self, screen)
+
+# End of today's work
+
 
 class ChooseDocumentBackground(Background):
-    def __init__(self, documents):
+    def __init__(self):
         Background.__init__(self, "choose")
-        self.documents = documents
         self.layout0 = None
         self.layout0_pos = None
         self.layout1 = None
@@ -435,10 +483,10 @@ class ChooseDocumentBackground(Background):
 
 
 class ChosenDocumentBackground(Background):
-    def __init__(self, document, selected):
+    def __init__(self):
         Background.__init__(self, "chosen")
-        self.document = document 
-        self.selected = selected
+        # self.document = document 
+        # self.selected = selected
         self.layout = None 
         self.layout_pos = None 
     def __str__(self):
