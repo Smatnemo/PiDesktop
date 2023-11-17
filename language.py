@@ -66,6 +66,7 @@ DEFAULT = {
         'intro_print': "Or you can\nstill print\nthis photo",
         'login': "Please Log In",
         'choose': "Choose Document",
+        'No_documents': "No Documents",
         '1': "1 photo",
         '2': "2 photos",
         '3': "3 photos",
