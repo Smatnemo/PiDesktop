@@ -161,7 +161,7 @@ class ViewPlugin(object):
         LOGGER.info("Show document choice (nothing selected)")
         win.set_print_number(0, False)  # Hide printer status
         # Create logic to fetch documents from database
-        win.show_documents_choice(app.documents)
+        win.show_choices(app.documents)
         self.choose_timer.start()
 
     @LDS.hookimpl
