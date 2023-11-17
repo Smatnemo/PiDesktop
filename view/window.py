@@ -10,7 +10,7 @@ import pygame
 from pygame import gfxdraw
 from PIL import Image
 from LDS import pictures, fonts
-from LDS.view import background
+from LDS.view import background, foreground
 from LDS.utils import LOGGER
 from LDS.pictures import sizing
 from LDS.view.loginview import LoginView
@@ -78,6 +78,8 @@ class PiWindow(object):
         self._print_failure = False
         self._capture_number = (0, 4)  # (current, max)
 
+        self.documents_foreground = {}
+
         self._pos_map = {self.CENTER: self._center_pos,
                          self.RIGHT: self._right_pos,
                          self.LEFT: self._left_pos,
@@ -125,6 +127,14 @@ class PiWindow(object):
             self.surface.blit(outlines, self._pos_map[pos](outlines))
 
         return self.surface.blit(image, self._pos_map[pos](image))
+    
+    def _update_documents_foreground(self, foreground):
+        """
+        Use this if there are documents to be printed
+        """
+        self._current_documents_foreground = self.documents_foreground.setdefault(str(foreground), foreground)
+        self._current_documents_foreground.resize(self.surface)
+        self._current_documents_foreground.paint(self.surface)
 
     def _update_background(self, bkgd):
         """Show image on the background.
@@ -281,15 +291,34 @@ class PiWindow(object):
             self._update_background(background.ChooseBackground(choices, self.arrow_location, self.arrow_offset))
         else:
             self._update_background(background.ChosenBackground(choices, selected))
-    
-    def show_documents_choice(self, documents, selected=None):
-        """Show the choice view.
+
+# After log in
+    def show_choices(self, documents, selected=None):
         """
-        self._capture_number = (0, self._capture_number[1])
-        if not selected:
-            self._update_background(background.ChooseDocumentBackground(documents))
+        Show list of inmates with the number of documents each has
+        """
+        if documents:
+            if not selected:
+                self._update_background(background.ChooseInmateDocumentBackground())
+                self._update_documents_foreground(foreground.ChooseInmateDocumentBackground(documents))
+            else:
+                # This leads to the choices documents for the inmate
+                self._update_documents_foreground(background.ChosenInmateDocumentBackground(documents, selected))
         else:
-            self._update_background(background.ChosenDocumentBackground(documents, selected))
+            self._update_background(background.ChooseInmateDocumentBackground())
+            self._update_documents_foreground(foreground.NoDocumentForeground())
+
+
+# After selecting the inmate row
+    def show_documents_choice(self, documents, selected=None):
+        """Show the documents choice view.
+        """
+        if not selected:
+            self._update_background(background.ChooseDocumentBackground())
+            self._update_documents_foreground(foreground.ChooseDocumentForeground(documents))
+        else:
+            self._update_documents_foreground(foreground.ChosenDocumentForeground(documents, selected))
+
 
     def show_image(self, pil_image=None, pos=CENTER):
         """Show PIL image as it (no resize).
