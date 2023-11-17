@@ -367,7 +367,7 @@ class DataBase(object):
         self.settings['black_and_white'] = True
         self.settings['coloured'] = True
         self.settings['background'] = self.get_object(self.entity[7])
-        self.settings['documents'] = {}
+        self.settings['inmate_documents'] = {}
 
     def get_passcode(self, passcode:str):
         self.cursor.execute("SELECT passcode FROM entity WHERE passcode=(?)",(passcode,))
@@ -379,6 +379,41 @@ class DataBase(object):
         # Use the order number and decrypt key columns to get the decryption key from the database
         self.cursor.execute("SELECT decrypt_key FROM " + table_name + " WHERE decrypt_key=(?)",(decrypt_key,))
         return self.cursor.fetchone()
+    
+    def get_column(self, table_name:str, column:str):
+        self.cursor.execute("SELECT " + column + " FROM " + table_name)
+        return self.cursor.fetchall()
+
+    def get_record(self, table_name:str, column:str, column_value):
+        # Get all the records from a table where field conditions meet certain requirements
+        self.cursor.execute("SELECT * FROM " + table_name + " WHERE " + column +"=(?)",(column_value,))
+        return self.cursor.fetchall()
+    
+    def get_table(self, table_name:str):
+        self.cursor.execute("SELECT * FROM " + table_name)
+        return self.cursor.fetchall()
+
+    def get_inmate_documents(self):
+        # Query table to get inmate numbers
+        inmate_documents = {}
+        # use this on the login page
+        documents = self.get_table("Documents")
+        number_of_documents = len(documents)
+
+        # use this list to build dictionary
+        # Make this list a set
+        inmate_number_list = self.get_column("Documents", "inmate_number")
+        unique_inmate_number_list = list(set(inmate_number_list))
+        # for document in documents:
+        #     if document[9] in list(inmate_documents.keys()):
+        #         inmate_documents[document[9]].append(document)#
+        #     else:
+        #         inmate_documents[document[9]] = list((document,))
+
+        for inmate_number in unique_inmate_number_list:
+            docs = self.get_record("Documents", "inmate_number", inmate_number[0])
+            inmate_documents[inmate_number[0]] = docs
+        return inmate_documents, number_of_documents
 
     def create_tables(self):
         # create sql tables if the don't exists
