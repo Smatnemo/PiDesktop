@@ -385,8 +385,46 @@ def state_chosen_exit(cfg, app, win):
     :param app: application instance
     :param win: graphical window instance
     """
+ 
+# --- Decrypt State ------------------------------------------------------------
 
+@hookspec
+def state_decrypt_enter(win):
+    """Actions performed when application enters the login state.
+    :param win: graphical window 
+    """
 
+@hookspec
+def state_decrypt_do(app, win, events):
+    """Actions performed when application is in Login state.
+    This hook is called in a loop until the application can switch
+    to the next state.
+
+    :param app: application instance
+    :param win: graphical window instance
+    :param events: pygame events generated since last call
+    """
+
+@hookspec
+def state_decrypt_validate(cfg, app, win, events):
+    """Actions performed when user enters login details.
+    This hook is called in a loop until the user details are verified and if so
+    return the next state otherwise return None.
+
+    :param cfg: application configuration
+    :param app: application instance
+    :param win: graphical window instance
+    :param events: pygame events generated since last call
+    """
+
+@hookspec 
+def state_decrypt_exit(win):
+    """Actions performed when application exit Login state.
+
+    :param cfg: application configuration
+    :param app: application instance
+    :param win: graphical window 
+    """
 # --- Preview State ------------------------------------------------------------
 
 @hookspec
