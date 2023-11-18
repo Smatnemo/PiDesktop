@@ -171,10 +171,28 @@ class ViewPlugin(object):
             LOGGER.info("Restarting timer in choose state")
             self.choose_timer.start()
 
+        win._current_documents_foreground.inmate_documents_view.update_needed = app.update_needed
+        win.show_choices(app.documents)
 
+        event = app.find_choose_event(events)
+        if event:
+            app.inmate_number = win._current_documents_foreground.inmate_documents_view.choseninmaterow.inmate_number
+
+
+    # @LDS.hookimpl
+    # def state_choose_validate(self, cfg, app):
+    #     if app.capture_nbr:
+    #         if cfg.getfloat('WINDOW', 'chosen_delay') > 0:
+    #             return 'chosen'
+    #         else:
+    #             return 'preview'
+    #     elif self.choose_timer.is_timeout():
+    #         # once the time is reached return to wait state
+    #         return 'wait'
+        
     @LDS.hookimpl
     def state_choose_validate(self, cfg, app):
-        if app.capture_nbr:
+        if app.inmate_number:
             if cfg.getfloat('WINDOW', 'chosen_delay') > 0:
                 return 'chosen'
             else:
@@ -183,10 +201,19 @@ class ViewPlugin(object):
             # once the time is reached return to wait state
             return 'wait'
 
+    # @LDS.hookimpl
+    # def state_chosen_enter(self, cfg, app, win):
+    #     LOGGER.info("Show picture choice (%s captures selected)", app.capture_nbr)
+    #     win.show_choice(app.capture_choices, selected=app.capture_nbr)
+
+    #     # Reset timeout in case of settings changed
+    #     self.layout_timer.timeout = cfg.getfloat('WINDOW', 'chosen_delay')
+    #     self.layout_timer.start()
+
     @LDS.hookimpl
     def state_chosen_enter(self, cfg, app, win):
-        LOGGER.info("Show picture choice (%s captures selected)", app.capture_nbr)
-        win.show_choice(app.capture_choices, selected=app.capture_nbr)
+        LOGGER.info("Show chosen inmate document choice (inmate %s selected)", app.inmate_number)
+        win.show_choices(app.documents, selected=app.inmate_number)
 
         # Reset timeout in case of settings changed
         self.layout_timer.timeout = cfg.getfloat('WINDOW', 'chosen_delay')
