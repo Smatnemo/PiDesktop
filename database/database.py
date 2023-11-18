@@ -367,7 +367,7 @@ class DataBase(object):
         self.settings['black_and_white'] = True
         self.settings['coloured'] = True
         self.settings['background'] = self.get_object(self.entity[7])
-        self.settings['inmate_documents'] = self.get_inmate_documents()
+        self.settings['inmate_documents'] = self.get_inmate_documents()[0]
 
     def get_passcode(self, passcode:str):
         self.cursor.execute("SELECT passcode FROM entity WHERE passcode=(?)",(passcode,))
