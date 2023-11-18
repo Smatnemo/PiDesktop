@@ -94,6 +94,7 @@ class PiApplication:
         self._machine.add_state('login')
         self._machine.add_state('choose') # This state should be used to choose documents
         self._machine.add_state('chosen') # This state should be used after document has been chosen
+        self._machine.add_state('decrypt') # State similar to login for decrypting documents
         self._machine.add_state('preview') # This state should be used to see the chosen document
         self._machine.add_state('capture') # This state should is either for capturing signature or image to prove that the document has been received
         self._machine.add_state('processing')
