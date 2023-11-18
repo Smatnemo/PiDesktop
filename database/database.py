@@ -367,7 +367,7 @@ class DataBase(object):
         self.settings['black_and_white'] = True
         self.settings['coloured'] = True
         self.settings['background'] = self.get_object(self.entity[7])
-        self.settings['inmate_documents'] = {}
+        self.settings['inmate_documents'] = self.get_inmate_documents()
 
     def get_passcode(self, passcode:str):
         self.cursor.execute("SELECT passcode FROM entity WHERE passcode=(?)",(passcode,))
@@ -394,6 +394,7 @@ class DataBase(object):
         return self.cursor.fetchall()
 
     def get_inmate_documents(self):
+        self.open()
         # Query table to get inmate numbers
         inmate_documents = {}
         # use this on the login page
@@ -413,6 +414,7 @@ class DataBase(object):
         for inmate_number in unique_inmate_number_list:
             docs = self.get_record("Documents", "inmate_number", inmate_number[0])
             inmate_documents[inmate_number[0]] = docs
+        self.close()
         return inmate_documents, number_of_documents
 
     def create_tables(self):
