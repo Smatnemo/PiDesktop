@@ -64,7 +64,7 @@ DEFAULT = {
     'en': {
         'intro': "Legal Document System",
         'intro_print': "Or you can\nstill print\nthis photo",
-        'login': "Please Log In",
+        'login': "Please Unlock",
         'choose': "Choose Document",
         'No_documents': "No Documents",
         '1': "1 photo",
