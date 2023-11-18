@@ -24,11 +24,13 @@ from LDS.counters import Counters
 from LDS.utils import (LOGGER, PoolingTimer, configure_logging, get_crash_message,
                            set_logging_level, get_event_pos)
 from LDS.view.window import PiWindow
+from LDS.view.documentsview import CHOSEEVENT
 from LDS.view import LOGINEVENT
 from LDS.states import StatesMachine
 from LDS.plugins import create_plugin_manager
 from LDS.printer import PRINTER_TASKS_UPDATED, Printer
 from LDS.config import PiConfigParser, PiConfigMenu
+
 
 # Try importing pyvidplayer2
 try: 
@@ -107,7 +109,10 @@ class PiApplication:
         self.capture_nbr = None
         self.capture_date = None
         self.capture_choices = (4, 1)
-        self.documents = self.settings['documents']
+
+        self.inmate_number = None
+        self.chosen_document = None
+        self.documents = self.settings['inmate_documents']
         # self.db_capture_choices = (6, 4, 2, 1)
         self.previous_picture = None
         self.previous_animated = None
@@ -252,6 +257,12 @@ class PiApplication:
                     event.key = pygame.K_LEFT
                 else:
                     event.key = pygame.K_RIGHT
+                return event
+        return None
+    
+    def find_choose_event(self, events):
+        for event in events:
+            if event.type == CHOSEEVENT:
                 return event
         return None
 
