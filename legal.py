@@ -122,6 +122,7 @@ class PiApplication:
         self.password = ''
         self.validated = None 
         self.update_needed = None
+        self.decrypt_key = None
 
 
         self.count = Counters(self._config.join_path("counters.pickle"),
