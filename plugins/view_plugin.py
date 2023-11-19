@@ -231,6 +231,9 @@ class ViewPlugin(object):
         win._current_documents_foreground.document_view.update_needed = app.update_needed
         win.show_choices(app.documents, selected=app.inmate_number)
 
+        # update for backbutton
+        win._current_background.backbutton.draw(app.update_needed)
+
         event = app.find_choose_event(events)
         if event:
             app.chosen_document = win._current_documents_foreground.document_view.chosendocumentrow.document
