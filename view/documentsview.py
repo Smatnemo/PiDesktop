@@ -83,11 +83,15 @@ class DocumentRow(object):
         self.document_rect = None
         self.row_height = 60
         self.row_num = row_number
-        self.document_name = "Document"+str(self.row_num+1)
+        self.document_name = "Document"+str(document[9])+str(self.row_num+1)
+        # Change logic to write out the statement relating in the third column
         self.status = document[-1]
         self.row_text_size = 32
         self.row_text_color = BLACK
         self.font = pygame.font.Font('freesansbold.ttf', self.row_text_size)
+        self.document = document
+        self.chosen = False
+        
 
     def draw(self, foreground_rect, screen, event):
         self.document_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
@@ -128,6 +132,7 @@ class DocumentRow(object):
             return 'BUTTONDOWN'
         if event.type==pygame.MOUSEBUTTONUP and self.document_rect.collidepoint(event.pos):
             pygame.event.post(pygame.event.Event(CHOSEEVENT))
+            self.chosen = True
             return 'BUTTONUP'
         else:
             return None
@@ -139,11 +144,19 @@ class DocumentsView(object):
         self.inmate_documents = inmate_documents
         documents = inmate_documents[selected]
         self.document_rows = [DocumentRow(document, doc_num) for doc_num, document in enumerate(documents)]
+        self.update_needed = None
+        self.chosendocumentrow = None 
     
     def draw(self, foreground_rect, screen):
         for document_row in self.document_rows:
-            document_row.draw(foreground_rect, screen)
+            document_row.draw(foreground_rect, screen, self.update_needed)
 
+    def update(self):
+        # When button is clicked, return the inmate number
+        for row in self.document_rows:
+            if row.chosen == True:
+                self.chosendocumentrow = row
+                row.chosen = False
 
 class InmateDocumentsView(object):
     def __init__(self, inmate_documents):
