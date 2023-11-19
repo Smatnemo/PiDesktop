@@ -444,8 +444,29 @@ class ChosenInmateDocumentBackground(Background):
         self.layout1 = None
         self.layout1_pos = None 
 
+        self.backbutton = None
+        self.backbutton_width = 200
+        self.backbutton_height = 38
+
+        
+        self.backbutton_enabled = True
+        self.backbutton_event = pygame.USEREVENT + 17
+
+
+        self.update_needed = None
+
     def resize(self, screen):
         Background.resize(self, screen) 
+
+        #  Create parameters for button 
+        self._rect = screen.get_rect()
+        self.backbutton_x = self._rect.x+60
+        self.backbutton_y = self._rect.y+60  
+
+        if self.backbutton_enabled:
+            self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
+            self.backbutton.enabled(True)
+            self.backbutton_enabled = False
 
     def resize_texts(self):
         """Update text Surfaces
@@ -456,6 +477,7 @@ class ChosenInmateDocumentBackground(Background):
     
     def paint(self, screen):
         Background.paint(self, screen)
+        self.backbutton.draw(self.update_needed)
 
 
 
@@ -468,6 +490,7 @@ class ChosenBackground(Background):
         self.selected = selected
         self.layout = None
         self.layout_pos = None
+
 
     def __str__(self):
         """Return background final name.
