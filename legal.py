@@ -51,6 +51,9 @@ except BadPinFactory:
 
 BUTTONDOWN = pygame.USEREVENT + 1
 
+BACKBUTTON = pygame.USEREVENT + 17
+NEXTBUTTON = pygame.USEREVENT + 18 
+
 
 class PiApplication:
 
@@ -267,6 +270,12 @@ class PiApplication:
             if event.type == CHOSEEVENT:
                 return event
         return None
+    
+    def find_next_back_event(self, events):
+        for event in events:
+            if event.type == BACKBUTTON or event.type == NEXTBUTTON:
+                return event 
+        return None 
 
     def find_capture_event(self, events):
         """Return the first found event if found in the list.
