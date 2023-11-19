@@ -177,47 +177,34 @@ class ViewPlugin(object):
         win._current_documents_foreground.inmate_documents_view.update_needed = app.update_needed
         win.show_choices(app.documents)
 
+        # update for backbutton
+        win._current_background.backbutton.draw(app.update_needed)
+
         event = app.find_choose_event(events)
         if event:
             app.inmate_number = win._current_documents_foreground.inmate_documents_view.choseninmaterow.inmate_number
-
-
-    # @LDS.hookimpl
-    # def state_choose_validate(self, cfg, app):
-    #     if app.capture_nbr:
-    #         if cfg.getfloat('WINDOW', 'chosen_delay') > 0:
-    #             return 'chosen'
-    #         else:
-    #             return 'preview'
-    #     elif self.choose_timer.is_timeout():
-    #         # once the time is reached return to wait state
-    #         return 'wait'
-        
+   
     @LDS.hookimpl
-    def state_choose_validate(self, cfg, app):
-        if app.inmate_number:
-            if cfg.getfloat('WINDOW', 'chosen_delay') > 0:
-                return 'chosen'
-            else:
-                return 'preview'
+    def state_choose_validate(self, cfg, app, events):
+        if app.find_next_back_event(events):
+            return 'login'
+        elif app.inmate_number:
+            return 'chosen'
         elif self.choose_timer.is_timeout():
             # once the time is reached return to wait state
             return 'wait'
+        
 
-    # @LDS.hookimpl
-    # def state_chosen_enter(self, cfg, app, win):
-    #     LOGGER.info("Show picture choice (%s captures selected)", app.capture_nbr)
-    #     win.show_choice(app.capture_choices, selected=app.capture_nbr)
-
-    #     # Reset timeout in case of settings changed
-    #     self.layout_timer.timeout = cfg.getfloat('WINDOW', 'chosen_delay')
-    #     self.layout_timer.start()
+    @LDS.hookimpl
+    def state_choose_exit(self, app):
+        # app.inmate_number = None
+        pass
+        
 
     @LDS.hookimpl
     def state_chosen_enter(self, cfg, app, win):
         LOGGER.info("Show chosen inmate document choice (inmate %s selected)", app.inmate_number)
         win.show_choices(app.documents, selected=app.inmate_number)
-
         # Reset timeout in case of settings changed
         self.choose_timer.start()
 
@@ -239,17 +226,24 @@ class ViewPlugin(object):
             app.chosen_document = win._current_documents_foreground.document_view.chosendocumentrow.document
 
     @LDS.hookimpl
-    def state_chosen_validate(self, app):
-        if app.chosen_document:
+    def state_chosen_validate(self, app, win, events):
+        if app.find_next_back_event(events):
+            app.inmate_number = None
+            app.chosen_document = None
+            # Drop cached foreground
+            win.documents_foreground = {}
+            return 'choose'
+        elif app.chosen_document:
             return 'decrypt'
         elif self.choose_timer.is_timeout():
             return 'preview'
         
+        
     @LDS.hookimpl
-    def state_chosen_exit(self, win):
+    def state_chosen_exit(self, app):
         # Exit the chosen state
-        # save chosen before exiting
-        win.show_image(None)
+        pass
+
 
     @LDS.hookimpl
     def state_decrypt_enter(self, win):
