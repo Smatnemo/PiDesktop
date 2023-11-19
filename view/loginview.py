@@ -16,7 +16,7 @@ FONT = pygame.font.Font('freesansbold.ttf', 20)
 
 
 LOGINEVENT = pygame.USEREVENT + 3
-BACKBUTTON = pygame.USEREVENT + 4
+CLEARBUTTON = pygame.USEREVENT + 4
 BUTTON_0 = pygame.USEREVENT + 5
 BUTTON_1 = pygame.USEREVENT + 6
 BUTTON_2 = pygame.USEREVENT + 7
@@ -74,7 +74,7 @@ class InputBox:
 
     def handle_event(self, events):
         for event in events:
-            if event.type >= BACKBUTTON: 
+            if event.type >= CLEARBUTTON: 
                 if self.active:
                     button_event, input_text = self.check_event(event)
                     if button_event:
@@ -86,7 +86,7 @@ class InputBox:
                         pygame.event.post(pygame.event.Event(LOGINEVENT))
                         self.input_text = self.text
                         self.text = ''
-                    elif event.type==BACKBUTTON:
+                    elif event.type==CLEARBUTTON:
                         self.text = self.text[:-1]
                     
                 # Render updated text on text surface
@@ -286,7 +286,7 @@ class button(object):
             return 'BUTTONDOWN'
         if event.type==pygame.MOUSEBUTTONUP and self.button_rect.collidepoint(event.pos) and self.button_enabled:
             if self.text == 'x':
-                BUTTON_EVENT= BACKBUTTON
+                BUTTON_EVENT= CLEARBUTTON
             elif self.text == '<-':
                 BUTTON_EVENT = ENTERBUTTON
             else:
