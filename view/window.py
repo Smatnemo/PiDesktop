@@ -300,10 +300,10 @@ class PiWindow(object):
         if documents:
             if not selected:
                 self._update_background(background.ChooseInmateDocumentBackground())
-                self._update_documents_foreground(foreground.ChooseInmateDocumentBackground(documents))
+                self._update_documents_foreground(foreground.ChooseInmateDocumentForeground(documents))
             else:
                 # This leads to the choices documents for the inmate
-                self._update_documents_foreground(background.ChosenInmateDocumentBackground(documents, selected))
+                self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, selected))
         else:
             self._update_background(background.ChooseInmateDocumentBackground())
             self._update_documents_foreground(foreground.NoDocumentForeground())
