@@ -48,7 +48,7 @@ class InputBox:
         self.text_field_color = WHITE
         self.font_size = 32
         self.text = input_text
-        self.max_input_length = 5
+        self.max_input_length = 10
         self.label = label
         self.input_text = ''
         if not parent:
