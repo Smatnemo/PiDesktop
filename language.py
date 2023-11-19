@@ -67,6 +67,7 @@ DEFAULT = {
         'login': "Please Unlock",
         'choose': "Choose Document",
         'No_documents': "No Documents",
+        'decrypt': "Enter Decryption Key",
         '1': "1 photo",
         '2': "2 photos",
         '3': "3 photos",
