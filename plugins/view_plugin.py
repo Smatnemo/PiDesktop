@@ -271,6 +271,10 @@ class ViewPlugin(object):
             # print('From Login',app.password) 
         # win.surface.fill((255, 255, 255))
         self.decrypt_view.update_needed = app.update_needed
+
+        # update for backbutton
+        win._current_background.backbutton.draw(app.update_needed)
+
         self.decrypt_view.passcode_box.handle_event(events)
         self.decrypt_view.draw(win.surface)
 
@@ -287,6 +291,10 @@ class ViewPlugin(object):
                 app.chosen_document = None
                 return 'chosen'
             # Write code to return to previous state if the last state was not choose
+
+        elif app.find_next_back_event(events):
+            app.chosen_document = None
+            return 'chosen'
         elif self.choose_timer.is_timeout():    
             return 'wait'
 
