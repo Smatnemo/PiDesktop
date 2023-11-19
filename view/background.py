@@ -414,29 +414,29 @@ class ChooseBackground(Background):
             screen.blit(self.right_arrow, self.right_arrow_pos)
 
 
-# Today's work
-class ChooseInmateDocumentBackground(Background):
-    def __init__(self):
-        Background.__init__(self, "choose")
-        self.layout0 = None 
-        self.layout0_pos = None 
-        self.layout1 = None 
-        self.layout1_pos = None 
+# # Today's work
+# class ChooseInmateDocumentBackground(Background):
+#     def __init__(self):
+#         Background.__init__(self, "choose")
+#         self.layout0 = None 
+#         self.layout0_pos = None 
+#         self.layout1 = None 
+#         self.layout1_pos = None 
 
-    def resize(self, screen):
-        Background.resize(self, screen) 
+#     def resize(self, screen):
+#         Background.resize(self, screen) 
 
-    def resize_texts(self):
-        """Update text Surfaces
-        """
-        rect = pygame.Rect(self._text_border, self._text_border,
-                           self._rect.width - 2 * self._text_border, self._rect.height * 0.2)
-        Background.resize_texts(self, rect)
+#     def resize_texts(self):
+#         """Update text Surfaces
+#         """
+#         rect = pygame.Rect(self._text_border, self._text_border,
+#                            self._rect.width - 2 * self._text_border, self._rect.height * 0.2)
+#         Background.resize_texts(self, rect)
     
-    def paint(self, screen):
-        Background.paint(self, screen)
+#     def paint(self, screen):
+#         Background.paint(self, screen)
 
-class ChosenInmateDocumentBackground(Background):
+class ChooseInmateDocumentBackground(Background):
     def __init__(self):
         Background.__init__(self, "choose")
         self.layout0 = None 
@@ -460,8 +460,8 @@ class ChosenInmateDocumentBackground(Background):
 
         #  Create parameters for button 
         self._rect = screen.get_rect()
-        self.backbutton_x = self._rect.x+60
-        self.backbutton_y = self._rect.y+60  
+        self.backbutton_x = self._rect.x+10
+        self.backbutton_y = self._rect.y+10  
 
         if self.backbutton_enabled:
             self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
