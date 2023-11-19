@@ -438,4 +438,5 @@ class PiWindow(object):
         """
         self._current_background = None
         self._current_foreground = None
+        self._current_documents_foreground = None
         self._buffered_images = {}
