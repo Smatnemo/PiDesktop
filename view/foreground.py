@@ -3,7 +3,7 @@ import pygame
 
 from LDS.language import get_translated_text
 from LDS.view.background import multiline_text_to_surfaces
-from LDS.view import documentsview
+from LDS.view.documentsview import InmateDocumentsView, DocumentsView
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -55,13 +55,34 @@ class ChooseInmateDocumentForeground(Foreground):
     """
     def __init__(self, inmate_documents):
         Foreground.__init__(self, "choose_inmate")
-        self.inmate_documents = inmate_documents 
+        # inmate_documents argument is a tuple
+        self.inmate_documents_view = InmateDocumentsView(inmate_documents) 
+        
+
+    def resize(self, screen):
+        Foreground.resize(self, screen)
+
+    def paint(self, screen):
+        Foreground.paint(self, screen)
+        self.inmate_documents_view.draw(self.foreground_rect, screen)
+        self.inmate_documents_view.update()
+
+        
 
 
 class ChosenInmateDocumentForeground(Foreground):
-    def __init__(self, selected_inmate, inmate_documents):
+    def __init__(self, inmate_documents, selected_inmate):
         Foreground.__init__(self, "chosen_inmate")
-        self.selected_imate_documents = inmate_documents[selected_inmate]
+        # self.selected_inmate_documents = inmate_documents[selected_inmate]
+        self.document_view = DocumentsView(inmate_documents, selected_inmate)
+
+    def resize(self, screen):
+        Foreground.resize(self, screen)
+
+    def paint(self, screen):
+        Foreground.paint(self, screen)
+        self.document_view.draw(self.foreground_rect, screen)
+        self.document_view.update()
 
 
 class ChooseDocumentForeground(Foreground):
