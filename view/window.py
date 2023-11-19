@@ -285,6 +285,7 @@ class PiWindow(object):
     def show_decrypt(self):
         self._update_background(background.DecryptBackground())
         lv = LoginView(self.surface)
+        # Write logic to paint button on on screen surface
         return lv
         
 
@@ -308,6 +309,7 @@ class PiWindow(object):
                 self._update_documents_foreground(foreground.ChooseInmateDocumentForeground(documents))
             else:
                 # This leads to the choices documents for the inmate
+                self._update_background(background.ChooseInmateDocumentBackground())
                 self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, selected))
         else:
             self._update_background(background.ChooseInmateDocumentBackground())
@@ -315,14 +317,6 @@ class PiWindow(object):
 
 
 # After selecting the inmate row
-    def show_documents_choice(self, documents, selected=None):
-        """Show the documents choice view.
-        """
-        if not selected:
-            self._update_background(background.ChooseDocumentBackground())
-            self._update_documents_foreground(foreground.ChooseDocumentForeground(documents))
-        else:
-            self._update_documents_foreground(foreground.ChosenDocumentForeground(documents, selected))
 
 
     def show_image(self, pil_image=None, pos=CENTER):
