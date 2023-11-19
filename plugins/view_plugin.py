@@ -26,6 +26,9 @@ class ViewPlugin(object):
         # Seconds to display the selected layout
         self.finish_timer = PoolingTimer(1)
 
+        self.login_view = None 
+        self.decrypt_view = None
+
     @LDS.hookimpl
     def state_failsafe_enter(self, win):
         win.show_oops()
@@ -216,14 +219,81 @@ class ViewPlugin(object):
         win.show_choices(app.documents, selected=app.inmate_number)
 
         # Reset timeout in case of settings changed
-        self.layout_timer.timeout = cfg.getfloat('WINDOW', 'chosen_delay')
-        self.layout_timer.start()
+        self.choose_timer.start()
 
     @LDS.hookimpl
-    def state_chosen_validate(self):
-        if self.layout_timer.is_timeout():
+    def state_chosen_do(self, app, win, events):
+        if events:
+            # If there is any event restart timer
+            LOGGER.info("Restarting timer in chosen state")
+            self.choose_timer.start()
+
+        win._current_documents_foreground.document_view.update_needed = app.update_needed
+        win.show_choices(app.documents, selected=app.inmate_number)
+
+        event = app.find_choose_event(events)
+        if event:
+            app.chosen_document = win._current_documents_foreground.document_view.chosendocumentrow.document
+
+    @LDS.hookimpl
+    def state_chosen_validate(self, app):
+        if app.chosen_document:
+            return 'decrypt'
+        elif self.choose_timer.is_timeout():
             return 'preview'
         
+    @LDS.hookimpl
+    def state_chosen_exit(self, win):
+        # Exit the chosen state
+        # save chosen before exiting
+        win.show_image(None)
+
+    @LDS.hookimpl
+    def state_decrypt_enter(self, win):
+        LOGGER.info("Entered the decrypt state")
+        # win.surface.fill((255,255,255))
+        self.decrypt_view = win.show_login() # Create a function in window module to display login page
+        # write code to query database and reveal the number of documents downloaded that are yet to be printed
+        # Find way to display it in the login window during login in activity
+        self.choose_timer.start()
+
+    @LDS.hookimpl
+    def state_decrypt_do(self, app, win, events):
+        if events:
+            self.choose_timer.start()
+        if app.find_login_event(events):
+            if self.decrypt_view.passcode_box.input_text != '':
+                app.decrypt_key = self.decrypt_view.passcode_box.input_text 
+            else:
+                app.decrypt_key = self.decrypt_view.get_input_text() 
+            self.decrypt_view.passcode_box.text=''
+            self.decrypt_view.passcode_box.txt_surface = self.decrypt_view.passcode_box.font.render(self.decrypt_view.passcode_box.text, True, self.decrypt_view.passcode_box.color)
+            # print('From Login',app.password) 
+        # win.surface.fill((255, 255, 255))
+        self.decrypt_view.update_needed = app.update_needed
+        self.decrypt_view.passcode_box.handle_event(events)
+        self.decrypt_view.draw(win.surface)
+
+    @LDS.hookimpl
+    def state_decrypt_validate(self, cfg, app, win, events):
+        # Create a way to compare decrypt key entered by the user and the one in the document
+        if app.find_login_event(events) and app.chosen_document and app.decrypt_key:
+            # print('From Validate do',app.password)
+            LOGGER.info("Attempting to validate decrypt_key, decrypt_key:{}, with decrypt_key from chosen document:{}".format(app.decrypt_key, app.chosen_document[7]))
+            app.validated = app.chosen_document[7] == app.decrypt_key
+            LOGGER.info(app.validated)
+            if app.validated:
+                app.validated = None
+                app.chosen_document = None
+                return 'chosen'
+            # Write code to return to previous state if the last state was not choose
+        elif self.choose_timer.is_timeout():    
+            return 'wait'
+
+    @LDS.hookimpl 
+    def state_decrypt_exit(self, win):
+        pass
+
     @LDS.hookimpl
     def state_preview_enter(self, app, win):
         self.count += 1
