@@ -281,6 +281,11 @@ class PiWindow(object):
         # Find logic to display login
         lv = LoginView(self.surface)
         return lv
+    
+    def show_decrypt(self):
+        self._update_background(background.DecryptBackground())
+        lv = LoginView(self.surface)
+        return lv
         
 
     def show_choice(self, choices, selected=None):
