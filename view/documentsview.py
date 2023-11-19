@@ -135,9 +135,6 @@ class DocumentRow(object):
         screen.blit(self.text_surface(self.status), (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
 
 
-        
-
-
     def text_surface(self, text):
         text = str(text)
         text_surface = self.font.render(text, True, self.row_text_color)
