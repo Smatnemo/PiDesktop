@@ -8,7 +8,7 @@ BLACK = (0, 0, 0)
 CHOSEEVENT = pygame.USEREVENT + 16
 
 class InmateRow(object):
-    def __init__(self, inmate_number, documents, row_number):
+    def __init__(self, inmate_number=None, documents:list=None, row_number:int=0):
 
         self.documents = documents
         self.row_height = 60
@@ -20,11 +20,20 @@ class InmateRow(object):
         self.row_num = row_number 
         self.row_num_coord = None
 
-        self.num = len(documents)
+        if documents:
+            self.num = len(documents)
+            self.row_num = row_number + 1
         self.num_coord = None
 
         self.inmate_number = inmate_number 
         self.inmate_num_coord = None
+
+        self.row_num_text = row_number + 1
+
+        if not self.inmate_number:
+            self.inmate_number = "Inmate Number"
+            self.num = "Document count"
+            self.row_num_text = "S/N"
 
         self.chosen = False
 
@@ -33,20 +42,22 @@ class InmateRow(object):
 
     def draw(self, foreground_rect, screen, event):
         self.inmate_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
-        # pygame.draw.rect(screen, 'dark gray', self.inmate_rect)
         
-        if self.hovered(event):
-            pygame.draw.rect(screen, 'dark gray', self.inmate_rect)
-            clicked = self.clicked(event)
-            if clicked == 'BUTTONDOWN':
-                pygame.draw.rect(screen, 'black', self.inmate_rect)
-            elif clicked == 'BUTTONUP':
+        if self.documents:
+            if self.hovered(event):
                 pygame.draw.rect(screen, 'dark gray', self.inmate_rect)
-        else:
-            pygame.draw.rect(screen, 'light gray', self.inmate_rect)
+                clicked = self.clicked(event)
+                if clicked == 'BUTTONDOWN':
+                    pygame.draw.rect(screen, 'black', self.inmate_rect)
+                elif clicked == 'BUTTONUP':
+                    pygame.draw.rect(screen, 'dark gray', self.inmate_rect)
+            else:
+                pygame.draw.rect(screen, 'light gray', self.inmate_rect)
+
+        pygame.draw.rect(screen, 'black', self.inmate_rect, 2)
         
-        screen.blit(self.text_surface(self.row_num+1), (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
-        screen.blit(self.text_surface(self.inmate_number), (foreground_rect.x+54, foreground_rect.y+60*(self.row_num)+14))
+        screen.blit(self.text_surface(self.row_num_text), (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
+        screen.blit(self.text_surface(self.inmate_number), (foreground_rect.x+204, foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.num), (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
 
     def text_surface(self, text):
@@ -79,36 +90,52 @@ class InmateRow(object):
 
 
 class DocumentRow(object):
-    def __init__(self, document:tuple, row_number:int):
+    def __init__(self, document:tuple=None, row_number:int=0):
         self.document_rect = None
         self.row_height = 60
         self.row_num = row_number
-        self.document_name = "Document"+str(document[9])+str(self.row_num+1)
+        self.row_num_text = "S/N"
+        self.document_name = "Document Name"
+        self.status = "Status"
+        if document:
+            self.document_name = "Document"+str(document[9])+str(self.row_num+1)
+            self.status = document[-1]
+            self.row_num = row_number + 1
+            self.row_num_text = self.row_num
+            
+        self.document = document
+
         # Change logic to write out the statement relating in the third column
-        self.status = document[-1]
         self.row_text_size = 32
         self.row_text_color = BLACK
         self.font = pygame.font.Font('freesansbold.ttf', self.row_text_size)
-        self.document = document
+        
         self.chosen = False
         
 
     def draw(self, foreground_rect, screen, event):
         self.document_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
-
-        if self.hovered(event):
-            pygame.draw.rect(screen, 'dark gray', self.document_rect)
-            clicked = self.clicked(event)
-            if clicked == 'BUTTONDOWN':
-                pygame.draw.rect(screen, 'black', self.document_rect)
-            elif clicked == 'BUTTONUP':
+        
+        if self.document:
+            if self.hovered(event):
                 pygame.draw.rect(screen, 'dark gray', self.document_rect)
-        else:
-            pygame.draw.rect(screen, 'light gray', self.document_rect)
+                
+                clicked = self.clicked(event)
+                if clicked == 'BUTTONDOWN':
+                    pygame.draw.rect(screen, 'black', self.document_rect)
+                elif clicked == 'BUTTONUP':
+                    pygame.draw.rect(screen, 'dark gray', self.document_rect)
+            else:
+                pygame.draw.rect(screen, 'light gray', self.document_rect)
 
-        screen.blit(self.text_surface(self.row_num+1), (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
-        screen.blit(self.text_surface(self.document_name), (foreground_rect.x+54, foreground_rect.y+60*(self.row_num)+14))
+        pygame.draw.rect(screen, 'black', self.document_rect, 2) 
+        
+        screen.blit(self.text_surface(self.row_num_text), (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
+        screen.blit(self.text_surface(self.document_name), (foreground_rect.x+204, foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.status), (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
+
+
+        
 
 
     def text_surface(self, text):
@@ -146,6 +173,8 @@ class DocumentsView(object):
         self.document_rows = [DocumentRow(document, doc_num) for doc_num, document in enumerate(documents)]
         self.update_needed = None
         self.chosendocumentrow = None 
+        self.titlerow = DocumentRow()
+        self.document_rows.insert(0, self.titlerow)
     
     def draw(self, foreground_rect, screen):
         for document_row in self.document_rows:
@@ -164,6 +193,8 @@ class InmateDocumentsView(object):
         self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number) for row_number, inmate_number in enumerate(self.inmate_numbers)]
         self.update_needed = None
         self.choseninmaterow = None
+        self.titlerow = InmateRow()
+        self.inmate_rows.insert(0, self.titlerow)
 
     def draw(self, foreground_rect, screen):
         for inmate_row in self.inmate_rows:
