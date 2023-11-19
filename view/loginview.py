@@ -41,14 +41,14 @@ BLACK = (0, 0, 0)
 
 class InputBox:
 
-    def __init__(self, rect:tuple, label='label',input_text='', parent=None):
+    def __init__(self, rect:tuple, label='label',input_text='', input_text_length=10, parent=None):
         self.input_rect_border = pygame.Rect(rect)
         self.border_color = COLOR_INACTIVE
         self.color = COLOR_INACTIVE
         self.text_field_color = WHITE
         self.font_size = 32
         self.text = input_text
-        self.max_input_length = 10
+        self.max_input_length = input_text_length
         self.label = label
         self.input_text = ''
         if not parent:
