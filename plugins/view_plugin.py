@@ -252,7 +252,7 @@ class ViewPlugin(object):
     def state_decrypt_enter(self, win):
         LOGGER.info("Entered the decrypt state")
         # win.surface.fill((255,255,255))
-        self.decrypt_view = win.show_decrpt() # Create a function in window module to display login page
+        self.decrypt_view = win.show_decrypt() # Create a function in window module to display login page
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         # Find way to display it in the login window during login in activity
         self.choose_timer.start()
