@@ -317,8 +317,6 @@ class PiWindow(object):
 
 
 # After selecting the inmate row
-
-
     def show_image(self, pil_image=None, pos=CENTER):
         """Show PIL image as it (no resize).
         """
