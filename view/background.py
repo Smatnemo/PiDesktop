@@ -512,24 +512,25 @@ class DecryptBackground(Background):
         self.backbutton = None
         self.backbutton_width = 200
         self.backbutton_height = 38
-        self.backbutton_y = None 
-        self.backbutton_x = None
-        self.screen = None
 
-        self.backbutton_event = pygame.USEREVENT + 1
-
-        self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, 38), self.backbutton_event, label='<BACK', parent=self.screen)
-        self.backbutton.enabled(True)
+        
+        self.backbutton_enabled = True
+        self.backbutton_event = pygame.USEREVENT + 17
 
         self.update_needed = None
         
     def resize(self, screen):
-        Background.resize(self, screen)  
+        Background.resize(self, screen)
+
         #  Create parameters for button 
         self._rect = screen.get_rect()
         self.backbutton_x = self._rect.x+60
-        self.backbutton_y = self._rect.height-120
-        self.screen = screen 
+        self.backbutton_y = self._rect.height-120  
+
+        if self.backbutton_enabled:
+            self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
+            self.backbutton.enabled(True)
+            self.backbutton_enabled = False
         
 
     def resize_texts(self):
@@ -542,6 +543,7 @@ class DecryptBackground(Background):
     def paint(self, screen):
         Background.paint(self, screen)
         self.backbutton.draw(self.update_needed)
+        
 
 
 
