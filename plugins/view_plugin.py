@@ -130,7 +130,7 @@ class ViewPlugin(object):
             LOGGER.info(app.validated)
             if app.validated:
                 app.validated = None
-                return app.previous_state if app.previous_state != 'wait' or app.previous_state is not None else 'choose'
+                return app.previous_state if app.previous_state != 'wait' and app.previous_state is not None else 'choose'
             # Write code to return to previous state if the last state was not choose
         elif self.choose_timer.is_timeout():    
             return 'wait'
