@@ -58,6 +58,7 @@ class ChooseInmateDocumentForeground(Foreground):
         Foreground.__init__(self, "choose_inmate")
         # inmate_documents argument is a tuple
         self.inmate_documents_view = InmateDocumentsView(inmate_documents) 
+        # Make sure that drawn inmates documents view should stop at 10 pixels before the button 
         
         self.previousbutton = None
         self.previousbutton_width = 200
@@ -77,12 +78,13 @@ class ChooseInmateDocumentForeground(Foreground):
     def resize(self, screen):
         Foreground.resize(self, screen)
 
-        #  Create parameters for button 
+        #  Create parameters for button
+        self._rect = screen.get_rect() 
         self.nextbutton_x = self.foreground_rect.x+10
-        self.nextbutton_y = screen.height-70  
+        self.nextbutton_y = self._rect.height-150  
 
         self.previousbutton_x = self.foreground_rect.width - 210
-        self.previousbutton_y = screen.height-70
+        self.previousbutton_y = self._rect.height-150
 
         if self.button_enabled:
             self.previousbutton = PushButton((self.previousbutton_x, self.previousbutton_y, self.previousbutton_width, self.previousbutton_height), self.previousbutton_event, label='PREVIOUS', parent=screen)
