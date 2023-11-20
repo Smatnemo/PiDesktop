@@ -54,6 +54,8 @@ BUTTONDOWN = pygame.USEREVENT + 1
 BACKBUTTON = pygame.USEREVENT + 17
 NEXTBUTTON = pygame.USEREVENT + 18 
 
+LOCKSCREEN = pygame.USEREVENT + 19
+
 
 class PiApplication:
 
@@ -193,8 +195,11 @@ class PiApplication:
         return None
 
             
-    def find_logout_event(self, events):
-        pass
+    def find_lockscreen_event(self, events):
+        for event in events:
+            if event.type == LOCKSCREEN:
+                return event
+        return None
 
     def find_print_event(self, events):
         """Return the first found event if found in the list.
