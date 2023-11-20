@@ -278,7 +278,9 @@ class PiApplication:
     
     def find_next_back_event(self, events):
         for event in events:
-            if event.type == BACKBUTTON or event.type == NEXTBUTTON:
+            if event.type == BACKBUTTON:
+                return event
+            if event.type == NEXTBUTTON:
                 return event 
         return None 
 
