@@ -52,6 +52,7 @@ class InputBox:
         self.label = label
         self.input_text = ''
         if hide_text:
+            self.hide_text = hide_text
             self.hidden_input_text = ''
         if not parent:
             self.iniScreen()
@@ -84,12 +85,16 @@ class InputBox:
                         self.text = self.text
                     else:
                         self.text = self.text + input_text
+                        if self.hide_text:
+                            self.hidden_input_text += '*'
                 elif event.type == ENTERBUTTON:
                     pygame.event.post(pygame.event.Event(LOGINEVENT))
                     self.input_text = self.text
                     self.text = ''
                 elif event.type==CLEARBUTTON:
                     self.text = self.text[:-1]
+                    if self.hide_text:
+                        self.hidden_input_text = self.hidden_input_text[:-1]
                     
                 # Render updated text on text surface
                 if self.hidden_input_text:
@@ -119,14 +124,20 @@ class InputBox:
                     self.text = ''
                 elif event.key == pygame.K_BACKSPACE:
                     self.text = self.text[:-1] 
+                    if self.hide_text:
+                        self.hidden_input_text = self.hidden_input_text[:-1]
                 else:
                     if len(self.text) >= self.max_input_length:
                         self.text = self.text
                     else:
                         self.text += event.unicode
+                        if self.hide_text:
+                            self.hidden_input_text += '*'
                 # Re-render the text.
-                
-                self.txt_surface = self.font.render(self.text, True, self.color)
+                if self.hidden_input_text:
+                    self.txt_surface = self.font.render(self.hidden_input_text, True, self.color)
+                else:
+                    self.txt_surface = self.font.render(self.text, True, self.color)
 
     def check_event(self, event):
         for text,button in enumerate(button_events):
