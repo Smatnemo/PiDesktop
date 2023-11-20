@@ -177,9 +177,11 @@ class ViewPlugin(object):
         win._current_documents_foreground.inmate_documents_view.update_needed = app.update_needed
         win.show_choices(app.documents)
 
-        # update for backbutton
+        # update for buttona
         win._current_background.backbutton.draw(app.update_needed)
         win._current_background.lockbutton.draw(app.update_needed)
+        win._current_documents_foreground.nextbutton.draw(app.update_needed)
+        win._current_documents_foreground.previousbutton.draw(app.update_needed)
 
         event = app.find_choose_event(events)
         if event:
