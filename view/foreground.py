@@ -4,6 +4,7 @@ import pygame
 from LDS.language import get_translated_text
 from LDS.view.background import multiline_text_to_surfaces
 from LDS.view.documentsview import InmateDocumentsView, DocumentsView
+from LDS.view.loginview import PushButton
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -58,15 +59,46 @@ class ChooseInmateDocumentForeground(Foreground):
         # inmate_documents argument is a tuple
         self.inmate_documents_view = InmateDocumentsView(inmate_documents) 
         
+        self.previousbutton = None
+        self.previousbutton_width = 200
+        self.previousbutton_height = 38
+ 
+        self.button_enabled = True
+        self.previousbutton_event = pygame.USEREVENT + 17
+
+        self.update_needed = None
+
+        self.nextbutton = None
+        self.nextbutton_width = 200
+        self.nextbutton_height = 38
+
+        self.nextbutton_event = pygame.USEREVENT + 18
 
     def resize(self, screen):
         Foreground.resize(self, screen)
+
+        #  Create parameters for button 
+        self.nextbutton_x = self.foreground_rect.x+10
+        self.nextbutton_y = screen.height-70  
+
+        self.previousbutton_x = self.foreground_rect.width - 210
+        self.previousbutton_y = screen.height-70
+
+        if self.button_enabled:
+            self.previousbutton = PushButton((self.previousbutton_x, self.previousbutton_y, self.previousbutton_width, self.previousbutton_height), self.previousbutton_event, label='PREVIOUS', parent=screen)
+            self.previousbutton.enabled(True)
+
+            self.nextbutton = PushButton((self.nextbutton_x, self.nextbutton_y, self.nextbutton_width, self.nextbutton_height), self.nextbutton_event, label='NEXT', parent=screen)
+            self.nextbutton.enabled(True)
+            self.button_enabled = False
 
     def paint(self, screen):
         Foreground.paint(self, screen)
         self.inmate_documents_view.draw(self.foreground_rect, screen)
         self.inmate_documents_view.update()
-
+        # Draw buttons
+        self.nextbutton.draw(self.update_needed)
+        self.previousbutton.draw(self.update_needed)
         
 
 
@@ -85,13 +117,13 @@ class ChosenInmateDocumentForeground(Foreground):
         self.document_view.update()
 
 
-class ChooseDocumentForeground(Foreground):
-    def __init__(self):
-        Foreground.__init__(self, "choose_document")
+# class ChooseDocumentForeground(Foreground):
+#     def __init__(self):
+#         Foreground.__init__(self, "choose_document")
 
-class ChosenDocumentForeground(Foreground):
-    def __init__(self, document):
-        Foreground.__init__(self, "chosen_document")
+# class ChosenDocumentForeground(Foreground):
+#     def __init__(self, document):
+#         Foreground.__init__(self, "chosen_document")
 
 class NoDocumentForeground(Foreground):
     def __init__(self):
