@@ -130,7 +130,7 @@ class ViewPlugin(object):
             LOGGER.info(app.validated)
             if app.validated:
                 app.validated = None
-                return 'choose'
+                return app.previous_state if app.previous_state != 'wait' or app.previous_state is not None else 'choose'
             # Write code to return to previous state if the last state was not choose
         elif self.choose_timer.is_timeout():    
             return 'wait'
@@ -190,6 +190,7 @@ class ViewPlugin(object):
         if app.find_next_back_event(events):
             return 'login'
         elif app.find_lockscreen_event(events):
+            app.previous_state = 'choose'
             return 'wait'
         elif app.inmate_number:
             return 'chosen'
@@ -238,10 +239,12 @@ class ViewPlugin(object):
             win.documents_foreground = {}
             return 'choose'
         elif app.find_lockscreen_event(events):
+            app.previous_state = 'chosen'
             return 'wait'
         elif app.chosen_document:
             return 'decrypt'
         elif self.choose_timer.is_timeout():
+            app.previous_state = 'chosen'
             return 'wait'
         
         
@@ -300,8 +303,10 @@ class ViewPlugin(object):
             app.chosen_document = None
             return 'chosen'
         elif app.find_lockscreen_event(events):
+            app.previous_state = 'decrypt'
             return 'wait'
-        elif self.choose_timer.is_timeout():    
+        elif self.choose_timer.is_timeout(): 
+            app.previous_state = 'decrypt'   
             return 'wait'
 
     @LDS.hookimpl 
