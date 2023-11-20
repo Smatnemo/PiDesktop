@@ -179,6 +179,7 @@ class ViewPlugin(object):
 
         # update for backbutton
         win._current_background.backbutton.draw(app.update_needed)
+        win._current_background.lockbutton.draw(app.update_needed)
 
         event = app.find_choose_event(events)
         if event:
@@ -188,6 +189,8 @@ class ViewPlugin(object):
     def state_choose_validate(self, cfg, app, events):
         if app.find_next_back_event(events):
             return 'login'
+        elif app.find_lockscreen_event(events):
+            return 'wait'
         elif app.inmate_number:
             return 'chosen'
         elif self.choose_timer.is_timeout():
@@ -220,6 +223,7 @@ class ViewPlugin(object):
 
         # update for backbutton
         win._current_background.backbutton.draw(app.update_needed)
+        win._current_background.lockbutton.draw(app.update_needed)
 
         event = app.find_choose_event(events)
         if event:
@@ -233,10 +237,12 @@ class ViewPlugin(object):
             # Drop cached foreground
             win.documents_foreground = {}
             return 'choose'
+        elif app.find_lockscreen_event(events):
+            return 'wait'
         elif app.chosen_document:
             return 'decrypt'
         elif self.choose_timer.is_timeout():
-            return 'preview'
+            return 'wait'
         
         
     @LDS.hookimpl
@@ -271,6 +277,7 @@ class ViewPlugin(object):
 
         # update for backbutton
         win._current_background.backbutton.draw(app.update_needed)
+        win._current_background.lockbutton.draw(app.update_needed)
 
         self.decrypt_view.passcode_box.handle_event(events)
         self.decrypt_view.draw(win.surface)
@@ -292,6 +299,8 @@ class ViewPlugin(object):
         elif app.find_next_back_event(events):
             app.chosen_document = None
             return 'chosen'
+        elif app.find_lockscreen_event(events):
+            return 'wait'
         elif self.choose_timer.is_timeout():    
             return 'wait'
 
