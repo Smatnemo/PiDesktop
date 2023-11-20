@@ -41,7 +41,7 @@ BLACK = (0, 0, 0)
 
 class InputBox:
 
-    def __init__(self, rect:tuple, label='label',input_text='', input_text_length=10, parent=None):
+    def __init__(self, rect:tuple, label='label',input_text='', input_text_length=10, hide_text=True, parent=None):
         self.input_rect_border = pygame.Rect(rect)
         self.border_color = COLOR_INACTIVE
         self.color = COLOR_INACTIVE
@@ -51,6 +51,8 @@ class InputBox:
         self.max_input_length = input_text_length
         self.label = label
         self.input_text = ''
+        if hide_text:
+            self.hidden_input_text = ''
         if not parent:
             self.iniScreen()
         else:
@@ -75,22 +77,25 @@ class InputBox:
     def handle_event(self, events):
         for event in events:
             if event.type >= CLEARBUTTON: 
-                if self.active:
-                    button_event, input_text = self.check_event(event)
-                    if button_event:
-                        if len(self.text) >= self.max_input_length:
-                            self.text = self.text
-                        else:
-                            self.text = self.text + input_text
-                    elif event.type == ENTERBUTTON:
-                        pygame.event.post(pygame.event.Event(LOGINEVENT))
-                        self.input_text = self.text
-                        self.text = ''
-                    elif event.type==CLEARBUTTON:
-                        self.text = self.text[:-1]
+                # if self.active:
+                button_event, input_text = self.check_event(event)
+                if button_event:
+                    if len(self.text) >= self.max_input_length:
+                        self.text = self.text
+                    else:
+                        self.text = self.text + input_text
+                elif event.type == ENTERBUTTON:
+                    pygame.event.post(pygame.event.Event(LOGINEVENT))
+                    self.input_text = self.text
+                    self.text = ''
+                elif event.type==CLEARBUTTON:
+                    self.text = self.text[:-1]
                     
                 # Render updated text on text surface
-                self.txt_surface = self.font.render(self.text, True, self.color)
+                if self.hidden_input_text:
+                    self.txt_surface = self.font.render(self.hidden_input_text, True, self.color)
+                else:
+                    self.txt_surface = self.font.render(self.text, True, self.color)
             if event.type == pygame.MOUSEBUTTONDOWN:     
                 
                 # If the user clicked on the input_box rect.
@@ -107,21 +112,21 @@ class InputBox:
                 self.border_color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
         
             if event.type == pygame.KEYDOWN:
-                if self.active:
-                    if event.key == pygame.K_RETURN:
-                        pygame.event.post(pygame.event.Event(LOGINEVENT))
-                        self.input_text = self.text
-                        self.text = ''
-                    elif event.key == pygame.K_BACKSPACE:
-                        self.text = self.text[:-1] 
+                # if self.active:
+                if event.key == pygame.K_RETURN:
+                    pygame.event.post(pygame.event.Event(LOGINEVENT))
+                    self.input_text = self.text
+                    self.text = ''
+                elif event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1] 
+                else:
+                    if len(self.text) >= self.max_input_length:
+                        self.text = self.text
                     else:
-                        if len(self.text) >= self.max_input_length:
-                            self.text = self.text
-                        else:
-                            self.text += event.unicode
-                    # Re-render the text.
-                    
-                    self.txt_surface = self.font.render(self.text, True, self.color)
+                        self.text += event.unicode
+                # Re-render the text.
+                
+                self.txt_surface = self.font.render(self.text, True, self.color)
 
     def check_event(self, event):
         for text,button in enumerate(button_events):
@@ -384,10 +389,6 @@ class LoginView(object):
 
 
     # def MouseOverNumbers(self):
-
-
-   
-
 
 
 
