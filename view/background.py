@@ -437,8 +437,8 @@ class ChooseBackground(Background):
 #         Background.paint(self, screen)
 
 class ChooseInmateDocumentBackground(Background):
-    def __init__(self):
-        Background.__init__(self, "choose")
+    def __init__(self, bkg_string="choose_document"):
+        Background.__init__(self, bkg_string)
         self.layout0 = None 
         self.layout0_pos = None 
         self.layout1 = None
@@ -449,11 +449,19 @@ class ChooseInmateDocumentBackground(Background):
         self.backbutton_height = 38
 
         
-        self.backbutton_enabled = True
+        self.button_enabled = True
         self.backbutton_event = pygame.USEREVENT + 17
 
 
         self.update_needed = None
+
+        self.lockbutton = None
+        self.lockbutton_width = 200
+        self.lockbutton_height = 38
+
+    
+        self.lockbutton_event = pygame.USEREVENT + 19
+
 
     def resize(self, screen):
         Background.resize(self, screen) 
@@ -463,10 +471,16 @@ class ChooseInmateDocumentBackground(Background):
         self.backbutton_x = self._rect.x+10
         self.backbutton_y = self._rect.y+10  
 
-        if self.backbutton_enabled:
+        self.lockbutton_x = self._rect.width - 250
+        self.lockbutton_y = self._rect.y+10
+
+        if self.button_enabled:
             self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
             self.backbutton.enabled(True)
-            self.backbutton_enabled = False
+
+            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.backbutton_width, self.backbutton_height), self.lockbutton_event, label='LOCK SCREEN', parent=screen)
+            self.lockbutton.enabled(True)
+            self.button_enabled = False
 
     def resize_texts(self):
         """Update text Surfaces
@@ -478,6 +492,7 @@ class ChooseInmateDocumentBackground(Background):
     def paint(self, screen):
         Background.paint(self, screen)
         self.backbutton.draw(self.update_needed)
+        self.lockbutton.draw(self.update_needed)
 
 
 
@@ -540,6 +555,11 @@ class DecryptBackground(Background):
         self.backbutton_enabled = True
         self.backbutton_event = pygame.USEREVENT + 17
 
+        self.lockbutton = None
+        
+
+        self.lockbutton_event = pygame.USEREVENT + 19
+
         self.update_needed = None
         
     def resize(self, screen):
@@ -550,9 +570,16 @@ class DecryptBackground(Background):
         self.backbutton_x = self._rect.x+60
         self.backbutton_y = self._rect.height-120  
 
+        self.lockbutton_x = self._rect.width - 250
+        self.lockbutton_y = self._rect.y+10
+
         if self.backbutton_enabled:
             self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
             self.backbutton.enabled(True)
+
+            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.backbutton_width, self.backbutton_height), self.lockbutton_event, label='LOCK SCREEN', parent=screen)
+            self.lockbutton.enabled(True)
+
             self.backbutton_enabled = False
         
 
