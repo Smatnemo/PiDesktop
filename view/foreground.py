@@ -59,7 +59,7 @@ class ChooseInmateDocumentForeground(Foreground):
         # inmate_documents argument is a tuple
         self.inmate_documents_view = InmateDocumentsView(inmate_documents) 
         # Make sure that drawn inmates documents view should stop at 10 pixels before the button 
-        
+
         self.previousbutton = None
         self.previousbutton_width = 200
         self.previousbutton_height = 38
@@ -80,10 +80,10 @@ class ChooseInmateDocumentForeground(Foreground):
 
         #  Create parameters for button
         self._rect = screen.get_rect() 
-        self.nextbutton_x = self.foreground_rect.x+10
+        self.nextbutton_x =  self.foreground_rect.width - 210
         self.nextbutton_y = self._rect.height-150  
 
-        self.previousbutton_x = self.foreground_rect.width - 210
+        self.previousbutton_x = self.foreground_rect.x+10
         self.previousbutton_y = self._rect.height-150
 
         if self.button_enabled:
@@ -110,13 +110,48 @@ class ChosenInmateDocumentForeground(Foreground):
         # self.selected_inmate_documents = inmate_documents[selected_inmate]
         self.document_view = DocumentsView(inmate_documents, selected_inmate)
 
+        self.previousbutton = None
+        self.previousbutton_width = 200
+        self.previousbutton_height = 38
+ 
+        self.button_enabled = True
+        self.previousbutton_event = pygame.USEREVENT + 17
+
+        self.update_needed = None
+
+        self.nextbutton = None
+        self.nextbutton_width = 200
+        self.nextbutton_height = 38
+
+        self.nextbutton_event = pygame.USEREVENT + 18
+
     def resize(self, screen):
         Foreground.resize(self, screen)
+
+        #  Create parameters for button
+        self._rect = screen.get_rect() 
+        self.nextbutton_x =  self.foreground_rect.width - 210
+        self.nextbutton_y = self._rect.height-150  
+
+        self.previousbutton_x = self.foreground_rect.x+10
+        self.previousbutton_y = self._rect.height-150
+
+        if self.button_enabled:
+            self.previousbutton = PushButton((self.previousbutton_x, self.previousbutton_y, self.previousbutton_width, self.previousbutton_height), self.previousbutton_event, label='PREVIOUS', parent=screen)
+            self.previousbutton.enabled(True)
+
+            self.nextbutton = PushButton((self.nextbutton_x, self.nextbutton_y, self.nextbutton_width, self.nextbutton_height), self.nextbutton_event, label='NEXT', parent=screen)
+            self.nextbutton.enabled(True)
+            self.button_enabled = False
 
     def paint(self, screen):
         Foreground.paint(self, screen)
         self.document_view.draw(self.foreground_rect, screen)
         self.document_view.update()
+
+        # Draw buttons
+        self.nextbutton.draw(self.update_needed)
+        self.previousbutton.draw(self.update_needed)
 
 
 # class ChooseDocumentForeground(Foreground):
