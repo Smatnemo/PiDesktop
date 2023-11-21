@@ -228,6 +228,9 @@ class ViewPlugin(object):
         win._current_background.backbutton.draw(app.update_needed)
         win._current_background.lockbutton.draw(app.update_needed)
 
+        win._current_documents_foreground.nextbutton.draw(app.update_needed)
+        win._current_documents_foreground.previousbutton.draw(app.update_needed)
+
         event = app.find_choose_event(events)
         if event:
             app.chosen_document = win._current_documents_foreground.document_view.chosendocumentrow.document
