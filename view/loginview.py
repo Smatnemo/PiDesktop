@@ -214,9 +214,9 @@ class PushButton:
     def clicked(self, event):
         if not event:
             return None
-        if event.type==pygame.MOUSEBUTTONDOWN and self.button_rect.collidepoint(event.pos) and self.button_enabled:
+        if event.type==pygame.MOUSEBUTTONDOWN or event.type==pygame.FINGERDOWN and self.button_rect.collidepoint(event.pos) and self.button_enabled:
             return 'BUTTONDOWN'
-        if event.type==pygame.MOUSEBUTTONUP and self.button_rect.collidepoint(event.pos):
+        if event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP and self.button_rect.collidepoint(event.pos) and self.button_enabled:
             pygame.event.post(pygame.event.Event(self.event))
             return 'BUTTONUP'
         else:
@@ -298,9 +298,9 @@ class button(object):
     def clicked(self, event):
         if not event:
             return None
-        if event.type==pygame.MOUSEBUTTONDOWN and self.button_rect.collidepoint(event.pos) and self.button_enabled:  
+        if (event.type==pygame.MOUSEBUTTONDOWN or event.type==pygame.FINGERDOWN and self.button_rect.collidepoint(event.pos)) and self.button_enabled:  
             return 'BUTTONDOWN'
-        if event.type==pygame.MOUSEBUTTONUP and self.button_rect.collidepoint(event.pos) and self.button_enabled:
+        if (event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP and self.button_rect.collidepoint(event.pos)) and self.button_enabled:
             if self.text == 'x':
                 BUTTON_EVENT= CLEARBUTTON
             elif self.text == '<-':
@@ -422,7 +422,8 @@ def main_loop():
                 lv.passcode_box.text=''
                 lv.passcode_box.txt_surface = lv.passcode_box.font.render(lv.passcode_box.text, True, lv.passcode_box.color)
                 print(pass_code) 
-            if event.type == pygame.MOUSEBUTTONDOWN or event.type==pygame.MOUSEMOTION or event.type==pygame.MOUSEBUTTONUP:
+            if event.type == pygame.MOUSEBUTTONDOWN or event.type==pygame.MOUSEMOTION\
+                or event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP or event.type==pygame.FINGERDOWN:
                 lv.update_needed=event
             else:
                 lv.update_needed=None
