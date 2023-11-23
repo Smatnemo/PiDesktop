@@ -12,6 +12,7 @@ class ViewPlugin(object):
     def __init__(self, plugin_manager):
         self._pm = plugin_manager
         self.count = 0
+        self.count_failed_attempts = 0
         self.forgotten = False
         # Seconds to display the failed message
         self.failed_view_timer = PoolingTimer(2)
@@ -25,6 +26,8 @@ class ViewPlugin(object):
         self.print_view_timer = PoolingTimer(0)
         # Seconds to display the selected layout
         self.finish_timer = PoolingTimer(1)
+        # Lock screen timer for failed login or failed decryption after 3 attempts
+        self.lock_screen_timer = PoolingTimer(5)
 
         self.login_view = None 
         self.decrypt_view = None
@@ -138,7 +141,7 @@ class ViewPlugin(object):
         
     @LDS.hookimpl 
     def state_login_exit(self, win):
-        self.count = 0
+        self.failed_view_timer = 0
         win.show_image(None) # Clear currently displayed image
 
 # Default original
@@ -316,7 +319,7 @@ class ViewPlugin(object):
 
     @LDS.hookimpl 
     def state_decrypt_exit(self, win):
-        pass
+        self.failed_view_timer = 0
 
     @LDS.hookimpl
     def state_preview_enter(self, app, win):

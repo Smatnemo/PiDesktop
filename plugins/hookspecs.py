@@ -277,20 +277,39 @@ def state_login_exit(win):
 # --- logout state -------------------------------------------------------------
 
 @hookspec 
-def state_logout_enter():
-    pass 
+def state_lock_enter(win):
+    """Actions performed when application enters the lock state.
+    :param win: graphical window 
+    """
 
 @hookspec 
-def state_logout_do():
-    pass 
+def state_lock_do(app, win, events):
+    """Actions performed when application is in Lock state.
+    This hook is called in a loop until the application can switch
+    to the next state.
+
+    :param app: application instance
+    :param win: graphical window instance
+    :param events: pygame events generated since last call
+    """
 
 @hookspec 
-def state_logout_validate():
-    pass 
+def state_lock_validate(cfg, app, win, events):
+    """Actions performed when user enters lock details.
+    This hook is called in a loop until the time runs out.
+
+    :param cfg: application configuration
+    :param app: application instance
+    :param win: graphical window instance
+    :param events: pygame events generated since last call
+    """
 
 @hookspec 
-def state_logout_exit():
-    pass
+def state_lock_exit(win):
+    """Actions performed when application exit Lock state.
+
+    :param win: graphical window 
+    """
 # --- Choose State -------------------------------------------------------------
 
 

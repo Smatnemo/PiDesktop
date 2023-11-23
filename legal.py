@@ -11,8 +11,11 @@ import tempfile
 from warnings import filterwarnings
 
 user = os.getlogin()
-sys.path.append('/home/{}'.format(user))
-
+# sys.path.append('/home/{}'.format(user))
+current_path = os.getcwd()
+package_dir = osp.dirname(current_path)
+sys.path.append(package_dir)
+print(sys.path)
 
 from gpiozero import Device, ButtonBoard, LEDBoard, pi_info
 from gpiozero.exc import BadPinFactory, PinFactoryFallback
@@ -73,7 +76,7 @@ class PiApplication:
         init_size = self._config.gettyped('WINDOW', 'size')
         init_debug = self._config.getboolean('GENERAL', 'debug')
         # init_color = self._config.gettyped('WINDOW', 'background')
-        init_color = self.settings['background']
+        init_color = LDS.current_path + self.settings['background']
         init_text_color = self._config.gettyped('WINDOW', 'text_color')
         if isinstance(init_color, str):
             if not osp.isfile(init_color):
@@ -83,7 +86,9 @@ class PiApplication:
             # init_color = self.settings['backgroundpath']
 
         title = 'Legal v{}'.format(LDS.__version__)
-        img = pygame.image.load(self.settings['watermarkpath'])
+        
+        logo_path = LDS.current_path + self.settings['watermarkpath']
+        img = pygame.image.load(logo_path)
         if not isinstance(init_size, str):
             self._window = PiWindow(title, init_size, color=init_color,
                                     text_color=init_text_color, debug=init_debug, app_icon = img)
@@ -105,7 +110,7 @@ class PiApplication:
         self._machine.add_state('processing')
         self._machine.add_state('print')# This state should be used to print document instead
         self._machine.add_state('finish')
-        self._machine.add_state('logout') # log out 
+        self._machine.add_state('lock') # log out 
 
         # State to return to after screen is locked and logged back into
         self.previous_state = None

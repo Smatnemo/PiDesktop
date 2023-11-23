@@ -1,10 +1,12 @@
 # This script is only run once on start up to create an sqlite database
 import sqlite3
 import os.path as osp
+from LDS.utils import LOGGER
+from LDS import current_path
 
-
-
-DB_PATH = "/home/pi/legal.db"
+DB_PATH = osp.join(current_path,"data/legal.db")
+LOGGER.info("Database path: {}".format(DB_PATH))
+print("Database Path:", DB_PATH)
 
 # Database quries
 create_product_table = """
@@ -431,7 +433,7 @@ class DataBase(object):
             self.conn = sqlite3.connect(DB_PATH)
         except:
             # Log the error
-            print("Could not open a connection to the database")
+            LOGGER.error("Could not open a connection to the database")
             return
         self.cursor = self.conn.cursor()
 
