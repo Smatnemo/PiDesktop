@@ -20,15 +20,16 @@ class PrinterPlugin(object):
         app.count.printed += 1
         app.count.remaining_duplicates -= 1
 
+        
+
     def print_document(self, cfg, app):
-        LOGGER.info("Send final picture to printer")
-        app.printer.print_file(app.previous_picture_file,
-                               cfg.getint('PRINTER', 'pictures_per_page'))
+        LOGGER.info("Send final document to printer")
+        app.printer.print_file(app.print_job)
         app.count.printed += 1
         app.count.remaining_duplicates -= 1
-        
+    
     @LDS.hookimpl
-    def pibooth_cleanup(self, app):
+    def lds_cleanup(self, app):
         app.printer.quit()
 
     @LDS.hookimpl
@@ -39,19 +40,8 @@ class PrinterPlugin(object):
 
     @LDS.hookimpl
     def state_wait_do(self, cfg, app, events):
-        if app.find_print_event(events) and app.previous_picture_file and app.printer.is_installed():
-
-            if app.count.remaining_duplicates <= 0:
-                LOGGER.warning("Too many duplicates sent to the printer (%s max)",
-                               cfg.getint('PRINTER', 'max_duplicates'))
-                return
-
-            elif not app.printer.is_ready():
-                LOGGER.warning("Maximum number of printed pages reached (%s/%s max)", app.count.printed,
-                               cfg.getint('PRINTER', 'max_pages'))
-                return
-
-            self.print_picture(cfg, app)
+        """Find printer information
+        """
 
     @LDS.hookimpl
     def state_processing_enter(self, cfg, app):
@@ -69,5 +59,6 @@ class PrinterPlugin(object):
 
     @LDS.hookimpl
     def state_print_do(self, cfg, app, events):
-        if app.find_print_event(events) and app.previous_picture_file:
-            self.print_picture(cfg, app)
+        self.print_job_status = None
+        if app.find_print_event(events) and app.print_job:
+            self.print_document(cfg, app)

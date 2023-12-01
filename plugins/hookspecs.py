@@ -72,7 +72,7 @@ def lds_startup(cfg, app):
     """
 
 @hookspec(firstresult=True)
-def pibooth_setup_picture_factory(cfg, opt_index, factory):
+def lds_setup_picture_factory(cfg, app, opt_index, factory):
     """Hook used to setup the ``PictureFactory`` instance.
 
     The ``opt_index`` is the selected index of the ``[PICTURE][captures]``
@@ -84,23 +84,7 @@ def pibooth_setup_picture_factory(cfg, opt_index, factory):
     public API than :py:class:`pibooth.pictures.factory.PictureFactory`.
 
     :param cfg: application configuration
-    :param opt_index: index for tuple options related to captures number
-    :param factory: default ``PictureFactory`` instance (not configured yet)
-    """
-
-@hookspec(firstresult=True)
-def lds_setup_picture_factory(cfg, opt_index, factory):
-    """Hook used to setup the ``PictureFactory`` instance.
-
-    The ``opt_index`` is the selected index of the ``[PICTURE][captures]``
-    configuration option for the current captures sequence. It represents
-    the selected captures number.
-
-    A new ``PictureFactory`` instance can be returned by this hook, it will be
-    used instead of the default one. The returned object shall have the same
-    public API than :py:class:`pibooth.pictures.factory.PictureFactory`.
-
-    :param cfg: application configuration
+    :param app: application instance
     :param opt_index: index for tuple options related to captures number
     :param factory: default ``PictureFactory`` instance (not configured yet)
     """
@@ -125,12 +109,12 @@ def lds_setup_camera(cfg):
     :param cfg: application configuration
     """
 
-@hookspec
-def pibooth_cleanup(app):
-    """Actions performed at the cleanup of pibooth.
+# @hookspec
+# def pibooth_cleanup(app):
+#     """Actions performed at the cleanup of pibooth.
 
-    :param app: application instance
-    """
+#     :param app: application instance
+#     """
 
 @hookspec
 def lds_cleanup(app):
@@ -266,18 +250,17 @@ def state_login_validate(cfg, app, win, events):
     """
 
 @hookspec 
-def state_login_exit(win):
+def state_login_exit(app):
     """Actions performed when application exit Login state.
 
-    :param cfg: application configuration
+ 
     :param app: application instance
-    :param win: graphical window 
     """
 
 # --- logout state -------------------------------------------------------------
 
 @hookspec 
-def state_lock_enter(win):
+def state_lock_enter(app, win):
     """Actions performed when application enters the lock state.
     :param win: graphical window 
     """
@@ -307,6 +290,43 @@ def state_lock_validate(cfg, app, win, events):
 @hookspec 
 def state_lock_exit(win):
     """Actions performed when application exit Lock state.
+
+    :param win: graphical window 
+    """
+
+# --- PassFail state ------------------------------------------------
+
+@hookspec 
+def state_passfail_enter(app, win):
+    """Actions performed when application enters the pass state.
+    :param win: graphical window 
+    """
+
+@hookspec 
+def state_passfail_do(app, win, events):
+    """Actions performed when application is in passfail state.
+    This hook is called in a loop until the application can switch
+    to the next state.
+
+    :param app: application instance
+    :param win: graphical window instance
+    :param events: pygame events generated since last call
+    """
+
+@hookspec 
+def state_passfail_validate(cfg, app, win, events):
+    """Actions performed when user enters passfail details.
+    This hook is called in a loop until the time runs out.
+
+    :param cfg: application configuration
+    :param app: application instance
+    :param win: graphical window instance
+    :param events: pygame events generated since last call
+    """
+
+@hookspec 
+def state_passfail_exit(app, win):
+    """Actions performed when application exit passfail state.
 
     :param win: graphical window 
     """
@@ -437,10 +457,9 @@ def state_decrypt_validate(cfg, app, win, events):
     """
 
 @hookspec 
-def state_decrypt_exit(win):
+def state_decrypt_exit(app, win):
     """Actions performed when application exit Login state.
 
-    :param cfg: application configuration
     :param app: application instance
     :param win: graphical window 
     """
@@ -539,6 +558,24 @@ def state_capture_exit(cfg, app, win):
     :param win: graphical window instance
     """
 
+# --- Capture signature state --------------------------------------------------
+
+@hookspec
+def state_capture_signature_enter():
+    """Capture signature
+    """
+@hookspec
+def state_capture_signature_do():
+    """Keep calling it in a loop
+    """
+@hookspec
+def state_capture_signature_validate():
+    """Verify conditions for the next state
+    """
+@hookspec
+def state_capture_signature_exit():
+    """Validate for the next state
+    """
 
 # --- Processing State ---------------------------------------------------------
 

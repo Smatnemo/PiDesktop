@@ -27,7 +27,7 @@ BUTTON_6 = pygame.USEREVENT + 11
 BUTTON_7 = pygame.USEREVENT + 12
 BUTTON_8 = pygame.USEREVENT + 13
 BUTTON_9 = pygame.USEREVENT + 14
-ENTERBUTTON = pygame.USEREVENT + 15
+BACKSPACEBUTTON = pygame.USEREVENT + 15
 
 
 button_events = [BUTTON_0,BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8, BUTTON_9]
@@ -43,6 +43,7 @@ class InputBox:
 
     def __init__(self, rect:tuple, label='label',input_text='', input_text_length=10, hide_text=True, parent=None):
         self.input_rect_border = pygame.Rect(rect)
+        self.rect = rect
         self.border_color = COLOR_INACTIVE
         self.color = COLOR_INACTIVE
         self.text_field_color = WHITE
@@ -87,14 +88,20 @@ class InputBox:
                         self.text = self.text + input_text
                         if self.hide_text:
                             self.hidden_input_text += '*'
-                elif event.type == ENTERBUTTON:
-                    pygame.event.post(pygame.event.Event(LOGINEVENT))
-                    self.input_text = self.text
-                    self.text = ''
-                elif event.type==CLEARBUTTON:
+                # elif event.type == BACKSPACEBUTTON:
+                #     pygame.event.post(pygame.event.Event(LOGINEVENT))
+                #     self.input_text = self.text
+                #     self.text = ''
+                #     if self.hide_text:
+                #         self.hidden_input_text = self.text
+                elif event.type==BACKSPACEBUTTON:
                     self.text = self.text[:-1]
                     if self.hide_text:
                         self.hidden_input_text = self.hidden_input_text[:-1]
+                elif event.type==CLEARBUTTON:
+                    self.text = ''
+                    if self.hide_text:
+                        self.hidden_input_text = ''
                     
                 # Render updated text on text surface
                 if self.hidden_input_text:
@@ -122,6 +129,8 @@ class InputBox:
                     pygame.event.post(pygame.event.Event(LOGINEVENT))
                     self.input_text = self.text
                     self.text = ''
+                    if self.hide_text:
+                        self.hidden_input_text = self.text
                 elif event.key == pygame.K_BACKSPACE:
                     self.text = self.text[:-1] 
                     if self.hide_text:
@@ -148,7 +157,7 @@ class InputBox:
 
     def update(self):
         # Resize the box if the text is too long.
-        width = max(200, self.txt_surface.get_width()+10)
+        width = max(self.rect[2], self.txt_surface.get_width()+10)
         self.input_rect_border.w = width
         self.input_rect.w = width-4
 
@@ -303,8 +312,8 @@ class button(object):
         if (event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP and self.button_rect.collidepoint(event.pos)) and self.button_enabled:
             if self.text == 'x':
                 BUTTON_EVENT= CLEARBUTTON
-            elif self.text == '<-':
-                BUTTON_EVENT = ENTERBUTTON
+            elif self.text == '<':
+                BUTTON_EVENT = BACKSPACEBUTTON
             else:
                 BUTTON_EVENT = pygame.USEREVENT+5+int(self.text)
             pygame.event.post(pygame.event.Event(BUTTON_EVENT))
@@ -320,17 +329,17 @@ class LoginView(object):
         # Set up the input boxes
         # self.username_box = pg.Rect(200, 200, 400, 50)
         self.update_needed = None
-        passcode_box_width = 200
+        passcode_box_width = 230
         passcode_box_height = 38
         x = screen.get_rect().center[0] - passcode_box_width//2
         y = screen.get_rect().center[1] - passcode_box_height//2 - 200
         
         self.passcode_box = InputBox((x, y, passcode_box_width, passcode_box_height), parent=screen)
         self.passcode_box.key_pad_rect = [pygame.Rect(x, y, passcode_box_width, passcode_box_height)]
-        button_width = 60 
-        button_height = 56
-        row_margin = 6
-        column_margin = 6
+        button_width = 70 
+        button_height = 66
+        row_margin = 10
+        column_margin = 10
         first_row_y_position = y+58
         second_row_y_position = first_row_y_position + button_height + column_margin
         third_row_y_position = second_row_y_position + button_height + column_margin 
@@ -368,23 +377,23 @@ class LoginView(object):
         s_9s = button((0,255,0),third_column_x_position,third_row_y_position,button_width,button_height, '9')
         self.passcode_box.key_pad_rect.append(pygame.Rect(third_column_x_position,third_row_y_position,button_width,button_height))
 
-        s_xs = button((0,255,0),first_column_x_position,fourth_row_y_position,button_width,button_height, 'x')
+        s_clears = button((0,255,0),first_column_x_position,fourth_row_y_position,button_width,button_height, 'x')
         self.passcode_box.key_pad_rect.append(pygame.Rect(first_column_x_position,fourth_row_y_position,button_width,button_height))
 
         s_0s = button((0,255,0),second_column_x_position,fourth_row_y_position,button_width,button_height, '0')
         self.passcode_box.key_pad_rect.append(pygame.Rect(second_column_x_position,fourth_row_y_position,button_width,button_height))
 
-        s_enter = button((0,255,0),third_column_x_position,fourth_row_y_position,button_width,button_height, '<-')
+        s_back = button((0,255,0),third_column_x_position,fourth_row_y_position,button_width,button_height, '<')
         self.passcode_box.key_pad_rect.append(pygame.Rect(third_column_x_position,fourth_row_y_position,button_width,button_height))
         
 
-        self.numbers = [s_1s,s_2s,s_3s,s_4s,s_5s,s_6s,s_7s,s_8s,s_9s,s_xs,s_0s,s_enter]
+        self.numbers = [s_1s,s_2s,s_3s,s_4s,s_5s,s_6s,s_7s,s_8s,s_9s,s_clears,s_0s,s_back]
         
         # Set up the buttons
         login_button_x = x + 50
         login_button_y = fourth_row_y_position + button_width + column_margin
 
-        self.login_button = PushButton((login_button_x, login_button_y, 200, 38),LOGINEVENT, label='LOG IN', parent=screen)
+        self.login_button = PushButton((login_button_x, login_button_y, 200, 38),LOGINEVENT, label='UNLOCK', parent=screen)
         self.login_button.enabled(True)
 
     def get_input_text(self):
@@ -400,6 +409,11 @@ class LoginView(object):
 
 
     # def MouseOverNumbers(self):
+
+# class DecryptView(LoginView):
+#     def __init__(self, screen):
+#         LoginView.__init__(screen)
+#         self.login_button = PushButton((login_button_x, login_button_y, 200, 38),LOGINEVENT, label='Decrypt', parent=screen)
 
 
 

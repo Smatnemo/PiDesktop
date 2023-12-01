@@ -2,9 +2,9 @@
 import sqlite3
 import os.path as osp
 from LDS.utils import LOGGER
-from LDS import current_path
+from LDS import package_dir
 
-DB_PATH = osp.join(current_path,"data/legal.db")
+DB_PATH = osp.join(package_dir,"data/legal.db")
 LOGGER.info("Database path: {}".format(DB_PATH))
 print("Database Path:", DB_PATH)
 
@@ -103,7 +103,30 @@ CREATE TABLE IF NOT EXISTS 'Documents' (
 
 create_tables = [create_object_table, create_product_table, create_product_photos_table, create_templates_table, create_entity_table, create_documents_table]
 
+document_insert_query = """ INSERT INTO 'Documents'
+                                  (order_id, 
+                                  document_path, 
+                                  width, height, 
+                                  created_by, 
+                                  downloaded_on, 
+                                  deleted_on, 
+                                  decrypt_key, 
+                                  num_of_pages, 
+                                  inmate_number, 
+                                  signature, 
+                                  status, 
+                                  printed, 
+                                  decrypted,
+                                  encrypted_file_checksum,
+                                  original_file_checksum,
+                                  inmate_photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
 
+document_update_query = """UPDATE 'Documents'
+                            SET printed = 1,
+                                decrypted = 1,
+                                status = 'printed',
+                                inmate_photo= ?
+                            WHERE order_id= ? """
 # A list of standard queries for settings
 # 1. query for getting the number of enabled products. int 
 # 2. query for getting the photocount per product
@@ -178,12 +201,14 @@ class DataBase(object):
         self.get_settings()
         
     
-    def __insert__(self):
+    def __insert__(self, query, document):
         self.open()
+        self.cursor.execute(query, document)
         self.close()
 
-    def __update__(self):
+    def __update__(self, query, value):
         self.open()
+        self.cursor.execute(query, value)
         self.close() 
 
     def __find__(self, feature):
@@ -370,6 +395,8 @@ class DataBase(object):
         self.settings['coloured'] = True
         self.settings['background'] = self.get_object(self.entity[7])
         self.settings['inmate_documents'] = self.get_inmate_documents()[0]
+        self.settings['attempt_count'] = None
+        self.settings['use_camera'] = True
 
     def get_passcode(self, passcode:str):
         self.cursor.execute("SELECT passcode FROM entity WHERE passcode=(?)",(passcode,))

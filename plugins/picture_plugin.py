@@ -30,7 +30,7 @@ class PicturePlugin(object):
         app.previous_picture_file = None
 
     @LDS.hookimpl(hookwrapper=True)
-    def pibooth_setup_picture_factory(self, cfg, opt_index, factory):
+    def lds_setup_picture_factory(self, cfg, app, opt_index, factory):
 
         outcome = yield  # all corresponding hookimpls are invoked here
         factory = outcome.get_result() or factory
@@ -44,8 +44,13 @@ class PicturePlugin(object):
         if overlays[opt_index]:
             factory.set_overlay(overlays[opt_index])
 
-        texts = [cfg.get('PICTURE', 'footer_text1').strip('"').format(**self.texts_vars),
-                 cfg.get('PICTURE', 'footer_text2').strip('"').format(**self.texts_vars)]
+        # Write inmate number as main title and document name as the second title
+        # texts = [cfg.get('PICTURE', 'footer_text1').strip('"').format(**self.texts_vars),
+        #          cfg.get('PICTURE', 'footer_text2').strip('"').format(**self.texts_vars)]
+
+        texts = [str(app.inmate_number),
+                 str(app.chosen_document.document_name)]
+        print(texts)
         colors = cfg.gettuple('PICTURE', 'text_colors', 'color', len(texts))
         text_fonts = cfg.gettuple('PICTURE', 'text_fonts', str, len(texts))
         alignments = cfg.gettuple('PICTURE', 'text_alignments', str, len(texts))
@@ -61,8 +66,10 @@ class PicturePlugin(object):
 
         outcome.force_result(factory)
 
+
+
     @LDS.hookimpl
-    def pibooth_cleanup(self):
+    def lds_cleanup(self):
         self.factory_pool.quit()
 
     @LDS.hookimpl
@@ -112,7 +119,8 @@ class PicturePlugin(object):
 
         LOGGER.info("Creating the final picture")
         default_factory = get_picture_factory(captures, cfg.get('PICTURE', 'orientation'))
-        factory = self._pm.hook.pibooth_setup_picture_factory(cfg=cfg,
+        factory = self._pm.hook.lds_setup_picture_factory(cfg=cfg,
+                                                            app=app,
                                                               opt_index=idx,
                                                               factory=default_factory)
         app.previous_picture = factory.build()
@@ -139,6 +147,7 @@ class PicturePlugin(object):
 
     @LDS.hookimpl
     def state_print_do(self, cfg, app, events):
+        # if the CO decides to take another photo, delete current photo and take another photo
         if app.find_capture_event(events):
 
             LOGGER.info("Moving the picture in the forget folder")

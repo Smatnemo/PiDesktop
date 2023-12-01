@@ -1,6 +1,10 @@
 import LDS 
+import os
 from LDS.utils import LOGGER, get_crash_message, PoolingTimer
 from LDS.accounts import LogIn, LogOut
+from LDS.documents.document import decrypt_content, document_authentication
+from LDS.database.database import DataBase, document_update_query
+
 class ViewPlugin(object):
 
     """Plugin to manage the LDS window dans transitions.
@@ -15,7 +19,7 @@ class ViewPlugin(object):
         self.count_failed_attempts = 0
         self.forgotten = False
         # Seconds to display the failed message
-        self.failed_view_timer = PoolingTimer(2)
+        self.failed_view_timer = PoolingTimer(5)
         # Seconds between each animated frame
         self.animated_frame_timer = PoolingTimer(0)
         # Seconds before going back to the start
@@ -27,7 +31,7 @@ class ViewPlugin(object):
         # Seconds to display the selected layout
         self.finish_timer = PoolingTimer(1)
         # Lock screen timer for failed login or failed decryption after 3 attempts
-        self.lock_screen_timer = PoolingTimer(5)
+        self.lock_screen_timer = PoolingTimer(30)
 
         self.login_view = None 
         self.decrypt_view = None
@@ -46,37 +50,24 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_wait_enter(self, cfg, app, win):
         self.forgotten = False
-        if app.previous_animated:
-            previous_picture = next(app.previous_animated)
-            # Reset timeout in case of settings changed
-            self.animated_frame_timer.timeout = cfg.getfloat('WINDOW', 'animate_delay')
-            self.animated_frame_timer.start()
-        else:
-            previous_picture = app.previous_picture
+        # if app.previous_animated:
+        #     previous_picture = next(app.previous_animated)
+        #     # Reset timeout in case of settings changed
+        #     self.animated_frame_timer.timeout = cfg.getfloat('WINDOW', 'animate_delay')
+        #     self.animated_frame_timer.start()
+        # else:
+        #     previous_picture = app.previous_picture
 
-        win.show_intro(previous_picture, app.printer.is_ready()
-                       and app.count.remaining_duplicates > 0)
-        if app.printer.is_installed():
-            win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
+        # win.show_intro(previous_picture, app.printer.is_ready()
+        #                and app.count.remaining_duplicates > 0)
+        # if app.printer.is_installed():
+        #     win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
+        win.show_intro()
 
     @LDS.hookimpl
     def state_wait_do(self, app, win, events):
-        if app.previous_animated and self.animated_frame_timer.is_timeout():
-            previous_picture = next(app.previous_animated)
-            win.show_intro(previous_picture, app.printer.is_ready()
-                           and app.count.remaining_duplicates > 0)
-            self.animated_frame_timer.start()
-        else:
-            previous_picture = app.previous_picture
-
-        event = app.find_print_status_event(events)
-        if event and app.printer.is_installed():
-            tasks = app.printer.get_all_tasks()
-            win.set_print_number(len(tasks), not app.printer.is_ready())
-
-        if app.find_print_event(events) or (win.get_image() and not previous_picture):
-            win.show_intro(previous_picture, app.printer.is_ready()
-                           and app.count.remaining_duplicates > 0)
+        """Write logic to continuously query database for update
+        """
 
     @LDS.hookimpl
     def state_wait_validate(self, cfg, app, events):
@@ -133,34 +124,22 @@ class ViewPlugin(object):
             LOGGER.info(app.validated)
             if app.validated:
                 app.validated = None
-                return app.previous_state if app.previous_state != 'wait' and app.previous_state is not None else 'choose'
+                return app.previous_state if app.previous_state != 'wait' and app.previous_state != 'login' and app.previous_state is not None else 'choose'
+            else:
+                self.count_failed_attempts += 1
+                LOGGER.info("This is failed attempt number {}".format(self.count_failed_attempts))
+                if self.count_failed_attempts == app.attempt_count:
+                    self.count_failed_attempts = 0
+                    return 'lock'
+                else:
+                    app.previous_state = 'login'
+                    return 'passfail'
             # Write code to return to previous state if the last state was not choose
         elif self.choose_timer.is_timeout():    
             return 'wait'
 
-        
-    @LDS.hookimpl 
-    def state_login_exit(self, win):
-        self.failed_view_timer = 0
-        win.show_image(None) # Clear currently displayed image
-
-# Default original
-    # @LDS.hookimpl
-    # def state_choose_enter(self, app, win):
-    #     LOGGER.info("Show picture choice (nothing selected)")
-    #     win.set_print_number(0, False)  # Hide printer status
-    #     win.show_choice(app.capture_choices)
-    #     self.choose_timer.start()
-
-    # @LDS.hookimpl
-    # def state_choose_validate(self, cfg, app):
-    #     if app.capture_nbr:
-    #         if cfg.getfloat('WINDOW', 'chosen_delay') > 0:
-    #             return 'chosen'
-    #         else:
-    #             return 'preview'
-    #     elif self.choose_timer.is_timeout():
-    #         return 'wait'
+    # def state_login_exit(self, app):
+    #     app.previous_state = 'login'
 
     @LDS.hookimpl
     def state_choose_enter(self, app, win):
@@ -236,7 +215,8 @@ class ViewPlugin(object):
 
         event = app.find_choose_event(events)
         if event:
-            app.chosen_document = win._current_documents_foreground.document_view.chosendocumentrow.document
+            app.chosen_document = win._current_documents_foreground.document_view.chosendocumentrow
+        
 
     @LDS.hookimpl
     def state_chosen_validate(self, app, win, events):
@@ -286,7 +266,7 @@ class ViewPlugin(object):
         # win.surface.fill((255, 255, 255))
         self.decrypt_view.update_needed = app.update_needed
 
-        # update for backbutton
+        # update for backbutton and lockbutton
         win._current_background.backbutton.draw(app.update_needed)
         win._current_background.lockbutton.draw(app.update_needed)
 
@@ -298,15 +278,37 @@ class ViewPlugin(object):
         # Create a way to compare decrypt key entered by the user and the one in the document
         if app.find_login_event(events) and app.chosen_document and app.decrypt_key:
             # print('From Validate do',app.password)
-            LOGGER.info("Attempting to validate decrypt_key, decrypt_key:{}, with decrypt_key from chosen document:{}".format(app.decrypt_key, app.chosen_document[7]))
-            app.validated = app.chosen_document[7] == app.decrypt_key
+            LOGGER.info("Attempting to validate decrypt_key, decrypt_key:{}, with decrypt_key from chosen document:{}".format(app.decrypt_key, app.chosen_document.document[7]))
+            app.validated = app.chosen_document.document[7] == app.decrypt_key
             LOGGER.info(app.validated)
             if app.validated:
                 app.validated = None
-                app.chosen_document = None
-                return 'chosen'
-            # Write code to return to previous state if the last state was not choose
+                # Decrypt the document using the document file path and check if the documents pages match
+                result = decrypt_content(app.chosen_document.document[7], app.chosen_document.document[1])
+                verify_decryption = document_authentication(result.name, app.chosen_document.document)
+                if verify_decryption:
+                    app.decrypted_file = result.name
+                    LOGGER.info("Done Decrypting")
+                    # Change status in the tuple document before return print
+                    
+                    
 
+                    app.print_job = result.name        
+                    return 'print'
+                else:
+                    LOGGER.error("Encountered error decrypting file:".format(app.chosen_document.document_name))
+                    app.chosen_document = None
+                    return 'failsafe'
+            else:
+                self.count_failed_attempts += 1
+                LOGGER.info("This is failed attempt number {}".format(self.count_failed_attempts))
+                if self.count_failed_attempts == app.attempt_count:
+                    self.count_failed_attempts = 0
+                    return 'lock'
+                else:
+                    app.previous_state = 'decrypt'
+                    return 'passfail'
+            # Write code to return to previous state if the last state was not choose
         elif app.find_next_back_event(events):
             app.chosen_document = None
             return 'chosen'
@@ -316,11 +318,46 @@ class ViewPlugin(object):
         elif self.choose_timer.is_timeout(): 
             app.previous_state = 'decrypt'   
             return 'wait'
+        
+   
 
-    @LDS.hookimpl 
-    def state_decrypt_exit(self, win):
-        self.failed_view_timer = 0
+    # ----------------------------- Lock State -----------------------------
+    # This state is entered when password attempt is failed a number of times
+    @LDS.hookimpl
+    def state_lock_enter(self,app,win):
+        LOGGER.info("This is the lock state")
+        self.lock_screen_timer.start()
+        
+        win.show_locked('locked', app.attempt_count)
 
+    @LDS.hookimpl
+    def state_lock_do(self, app, win, events):
+        win.show_locked('locked')
+            
+    @LDS.hookimpl
+    def state_lock_validate(self, cfg, app, events): 
+        if self.lock_screen_timer.is_timeout():
+            return 'login' 
+
+    # ----------------------------- PassFail State           --------------------------------
+
+    @LDS.hookimpl
+    def state_passfail_enter(self,app,win):
+        LOGGER.info("This is the passfail state")
+        self.failed_view_timer.start()
+        print("Previous state was {}".format(app.previous_state))
+        if app.previous_state == 'decrypt':
+            message = 'wrong_decrypt'
+        elif app.previous_state == 'login':
+            message = 'wrong_password'
+        win.show_locked(message)
+            
+    @LDS.hookimpl
+    def state_passfail_validate(self, cfg, app, events): 
+        if self.failed_view_timer.is_timeout():
+            return app.previous_state
+        
+# -----------------------------------------------------------------
     @LDS.hookimpl
     def state_preview_enter(self, app, win):
         self.count += 1
@@ -348,42 +385,89 @@ class ViewPlugin(object):
     def state_processing_validate(self, cfg, app):
         if app.printer.is_ready() and cfg.getfloat('PRINTER', 'printer_delay') > 0\
                 and app.count.remaining_duplicates > 0:
-            return 'print'
+            return 'finish'
         return 'finish'  # Can not print
 
     @LDS.hookimpl
     def state_print_enter(self, cfg, app, win):
-        LOGGER.info("Display the final picture")
-        win.show_print(app.previous_picture)
-        win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
-
-        # Reset timeout in case of settings changed
-        self.print_view_timer.timeout = cfg.getfloat('PRINTER', 'printer_delay')
-        self.print_view_timer.start()
+        LOGGER.info("Display the Document details to be printed")
+        LOGGER.info("Printing Document: {}".format(app.print_job))
+        self.print_status = "print"
+        self.action = ""
+        win.show_print(app.previous_picture, self.print_status, self.action, app.chosen_document.document_name)
+        if app.print_job and app.printer.is_ready():
+            app.print_event()
 
     @LDS.hookimpl
+    def state_print_do(self, cfg, app, win, events):
+        printed = app.find_print_status_event(events)
+        if printed:
+            # Enable the buttons of the page
+
+
+            # win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
+            # app.print_job = None
+            # # update dictionary to show that it has been printed
+            # app.picture_name = str(app.inmate_number) + str(app.chosen_document.document[0])
+            # app.capture_nbr = 1
+            # self.print_status = "print_successful"
+            # self.action = "print_forget"
+            print("Tasks:",app.printer.get_all_tasks())
+
+        # win.show_print(app.previous_picture, self.print_status, self.action)
+        # win._current_background.yesbutton.draw(app.update_needed)
+        # win._current_background.nobutton.draw(app.update_needed)
+        
+       
+    @LDS.hookimpl
     def state_print_validate(self, app, win, events):
-        printed = app.find_print_event(events)
+        # if self.forgotten.button_enabled:
+        #     self.forgotten = app.find_capture_event(events)
+
+        # if self.no_print.button_enabled:
+        #     self.no_print = app.find_print_failed_event(events)
         self.forgotten = app.find_capture_event(events)
-        if self.print_view_timer.is_timeout() or printed or self.forgotten:
-            if printed:
-                win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
-            return 'finish'
+        if self.forgotten:
+            return 'preview'
+        
+    @LDS.hookimpl
+    def state_capture_signature_enter(self):
+        """Capture signature
+        """
+    @LDS.hookimpl
+    def state_capture_signature_do(self):
+        """Keep calling it in a loop
+        """
+    @LDS.hookimpl
+    def state_capture_signature_validate(self):
+        """Verify conditions for the next state
+        """
+    @LDS.hookimpl
+    def state_capture_signature_exit(self):
+        """Validate for the next state
+        """
 
     @LDS.hookimpl
     def state_finish_enter(self, cfg, app, win):
-        if cfg.getfloat('WINDOW', 'finish_picture_delay') > 0 and not self.forgotten:
-            win.show_finished(app.previous_picture)
-            timeout = cfg.getfloat('WINDOW', 'finish_picture_delay')
-        else:
-            win.show_finished()
-            timeout = 1
+        win.show_print(app.previous_picture)
 
-        # Reset timeout in case of settings changed
-        self.finish_timer.timeout = timeout
-        self.finish_timer.start()
+        
 
     @LDS.hookimpl
-    def state_finish_validate(self):
-        if self.finish_timer.is_timeout():
-            return 'wait'
+    def state_finish_validate(self, app, win, events):
+        printed = app.find_print_event(events)
+        if printed and app.previous_picture_file:
+            # read image into blob
+            blob=app.convertToBinaryData(app.previous_picture_file)
+            os.remove(app.previous_picture_file)
+            # win._current_documents_foreground.document_view.inmate_documents
+            win._current_documents_foreground.document_view.update_view(app.inmate_number, blob, decrypted=True, printed=True)
+            app.documents = win._current_documents_foreground.document_view.inmate_documents  
+            win.documents_foreground = {}
+            db = DataBase()
+            db.__update__(document_update_query, (app.chosen_document.document[16], app.chosen_document.document[0]))
+            # print(app.chosen_document.document[16])
+            # insert tuple into database
+            app.chosen_document = None
+            return 'chosen'
+        

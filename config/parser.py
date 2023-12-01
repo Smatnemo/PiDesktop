@@ -147,7 +147,7 @@ DEFAULT = odict((
                  "Main text displayed",
                  "Title", "")),
             ("footer_text2",
-                ("Footer 2",
+                ("Inmate_Number",
                  "Secondary text displayed",
                  "Sub-title", "")),
             ("text_colors",

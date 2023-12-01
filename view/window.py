@@ -66,10 +66,11 @@ class PiWindow(object):
         info = pygame.display.Info()
 
         pygame.display.set_caption(title)
-        self.is_fullscreen = False
+        self.is_fullscreen = True
         self.display_size = (info.current_w, info.current_h)
         # self.surface = pygame.display.set_mode(self.__size, pygame.NOFRAME)
-        self.surface = pygame.display.set_mode(self.display_size, pygame.RESIZABLE)
+        # self.surface = pygame.display.set_mode(self.display_size, pygame.RESIZABLE)
+        self.surface = pygame.display.set_mode(self.display_size, pygame.NOFRAME)
 
         self._buffered_images = {}
         self._current_background = None
@@ -261,7 +262,7 @@ class PiWindow(object):
         self._capture_number = (0, self._capture_number[1])
         self._update_background(background.OopsBackground())
 
-    def show_intro(self, pil_image=None, with_print=True):
+    def show_intro(self, pil_image=None, with_print=True, state=None):
         """Show introduction view.
         """
         self._capture_number = (0, self._capture_number[1])
@@ -275,6 +276,12 @@ class PiWindow(object):
         elif self._current_foreground:
             self._buffered_images.pop(id(self._current_foreground[0]), None)
             self._current_foreground = None
+
+    def show_locked(self, state=None, count=None):
+        """Show locked view.
+        """
+        if state:
+            self._update_background(background.IntroBackground(self.arrow_location, self.arrow_offset, state, count))
 
     def show_login(self):
         self._update_background(background.LoginBackground())
@@ -337,12 +344,12 @@ class PiWindow(object):
         self._capture_number = (0, self._capture_number[1])
         self._update_background(background.ProcessingBackground())
 
-    def show_print(self, pil_image=None):
+    def show_print(self, pil_image=None, print_status="", action=""):
         """Show print view (image resized on the left).
         """
-        self._capture_number = (0, self._capture_number[1])
+        # self._capture_number = (0, self._capture_number[1])
         self._update_background(background.PrintBackground(self.arrow_location,
-                                                           self.arrow_offset))
+                                                           self.arrow_offset, print_status, action))
         if pil_image:
             self._update_foreground(pil_image, self.LEFT)
 
@@ -439,4 +446,5 @@ class PiWindow(object):
         self._current_background = None
         self._current_foreground = None
         self._current_documents_foreground = None
+        self.documents_foreground = {}
         self._buffered_images = {}

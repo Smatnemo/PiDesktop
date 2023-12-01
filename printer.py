@@ -17,6 +17,7 @@ from LDS.pictures import get_picture_factory
 
 
 PRINTER_TASKS_UPDATED = pygame.USEREVENT + 2
+PRINTEVENT= pygame.USEREVENT + 20
 
 PAPER_FORMATS = {
     '2x6': (2, 6),      # 2x6 pouces - 5x15 cm - 51x152 mm
@@ -125,6 +126,9 @@ class Printer(object):
             return {}  # No printer found
         return self._conn.getJobs(my_jobs=True, requested_attributes=["job-id", "job-name",
                                                                       "job-uri", "job-state"])
+    
+    def get_task_state(self, job):
+        return self._conn.getJobAttributes(job)["job-state"]
 
     def quit(self):
         """Do cleanup actions.

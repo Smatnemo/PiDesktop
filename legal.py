@@ -10,11 +10,13 @@ import time
 import tempfile
 from warnings import filterwarnings
 
-user = os.getlogin()
-# sys.path.append('/home/{}'.format(user))
-current_path = os.getcwd()
-package_dir = osp.dirname(current_path)
-sys.path.append(package_dir)
+
+package_dir = osp.abspath(osp.dirname(__file__))
+
+search_dir = osp.abspath(osp.dirname(package_dir))
+print("Search Dir:", search_dir)
+sys.path.append(search_dir)
+
 print(sys.path)
 
 from gpiozero import Device, ButtonBoard, LEDBoard, pi_info
@@ -22,6 +24,7 @@ from gpiozero.exc import BadPinFactory, PinFactoryFallback
 
 import LDS
 from LDS import language
+from LDS.documents import initialize_documents_dirs
 from LDS.database import DataBase 
 from LDS.counters import Counters
 from LDS.utils import (LOGGER, PoolingTimer, configure_logging, get_crash_message,
@@ -31,7 +34,7 @@ from LDS.view.documentsview import CHOSEEVENT
 from LDS.view import LOGINEVENT
 from LDS.states import StatesMachine
 from LDS.plugins import create_plugin_manager
-from LDS.printer import PRINTER_TASKS_UPDATED, Printer
+from LDS.printer import PRINTER_TASKS_UPDATED, PRINTEVENT, Printer
 from LDS.config import PiConfigParser, PiConfigMenu
 
 
@@ -59,6 +62,7 @@ NEXTBUTTON = pygame.USEREVENT + 18
 
 LOCKSCREEN = pygame.USEREVENT + 19
 
+CAPTUREEVENT = pygame.USEREVENT + 21
 
 class PiApplication:
 
@@ -70,13 +74,13 @@ class PiApplication:
         self.db = DataBase()
         self.db._initialize_app_settings()
         self.settings = self.db.settings
-        self.settings['use_camera'] = False
+        
 
         # Create window of (width, height)
         init_size = self._config.gettyped('WINDOW', 'size')
         init_debug = self._config.getboolean('GENERAL', 'debug')
         # init_color = self._config.gettyped('WINDOW', 'background')
-        init_color = LDS.current_path + self.settings['background']
+        init_color = osp.join(LDS.package_dir,self.settings['background'])
         init_text_color = self._config.gettyped('WINDOW', 'text_color')
         if isinstance(init_color, str):
             if not osp.isfile(init_color):
@@ -87,7 +91,8 @@ class PiApplication:
 
         title = 'Legal v{}'.format(LDS.__version__)
         
-        logo_path = LDS.current_path + self.settings['watermarkpath']
+        logo_path = osp.join(LDS.package_dir,self.settings['watermarkpath'])
+
         img = pygame.image.load(logo_path)
         if not isinstance(init_size, str):
             self._window = PiWindow(title, init_size, color=init_color,
@@ -111,20 +116,21 @@ class PiApplication:
         self._machine.add_state('print')# This state should be used to print document instead
         self._machine.add_state('finish')
         self._machine.add_state('lock') # log out 
+        self._machine.add_state('passfail')
 
         # State to return to after screen is locked and logged back into
         self.previous_state = None
 
         # Variables shared with plugins
         # Change them may break plugins compatibility
-        self.capture_nbr = None
+        self.capture_nbr = 1
         self.capture_date = None
         self.capture_choices = (4, 1)
 
         self.inmate_number = None
         self.chosen_document = None
+        self.document_row = None
         self.documents = self.settings['inmate_documents']
-        # self.db_capture_choices = (6, 4, 2, 1)
         self.previous_picture = None
         self.previous_animated = None
         self.previous_picture_file = None
@@ -133,14 +139,33 @@ class PiApplication:
         self.validated = None 
         self.update_needed = None
         self.decrypt_key = None
-
+        self.decrypted_file = None
+        self.print_job = None
+        self.picture_name = None
+        # Get count from data base
+        if self.settings['attempt_count']:
+            self.attempt_count = self.settings['attempt_count']
+        else:
+            self.attempt_count = 3
 
         self.count = Counters(self._config.join_path("counters.pickle"),
                               taken=0, printed=0, forgotten=0,
                               remaining_duplicates=self._config.getint('PRINTER', 'max_duplicates'))
-        if self.settings['use_camera']:
-            self.camera = self._pm.hook.lds_setup_camera(cfg=self._config)
         
+        try:
+            if self.settings['use_camera']:
+                self.camera = self._pm.hook.lds_setup_camera(cfg=self._config)
+        except Exception as ex:
+            LOGGER.error("Camera could not be set up: {}".format(ex))
+            self.settings['use_signature'] = True
+            pass
+        try: 
+            if self.settings['use_signature']:
+                self.capture_signature = None 
+        except Exception as ex:
+            LOGGER.error("Signature functionality could not be set up: {}".format(ex))
+            pass 
+
         self.leds = LEDBoard(capture="BOARD" + config.get('CONTROLS', 'picture_led_pin'),
                              printer="BOARD" + config.get('CONTROLS', 'print_led_pin'))
 
@@ -150,8 +175,25 @@ class PiApplication:
                                self.count)
 
     def _initialize(self):
-        print(self._machine.states)
-        
+        self.printer.max_pages = self._config.getint('PRINTER', 'max_pages')
+
+    @property
+    def picture_filename(self):
+        """Return the final picture file name.
+        """
+        if not self.picture_name:
+            raise EnvironmentError("The 'picturename' attribute is not set yet")
+        return "{}_.jpg".format(self.picture_name)  
+    
+    def convertToBinaryData(self, filename):
+        # Convert digital data to binary format
+        with open(filename, 'rb') as file:
+            blobData = file.read()
+        return blobData
+
+    def print_event(self):
+        pygame.event.post(pygame.event.Event(PRINTEVENT))
+     
     def find_quit_event(self, events):
         """Return the first found event if found in the list.
         """
@@ -189,7 +231,6 @@ class PiApplication:
                 print('pygame.FINGERUP')
                 return event
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                print('I am here')
                 return event
         return None
         
@@ -210,15 +251,7 @@ class PiApplication:
         """Return the first found event if found in the list.
         """
         for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_e\
-                    and pygame.key.get_mods() & pygame.KMOD_CTRL:
-                return event
-            if (event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2, 3)) or event.type == pygame.FINGERUP:
-                pos = get_event_pos(self._window.display_size, event)
-                rect = self._window.get_rect()
-                if pygame.Rect(rect.width // 2, 0, rect.width // 2, rect.height).collidepoint(pos):
-                    return event
-            if event.type == BUTTONDOWN and event.printer:
+            if event.type == PRINTEVENT:
                 return event
         return None
     
@@ -293,14 +326,9 @@ class PiApplication:
         """Return the first found event if found in the list.
         """
         for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
-                return event
-            if (event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2, 3)) or event.type == pygame.FINGERUP:
-                pos = get_event_pos(self._window.display_size, event)
-                rect = self._window.get_rect()
-                if pygame.Rect(0, 0, rect.width // 2, rect.height).collidepoint(pos):
-                    return event
             if event.type == BUTTONDOWN and event.capture:
+                return event
+            if event.type == CAPTUREEVENT:
                 return event
         return None
         
@@ -422,6 +450,9 @@ def main():
 
     # Update configuration with plugins ones
     plugin_manager.hook.lds_configure(cfg=config)
+
+    # Initializing documents directory
+    initialize_documents_dirs()
 
     # Ensure config files are present in case of first pibooth launch
     if not options.reset:
