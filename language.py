@@ -36,10 +36,16 @@ DEFAULT = {
         'print_forget': "Please\nTake a\nphoto",
         'print_again': "Please\nTake another\nphoto",
         'done':"Return to Documents",
+        'num_of_pages': "Number of pages",
         'finished': "Thanks",
         'oops': "Oops! something went wrong",
         'wrong_password':"Oops! Wrong Password",
         '':"",
+        'Q1':"Did it print successfully?",
+        'Q2':"Was your image captured?",
+        'Q3':"Was your signature captured?"
+    },
+    'sp': {
         'Q1':"Did it print successfully?",
         'Q2':"Was your image captured?",
         'Q3':"Was your signature captured?"
