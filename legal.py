@@ -225,8 +225,10 @@ class PiApplication:
         """
         for event in events:
             if event.type == pygame.FINGERDOWN:
+                LOGGER.info("This is a finger down:{}".format(event))
                 return event 
             if event.type == pygame.FINGERUP:
+                LOGGER.info("This is a finger up:{}".format(event))
                 return event
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 return event
@@ -363,7 +365,8 @@ class PiApplication:
                     self._window.resize(event.size)
                 # For keypad
                 for event in events:
-                    if event.type == pygame.MOUSEBUTTONDOWN or event.type==pygame.MOUSEMOTION or event.type==pygame.MOUSEBUTTONUP: 
+                    if event.type == pygame.MOUSEBUTTONDOWN or event.type==pygame.MOUSEMOTION or event.type==pygame.MOUSEBUTTONUP \
+                        or event.type==pygame.FINGERUP or event.type==pygame.FINGERDOWN: 
                         self.update_needed = event
                     else:
                         self.update_needed = None

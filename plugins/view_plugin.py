@@ -85,7 +85,7 @@ class ViewPlugin(object):
     def state_login_do(self, app, win, events):
         
         if events:
-            LOGGER.info("These are the events:{}".format(events))
+            # LOGGER.info("Events:{}".format(events))
             self.choose_timer.start()
         if app.find_login_event(events):
             if self.login_view.passcode_box.input_text != '':
