@@ -1,7 +1,9 @@
 from curses import BUTTON1_CLICKED
 import pygame 
 import time
+import os.path as osp
 
+from LDS import fonts, pictures
 
 pygame.init()
 WIDTH = 640
@@ -226,7 +228,10 @@ class PushButton:
         if event.type==pygame.MOUSEBUTTONDOWN or event.type==pygame.FINGERDOWN and self.button_rect.collidepoint(event.pos) and self.button_enabled:
             return 'BUTTONDOWN'
         if event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP and self.button_rect.collidepoint(event.pos) and self.button_enabled:
-            pygame.event.post(pygame.event.Event(self.event))
+            if isinstance(self.event, tuple):
+                pygame.event.post(pygame.event.Event(self.event[0], self.event[1]))
+            else:
+                pygame.event.post(pygame.event.Event(self.event))
             return 'BUTTONUP'
         else:
             return None
@@ -260,6 +265,17 @@ class PushButton:
         else:
             pygame.draw.rect(self.screen, 'blue', self.button_rect)
         self.screen.blit(self.button_text, self.coord)
+    
+    def use_icon(self, icon):
+        if osp.exists(icon) and osp.isfile(icon):
+            pass 
+        # Write code to resize image when given icon
+        size = (self._rect.width * 0.2, self._rect.height * 0.2)
+        self.left_arrow = pictures.get_pygame_image("camera.png", size, vflip=False, color=self._text_color)
+
+
+
+
 
 
 class button(object):

@@ -344,14 +344,21 @@ class PiWindow(object):
         self._capture_number = (0, self._capture_number[1])
         self._update_background(background.ProcessingBackground())
 
-    def show_print(self, pil_image=None, print_status="", action=""):
+    def show_print(self, pil_image=None, print_status="", question="", document_name="", number_of_pages=""):
         """Show print view (image resized on the left).
         """
-        # self._capture_number = (0, self._capture_number[1])
         self._update_background(background.PrintBackground(self.arrow_location,
-                                                           self.arrow_offset, print_status, action))
+                                                           self.arrow_offset, 
+                                                           print_status,
+                                                           question,
+                                                           document_name,
+                                                           number_of_pages))
         if pil_image:
             self._update_foreground(pil_image, self.LEFT)
+            print("Current foreground:{}".format(self._current_foreground))
+            print("Buffered images:{}".format(self._buffered_images))
+        else:
+            self._current_foreground = None
 
     def show_finished(self, pil_image=None):
         """Show finished view (image resized fullscreen).

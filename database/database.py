@@ -9,53 +9,6 @@ LOGGER.info("Database path: {}".format(DB_PATH))
 print("Database Path:", DB_PATH)
 
 # Database quries
-create_product_table = """
-CREATE TABLE IF NOT EXISTS 'product' (
-  'product_id' bigint PRIMARY KEY,
-  'enabled' tinyint(1) NOT NULL,
-  'name' varchar(50),
-  'default_background_img' varchar(255) NOT NULL,
-  'photo_count' int,
-  'created_by' bigint NOT NULL,
-  'created_on' datetime NOT NULL,
-  FOREIGN KEY ('default_background_img') REFERENCES 'Object' ('id')
-);
-"""
-
-create_product_photos_table = """
-CREATE TABLE IF NOT EXISTS 'product_photos' (
-  'product_photo_id' bigint PRIMARY KEY,
-  'photo_order' int NOT NULL,
-  'product_id' bigint NOT NULL,
-  'start_coord_x' int NOT NULL,
-  'start_coord_y' int NOT NULL,
-  'width' int NOT NULL,
-  'height' int NOT NULL,
-  'created_by' bigint NOT NULL,
-  'created_on' datetime NOT NULL,
-  FOREIGN KEY ('product_id') REFERENCES 'product' ('product_id')
-);
-"""
-create_templates_table = """
-CREATE TABLE IF NOT EXISTS 'templates' (
-  'template_id' bigint PRIMARY KEY,
-  'enabled' bool,
-  'template_order' int,
-  'product_id' bigint NOT NULL,
-  'entity_id' bigint NOT NULL,
-  'label' varchar(255) NOT NULL, 
-  'background_img' varchar(255) NOT NULL,
-  'price' decimal(10,0) NOT NULL,
-  'currency' bigint NOT NULL,
-  'run_on_date_range' tinyint(1) NOT NULL,
-  'start_date' datetime NOT NULL,
-  'end_time' datetime NOT NULL,
-  'created_by' bigint NOT NULL,
-  'created_on' datetime NOT NULL,
-  FOREIGN KEY ('product_id') REFERENCES 'product' ('product_id'),
-  FOREIGN KEY ('background_img') REFERENCES 'Object' ('id')
-);
-"""
 create_object_table = """CREATE TABLE IF NOT EXISTS `Object` (
   'id' bigint PRIMARY KEY NOT NULL,
   'original_name' varchar(1024) NOT NULL,
@@ -101,7 +54,36 @@ CREATE TABLE IF NOT EXISTS 'Documents' (
   'deleted_on' datetime NOT NULL
 );"""
 
-create_tables = [create_object_table, create_product_table, create_product_photos_table, create_templates_table, create_entity_table, create_documents_table]
+create_Questions_Answers_table = """
+CREATE TABLE IF NOT EXISTS `Questions_Answers` (
+  'id' INTEGER PRIMARY KEY AUTOINCREMENT,
+  'document_id' bigint,
+  'Q1' tinyint(1),
+  'Q2' tinyint(1),
+  'Q3' tinyint(1),
+  'Q4' tinyint(1),
+  'Q5' tinyint(1),
+  'Q6' tinyint(1),
+  'Q7' tinyint(1),
+  'Q8' tinyint(1),
+  'Q9' tinyint(1),
+  'Q10' tinyint(1),
+  'Q11' tinyint(1),
+  'Q12' tinyint(1),
+  'Q13' tinyint(1),
+  'Q14' tinyint(1),
+  'Q15' tinyint(1),
+  'Q16' tinyint(1),
+  'Q17' tinyint(1),
+  'Q18' tinyint(1),
+  'Q19' tinyint(1),
+  'Q20' tinyint(1),
+  'date_answered' DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY ('document_id') REFERENCES 'Documents' ('order_id')
+);
+"""
+
+create_tables = [create_object_table, create_entity_table, create_documents_table, create_Questions_Answers_table,]
 
 document_insert_query = """ INSERT INTO 'Documents'
                                   (order_id, 
@@ -127,6 +109,33 @@ document_update_query = """UPDATE 'Documents'
                                 status = 'printed',
                                 inmate_photo= ?
                             WHERE order_id= ? """
+
+Questions_Answers_insert_query = """
+INSERT INTO `Questions_Answers` (
+  'id' int PRIMARY KEY AUTOINCREMENT,
+  'document_id' bigint,
+  'Q1' tinyint(1),
+  'Q2' tinyint(1),
+  'Q3' tinyint(1),
+  'Q4' tinyint(1),
+  'Q5' tinyint(1),
+  'Q6' tinyint(1),
+  'Q7' tinyint(1),
+  'Q8' tinyint(1),
+  'Q9' tinyint(1),
+  'Q10' tinyint(1),
+  'Q11' tinyint(1),
+  'Q12' tinyint(1),
+  'Q13' tinyint(1),
+  'Q14' tinyint(1),
+  'Q15' tinyint(1),
+  'Q16' tinyint(1),
+  'Q17' tinyint(1),
+  'Q18' tinyint(1),
+  'Q19' tinyint(1),
+  'Q20' tinyint(1)
+)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+"""
 # A list of standard queries for settings
 # 1. query for getting the number of enabled products. int 
 # 2. query for getting the photocount per product
@@ -196,8 +205,8 @@ class DataBase(object):
     def _initialize_app_settings(self):
         # Create all the steps to query and initialize the settings that will be used in the app
         self.entity = self.get_entity()
-        self.get_products()
-        self.get_templates()
+        # self.get_products()
+        # self.get_templates()
         self.get_settings()
         
     
@@ -222,13 +231,6 @@ class DataBase(object):
     def reverse(self, tuple_name):
         return tuple_name[::-1]
         
-    def get_capture_choices(self):
-        enabled_products = self.enabled_product_templates.keys()
-        capture_options = []
-        for enabled_product in enabled_products:
-            capture_options.append(enabled_product[4])
-
-        return self.reverse(tuple(set((capture_options))))
 
     def get_entity(self):
         # Get al the details from the entity table
@@ -241,94 +243,7 @@ class DataBase(object):
         else:
             # Log error
             return
-
-
-    def get_products(self):
-        # Get a list of all the products from the database
-        self.open()
-        self.cursor.execute("SELECT * FROM product")
-        self.products = self.cursor.fetchall()
-
-        self.cursor.execute("SELECT * FROM product WHERE enabled=True")
-        self.enabled_products = self.cursor.fetchall()
-        if self.enabled_products:
-            # Stop app and ask for enabled products
-            pass
-
-        self.cursor.execute("SELECT * FROM product WHERE enabled=False")
-        self.unenabled_products = self.cursor.fetchall()
-
-        self.close()
-
-
-    def get_templates(self):
-        """
-        :attr product_id: the id of the product
-        :type product_id: int
-        """
-        self.open()
-        self.cursor.execute("SELECT * FROM templates")
-        self.templates = self.cursor.fetchall()
-
-        # get a list of enabled templates
-        self.cursor.execute("SELECT * FROM templates WHERE enabled=True")
-        self.enabled_templates = self.cursor.fetchall()
-
-        # get a list of unenabled templates
-        self.cursor.execute("SELECT * FROM templates WHERE enabled=False")
-        self.unenabled_templates = self.cursor.fetchall()
-
-        # get a unique set of ids from products list
-        self.product_ids = []
-        self.product_names = []
-        if self.products is not None:
-            # iterate through the list of products and get the product_ids and names
-            # use the product id to get all the templates associated with a product: enabled or not
-            # Store values in a dictionary with the name of the product as the key and a list of all its templates as the value
-            for product in self.products:
-                self.product_ids.append(product[0])
-                self.product_names.append(product[2])
-                self.cursor.execute("SELECT * FROM templates WHERE product_id=(?)", (product[0],))
-                templates = self.cursor.fetchall()
-                if templates:
-                    self.product_templates[product] = templates
-                else: 
-                    # Log info associated with the product id and name
-                    # product[0] - The product id
-                    # product[2] - The product name
-                    continue
-
-                # Create condition to check if the product is enbled, if so, create another dictionary for enabled products and themplates
-                if product[1] == 1:
-                    # Go through all its templates to check for enabled templates. 
-                    # Add enabled templates to the list below
-                    enabled_templates = []
-                    for template in templates:
-                        if template[1] == 1:
-                            enabled_templates.append(template)
-                        else:
-                            # template[0] - template_id
-                            # product[0] - product_id
-                            # Log these stating clearly that this template associated with this product is not enabled
-                            pass
-
-                    # if enabled_templates list is empty. 
-                    if not enabled_templates:
-                        # Create log stating that none of the templates associated with product is enabled.
-                        # exit this condition and return to the initial for loop
-                        continue
-
-                    # Use this to set up pibooth
-                    self.enabled_product_templates[product] = enabled_templates
-                    
-        # create attributes to hold modified list of enabled templates associated with enabled products
-        if self.enabled_product_templates is None:
-            # Show output saying there are no enabled templates associated with enabled products
-            # Show in error log that there must be at least one enabled template associated with at least one enabled product
-            # There must be enabled templates and products for photo booth to initialize
-            pass
-    
-        self.close()
+         
 
 
     def get_object(self, object_id=None):
@@ -386,13 +301,7 @@ class DataBase(object):
         enabled_products = self.enabled_product_templates.keys()
         self.settings['videopath'] = self.get_object(self.entity[2])
         self.settings['watermarkpath'] = self.get_object(self.entity[6])
-        self.settings['capture_choices'] = self.get_capture_choices()
         self.settings['capture_nbr'] = self.get_object()
-        self.settings['product_length'] = self.get_object()
-        self.settings['enabled_product_templates'] = self.enabled_product_templates
-        self.settings['product_templates'] = self.product_templates
-        self.settings['black_and_white'] = True
-        self.settings['coloured'] = True
         self.settings['background'] = self.get_object(self.entity[7])
         self.settings['inmate_documents'] = self.get_inmate_documents()[0]
         self.settings['attempt_count'] = None
@@ -434,12 +343,7 @@ class DataBase(object):
         # Make this list a set
         inmate_number_list = self.get_column("Documents", "inmate_number")
         unique_inmate_number_list = list(set(inmate_number_list))
-        # for document in documents:
-        #     if document[9] in list(inmate_documents.keys()):
-        #         inmate_documents[document[9]].append(document)#
-        #     else:
-        #         inmate_documents[document[9]] = list((document,))
-
+        
         for inmate_number in unique_inmate_number_list:
             docs = self.get_record("Documents", "inmate_number", inmate_number[0])
             inmate_documents[inmate_number[0]] = docs

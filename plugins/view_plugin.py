@@ -1,10 +1,13 @@
 import LDS 
 import os
+import sys
+import pygame
 from LDS.utils import LOGGER, get_crash_message, PoolingTimer
 from LDS.accounts import LogIn, LogOut
 from LDS.documents.document import decrypt_content, document_authentication
 from LDS.database.database import DataBase, document_update_query
 
+BUTTONDOWN = pygame.USEREVENT + 1
 class ViewPlugin(object):
 
     """Plugin to manage the LDS window dans transitions.
@@ -50,18 +53,6 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_wait_enter(self, cfg, app, win):
         self.forgotten = False
-        # if app.previous_animated:
-        #     previous_picture = next(app.previous_animated)
-        #     # Reset timeout in case of settings changed
-        #     self.animated_frame_timer.timeout = cfg.getfloat('WINDOW', 'animate_delay')
-        #     self.animated_frame_timer.start()
-        # else:
-        #     previous_picture = app.previous_picture
-
-        # win.show_intro(previous_picture, app.printer.is_ready()
-        #                and app.count.remaining_duplicates > 0)
-        # if app.printer.is_installed():
-        #     win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
         win.show_intro()
 
     @LDS.hookimpl
@@ -71,14 +62,11 @@ class ViewPlugin(object):
 
     @LDS.hookimpl
     def state_wait_validate(self, cfg, app, events):
-        if app.find_screen_event(events):
+        event = app.find_screen_event(events)
+        if event:
+            LOGGER.info("This is the event from wait state:{}".format(event))
             return 'login'
-        if app.find_capture_event(events):
-            if len(app.capture_choices) > 1:
-                return 'choose'
-            if cfg.getfloat('WINDOW', 'chosen_delay') > 0:
-                return 'chosen'
-            return 'preview'
+      
 
     @LDS.hookimpl
     def state_wait_exit(self, win):
@@ -88,7 +76,6 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_login_enter(self, win):
         LOGGER.info("Attempting to Login")
-        # win.surface.fill((255,255,255))
         self.login_view = win.show_login() # Create a function in window module to display login page
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         # Find way to display it in the login window during login in activity
@@ -96,7 +83,9 @@ class ViewPlugin(object):
         
     @LDS.hookimpl
     def state_login_do(self, app, win, events):
+        
         if events:
+            LOGGER.info("These are the events:{}".format(events))
             self.choose_timer.start()
         if app.find_login_event(events):
             if self.login_view.passcode_box.input_text != '':
@@ -105,8 +94,6 @@ class ViewPlugin(object):
                 app.password = self.login_view.get_input_text() 
             self.login_view.passcode_box.text=''
             self.login_view.passcode_box.txt_surface = self.login_view.passcode_box.font.render(self.login_view.passcode_box.text, True, self.login_view.passcode_box.color)
-            # print('From Login',app.password) 
-        # win.surface.fill((255, 255, 255))
         self.login_view.update_needed = app.update_needed
         self.login_view.passcode_box.handle_event(events)
         self.login_view.draw(win.surface)
@@ -117,7 +104,6 @@ class ViewPlugin(object):
     def state_login_validate(self, cfg, app, win, events):
         # Create a way to validate username and password
         if app.find_login_event(events):
-            # print('From Validate do',app.password)
             LOGGER.info("Attempting to validate password")
             login = LogIn()
             app.validated = login.authenticate(app.password)
@@ -138,9 +124,6 @@ class ViewPlugin(object):
         elif self.choose_timer.is_timeout():    
             return 'wait'
 
-    # def state_login_exit(self, app):
-    #     app.previous_state = 'login'
-
     @LDS.hookimpl
     def state_choose_enter(self, app, win):
         LOGGER.info("Show document choice (nothing selected)")
@@ -152,14 +135,12 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_choose_do(self, app, win, events):
         if events:
-            # If there is any event restart timer
-            LOGGER.info("Restarting timer in choose state")
             self.choose_timer.start()
 
         win._current_documents_foreground.inmate_documents_view.update_needed = app.update_needed
         win.show_choices(app.documents)
 
-        # update for buttona
+        # update for buttons
         win._current_background.backbutton.draw(app.update_needed)
         win._current_background.lockbutton.draw(app.update_needed)
         win._current_documents_foreground.nextbutton.draw(app.update_needed)
@@ -179,14 +160,8 @@ class ViewPlugin(object):
         elif app.inmate_number:
             return 'chosen'
         elif self.choose_timer.is_timeout():
-            # once the time is reached return to wait state
             return 'wait'
         
-
-    @LDS.hookimpl
-    def state_choose_exit(self, app):
-        # app.inmate_number = None
-        pass
         
 
     @LDS.hookimpl
@@ -289,10 +264,6 @@ class ViewPlugin(object):
                 if verify_decryption:
                     app.decrypted_file = result.name
                     LOGGER.info("Done Decrypting")
-                    # Change status in the tuple document before return print
-                    
-                    
-
                     app.print_job = result.name        
                     return 'print'
                 else:
@@ -386,48 +357,73 @@ class ViewPlugin(object):
         if app.printer.is_ready() and cfg.getfloat('PRINTER', 'printer_delay') > 0\
                 and app.count.remaining_duplicates > 0:
             return 'finish'
-        return 'finish'  # Can not print
+        return 'failsafe'  # Can not process photo
 
     @LDS.hookimpl
     def state_print_enter(self, cfg, app, win):
         LOGGER.info("Display the Document details to be printed")
         LOGGER.info("Printing Document: {}".format(app.print_job))
         self.print_status = "print"
-        self.action = ""
-        win.show_print(app.previous_picture, self.print_status, self.action, app.chosen_document.document_name)
+        self.question = "Q1"
+        self.document_name = app.chosen_document.document_name
+        self.enable_button = False
+        win.show_print(app.previous_picture, self.print_status, self.question, self.document_name, app.chosen_document.page_count)
         if app.print_job and app.printer.is_ready():
             app.print_event()
 
     @LDS.hookimpl
     def state_print_do(self, cfg, app, win, events):
+        
         printed = app.find_print_status_event(events)
         if printed:
-            # Enable the buttons of the page
+            self.enable_button = True
+            win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
+            app.print_job = None
+        
+        question_answers = {}
+        answered = app.find_question_event(events)
+        if answered:
+            self.enable_button = True
+            # Fetch different question
+            print(answered)
+            if answered.question == 'Q1':
+                self.question = 'Q2'
+                if answered.answer=='YES':
+                    self.print_status = "print_successful"
+                else:
+                    self.print_status = "print_unsuccessful"
+                # Write the answer to the database for Q1
+            elif answered.question == 'Q2':
+                self.question = 'Q3'
+                self.print_status = ""
+                # Write this into the database for Q2
+            elif answered.question == 'Q3':
+                self.question = 'capture_photo'
+                # win._current_background.yesbutton_enabled = False
 
+                # Write this into the database for Q3
+            self.document_name = ''
+        # Draw screen with the new question
+        win.show_print(app.previous_picture, self.print_status, self.question, self.document_name)
 
-            # win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
-            # app.print_job = None
-            # # update dictionary to show that it has been printed
-            # app.picture_name = str(app.inmate_number) + str(app.chosen_document.document[0])
-            # app.capture_nbr = 1
-            # self.print_status = "print_successful"
-            # self.action = "print_forget"
-            print("Tasks:",app.printer.get_all_tasks())
+        # Enable the buttons of the page
+        win._current_background.yesbutton.enabled(self.enable_button)
+        win._current_background.nobutton.enabled(self.enable_button)
 
-        # win.show_print(app.previous_picture, self.print_status, self.action)
-        # win._current_background.yesbutton.draw(app.update_needed)
-        # win._current_background.nobutton.draw(app.update_needed)
+        # Update the buttons to listen to events
+        win._current_background.yesbutton.draw(app.update_needed)
+        win._current_background.nobutton.draw(app.update_needed)
+
         
        
     @LDS.hookimpl
     def state_print_validate(self, app, win, events):
-        # if self.forgotten.button_enabled:
-        #     self.forgotten = app.find_capture_event(events)
-
-        # if self.no_print.button_enabled:
-        #     self.no_print = app.find_print_failed_event(events)
+        # This event will trigger the capture process
         self.forgotten = app.find_capture_event(events)
         if self.forgotten:
+            self.question = ""
+            app.picture_name = str(app.inmate_number) + str(app.chosen_document.document[0])
+            app.capture_nbr = 1
             return 'preview'
         
     @LDS.hookimpl
@@ -449,25 +445,44 @@ class ViewPlugin(object):
 
     @LDS.hookimpl
     def state_finish_enter(self, cfg, app, win):
-        win.show_print(app.previous_picture)
+        self.print_status = 'capture_again'
+        self.question = 'capture_photo'
+        win.show_print(app.previous_picture, self.print_status, self.question)
 
-        
+    @LDS.hookimpl
+    def state_finish_do(self, cfg, app, win, events):
+        # Enable the buttons of the page
+        win._current_background.yesbutton.enabled(self.enable_button)
+        win._current_background.nobutton.enabled(self.enable_button)
+
+        # Update the buttons to listen to events
+        win._current_background.yesbutton.draw(app.update_needed)
+        win._current_background.nobutton.draw(app.update_needed)
+
 
     @LDS.hookimpl
     def state_finish_validate(self, app, win, events):
-        printed = app.find_print_event(events)
-        if printed and app.previous_picture_file:
-            # read image into blob
-            blob=app.convertToBinaryData(app.previous_picture_file)
-            os.remove(app.previous_picture_file)
-            # win._current_documents_foreground.document_view.inmate_documents
-            win._current_documents_foreground.document_view.update_view(app.inmate_number, blob, decrypted=True, printed=True)
-            app.documents = win._current_documents_foreground.document_view.inmate_documents  
-            win.documents_foreground = {}
-            db = DataBase()
-            db.__update__(document_update_query, (app.chosen_document.document[16], app.chosen_document.document[0]))
-            # print(app.chosen_document.document[16])
-            # insert tuple into database
-            app.chosen_document = None
-            return 'chosen'
+        self.forgotten = app.find_capture_event(events)
+        if self.forgotten:
+            if self.forgotten.answer == 'NO':
+                # read image into blob
+                blob=app.convertToBinaryData(app.previous_picture_file)
+                os.remove(app.previous_picture_file)
+                # win._current_documents_foreground.document_view.inmate_documents
+                win._current_documents_foreground.document_view.update_view(app.inmate_number, blob, decrypted=True, printed=True)
+                app.documents = win._current_documents_foreground.document_view.inmate_documents  
+                win.documents_foreground = {}
+                db = DataBase()
+                db.__update__(document_update_query, (app.chosen_document.document[16], app.chosen_document.document[0]))
+                # print(app.chosen_document.document[16])
+                # insert tuple into database
+                app.chosen_document = None
+                app.previous_picture = None
+                return 'login'
+            
+            elif self.forgotten.answer == 'YES':
+                return 'preview'
+            
+
+        
         

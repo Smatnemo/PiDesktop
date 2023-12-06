@@ -182,7 +182,7 @@ class PiApplication:
         """Return the final picture file name.
         """
         if not self.picture_name:
-            raise EnvironmentError("The 'picturename' attribute is not set yet")
+            raise EnvironmentError("The 'picture_name' attribute is not set yet")
         return "{}_.jpg".format(self.picture_name)  
     
     def convertToBinaryData(self, filename):
@@ -225,10 +225,8 @@ class PiApplication:
         """
         for event in events:
             if event.type == pygame.FINGERDOWN:
-                print('pygame.FINGERDOWN')
                 return event 
             if event.type == pygame.FINGERUP:
-                print('pygame.FINGERUP')
                 return event
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 return event
@@ -269,8 +267,11 @@ class PiApplication:
         for event in events:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 return event
-            if event.type == BUTTONDOWN and event.capture and event.printer:
-                return event
+            try:
+                if event.type == BUTTONDOWN and event.capture and event.printer:
+                    return event
+            except:
+                pass
             if event.type == pygame.FINGERDOWN:
                 # Press but not release
                 self._fingerdown_events.append(event)
@@ -325,11 +326,16 @@ class PiApplication:
     def find_capture_event(self, events):
         """Return the first found event if found in the list.
         """
+        # and event.capture
         for event in events:
-            if event.type == BUTTONDOWN and event.capture:
+            if event.type == BUTTONDOWN and event.question=='capture_photo':
                 return event
-            if event.type == CAPTUREEVENT:
-                return event
+        return None
+    
+    def find_question_event(self, events):
+        for event in events:
+            if event.type == BUTTONDOWN and event.answer:
+                return event 
         return None
         
     def main_loop(self):

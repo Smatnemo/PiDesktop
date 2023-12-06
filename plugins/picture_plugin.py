@@ -111,11 +111,19 @@ class PicturePlugin(object):
 
         for savedir in cfg.gettuple('GENERAL', 'directory', 'path'):
             rawdir = osp.join(savedir, "raw", app.capture_date)
-            os.makedirs(rawdir)
+            if osp.exists(rawdir):
+                LOGGER.info("Deleting the directory with the raw images recurrently: {}".format(rawdir))
+                for root, dirs, files in os.walk(rawdir, topdown=False):
+                    for name in files:
+                        os.remove(os.path.join(root, name))
+                    for name in dirs:
+                        os.rmdir(os.path.join(root, name))
+            else:
+                os.makedirs(rawdir)
 
             for capture in captures:
                 count = captures.index(capture)
-                capture.save(osp.join(rawdir, "pibooth{:03}.jpg".format(count)))
+                capture.save(osp.join(rawdir, "lds{:03}.jpg".format(count)))
 
         LOGGER.info("Creating the final picture")
         default_factory = get_picture_factory(captures, cfg.get('PICTURE', 'orientation'))
@@ -151,16 +159,23 @@ class PicturePlugin(object):
         if app.find_capture_event(events):
 
             LOGGER.info("Moving the picture in the forget folder")
-            for savedir in cfg.gettuple('GENERAL', 'directory', 'path'):
-                forgetdir = osp.join(savedir, "forget")
-                if not osp.isdir(forgetdir):
-                    os.makedirs(forgetdir)
-                os.rename(osp.join(savedir, app.picture_filename), osp.join(forgetdir, app.picture_filename))
+            try:
+                for savedir in cfg.gettuple('GENERAL', 'directory', 'path'):
+                    forgetdir = osp.join(savedir, "forget")
+                    if not osp.isdir(forgetdir):
+                        os.makedirs(forgetdir)
+                    os.rename(osp.join(savedir, app.picture_filename), osp.join(forgetdir, app.picture_filename))
 
-            self._reset_vars(app)
-            app.count.forgotten += 1
-            app.previous_picture = self.second_previous_picture
+                self._reset_vars(app)
+                app.count.forgotten += 1
+                app.previous_picture = self.second_previous_picture
 
-            # Deactivate the print function for the backuped picture
-            # as we don't known how many times it has already been printed
-            app.count.remaining_duplicates = 0
+                # Deactivate the print function for the backuped picture
+                # as we don't known how many times it has already been printed
+                app.count.remaining_duplicates = 0
+            except: 
+                pass
+
+    @LDS.hookimpl
+    def state_finish_exit(self, app):
+        self._reset_vars(app)

@@ -13,6 +13,7 @@ ARROW_BOTTOM = 'bottom'
 ARROW_HIDDEN = 'hidden'
 ARROW_TOUCH = 'touchscreen'
 
+BUTTONDOWN = pygame.USEREVENT + 1
 
 def multiline_text_to_surfaces(text, color, rect, align='center'):
     """Return a list of surfaces corresponding to each line of the text.
@@ -31,7 +32,6 @@ def multiline_text_to_surfaces(text, color, rect, align='center'):
     """
     surfaces = []
     lines = text.splitlines()
-
     font = fonts.get_pygame_font(max(lines, key=len), fonts.MONOID,
                                  rect.width, rect.height / len(lines))
     for i, line in enumerate(lines):
@@ -62,9 +62,11 @@ def multiline_text_to_surfaces(text, color, rect, align='center'):
 
 class Background(object):
 
-    def __init__(self, image_name, color=(0, 0, 0), text_color=(255, 255, 255)):
+    def __init__(self, image_name, document_name="", color=(0, 0, 0), text_color=(255, 255, 255)):
         self._rect = None
         self._name = image_name
+        
+        self._document_name = document_name
         self._need_update = False
 
         self._background = None
@@ -176,6 +178,8 @@ class Background(object):
         """
         self._texts = []
         text = get_translated_text(self._name)
+        if self._document_name:
+            text = text + ": " + str(self._document_name)
         if text:
             self._write_text(text, rect, align)
 
@@ -214,28 +218,7 @@ class IntroBackground(Background):
 
     def resize(self, screen):
         Background.resize(self, screen)
-        if self._need_update and self.arrow_location != ARROW_HIDDEN:
-            if self.arrow_location == ARROW_TOUCH:
-                size = (self._rect.width * 0.2, self._rect.height * 0.2)
-
-                self.left_arrow = pictures.get_pygame_image("camera.png", size, vflip=False, color=self._text_color)
-
-                x = int(self._rect.width * 0.2)
-                y = int(self._rect.height // 2)
-            else:
-                size = (int(self._rect.width * 0.3), int(self._rect.height * 0.3))
-
-                vflip = True if self.arrow_location == ARROW_TOP else False
-                self.left_arrow = pictures.get_pygame_image("arrow.png", size, vflip=vflip, color=self._text_color)
-
-                x = int(self._rect.left + self._rect.width // 4
-                        - self.left_arrow.get_rect().width // 2)
-                if self.arrow_location == ARROW_TOP:
-                    y = self._rect.top + 10
-                else:
-                    y = int(self._rect.top + 2 * self._rect.height // 3)
-
-            self.left_arrow_pos = (x - self.arrow_offset, y)
+            
 
     def resize_texts(self):
         """Update text surfaces.
@@ -250,7 +233,7 @@ class IntroBackground(Background):
             self.align = align
         else:
             Background.resize_texts(self, rect, align)
-        print(self._texts)
+    
         if align == 'center':
             for text_surface in self._texts:
                 text_surface[1].x=self._rect.width//2-text_surface[1].width//2
@@ -267,11 +250,12 @@ class IntroBackground(Background):
         self.message_box = self.font.render(self.message, True, self._text_color)
 
         box_width, box_height = self.font.size(self.message)
+        self.text_rect.x = self.text_rect.width//2 - box_width//2
+        self.text_rect.y = self.text_rect.height//2 - box_height//2
         
 
     def paint(self, screen):
         Background.paint(self, screen)
-    
         if self._name == 'locked':
             self.countdown()
             screen.blit(self.message_box, (self.text_rect.x, self.text_rect.y))
@@ -315,7 +299,6 @@ class ChooseInmateDocumentBackground(Background):
         
         self.button_enabled = True
         self.backbutton_event = pygame.USEREVENT + 17
-
 
         self.update_needed = None
 
@@ -443,10 +426,6 @@ class CaptureBackground(Background):
             self.left_people_pos = (0, y)
             self.right_people_pos = (x + size[0] - 1.5 * self.right_people.get_rect().width, y)
 
-            if self._show_outlines:
-                self._outlines.append((self._make_outlines(size), (0, y)))
-                self._outlines.append((self._make_outlines(size), (x, y)))
-
     def paint(self, screen):
         Background.paint(self, screen)
         
@@ -467,15 +446,15 @@ class ProcessingBackground(Background):
 
 class PrintBackground(Background):
 
-    def __init__(self, arrow_location=ARROW_BOTTOM, arrow_offset=0, print_status="print", action="print_forget", document_name=None, number_of_pages=None):
-        Background.__init__(self, print_status)
+    def __init__(self, arrow_location=ARROW_BOTTOM, arrow_offset=0, print_status="print", question="", document_name="", number_of_pages=""):
+        Background.__init__(self, print_status, document_name)
         self.arrow_location = arrow_location
         self.arrow_offset = arrow_offset
         self.right_arrow = None
         self.right_arrow_pos = None
         self.left_arrow = None
         self.left_arrow_pos = None
-        self.action_statement = action
+        self.question = question
 
         self._rect = None
         self.yesbutton = None
@@ -484,128 +463,107 @@ class PrintBackground(Background):
 
         self.nobutton_width = 200
         self.nobutton_height = 38
+        self.yesbutton_y = None
+        self.nobutton_x = None
 
         self.yesbutton_enabled = True
-        self.yesbutton_event = pygame.USEREVENT + 21
-
+        
+        self.yesbutton_event = (BUTTONDOWN, {'question':question,'answer':'YES'})
         self.nobutton = None
 
-        self.nobutton_event = pygame.USEREVENT + 22
+        self.nobutton_event = (BUTTONDOWN, {'question':question,'answer':'NO'})
 
         self.update_needed = None
 
         self.document_name = document_name 
         self.num_of_pages = number_of_pages
 
+    def __str__(self):
+        """Return background final name.
+
+        It is used in the main window to distinguish backgrounds in the cache
+        thus each background string shall be uniq.
+        """
+        return "{}({})({})".format(self.__class__.__name__, self._name, self.question)
+
     def resize(self, screen):
         Background.resize(self, screen)
-        if self._need_update and self.arrow_location != ARROW_HIDDEN:
-
-            if self.arrow_location == ARROW_TOUCH:
-                size = (self._rect.width // 4, self._rect.height // 4)
-                # Right arrow
-                self.right_arrow = pictures.get_pygame_image(
-                    "printer_touch.png", size, hflip=False, vflip=False, color=self._text_color)
-                x = int(self._rect.left + self._rect.width * 0.70
-                        - self.right_arrow.get_rect().width // 2)
-                y = int(self._rect.top + self._rect.height * 0.45)
-            else:
-                size = (self._rect.width * 0.3, self._rect.height * 0.3)
-
-                vflip = True if self.arrow_location == ARROW_TOP else False
-
-                # Right arrow
-                self.right_arrow = pictures.get_pygame_image(
-                    "arrow.png", size, hflip=True, vflip=vflip, color=self._text_color)
-
-                x = int(self._rect.left + self._rect.width * 0.75
-                        - self.right_arrow.get_rect().width // 2)
-                if self.arrow_location == ARROW_TOP:
-                    y = self._rect.top + 10
-                else:
-                    y = int(self._rect.top + 2 * self._rect.height // 3)
-
-            self.right_arrow_pos = (x + self.arrow_offset, y)
-
-            # Left arrow
-            size = (self._rect.width * 0.1, self._rect.height * 0.1)
-
-            if self.arrow_location == ARROW_TOUCH:
-                self.left_arrow = pictures.get_pygame_image(
-                    "hand.png", size, hflip=False, vflip=False, angle=70, color=self._text_color)
-            else:
-                vflip = True if self.arrow_location == ARROW_TOP else False
-                angle = 70 if self.arrow_location == ARROW_TOP else -70
-                self.left_arrow = pictures.get_pygame_image(
-                    "arrow.png", size, hflip=False, vflip=vflip, angle=angle, color=self._text_color)
-
-            x = int(self._rect.left + self._rect.width // 2
-                    - self.left_arrow.get_rect().width // 2)
-
-            if self.arrow_location == ARROW_TOP:
-                y = self._rect.top + 10
-            else:
-                y = int(self._rect.bottom - self.left_arrow.get_rect().height * 1.1)
-
-            self.left_arrow_pos = (x - self.arrow_offset, y)
-
-
-        #  Create parameters for buttons 
-        self._rect = screen.get_rect()
-        self.yesbutton_x = self._rect.width//2 - self.yesbutton_width
-        self.yesbutton_y = self._rect.height//2
-
-        self.nobutton_x = self._rect.width//2 + self.nobutton_width
-        self.nobutton_y = self._rect.height//2
-
-        if self.yesbutton_enabled:
-            self.yesbutton = PushButton((self.yesbutton_x, self.yesbutton_y, self.yesbutton_width, self.yesbutton_height), self.yesbutton_event, label='YES', parent=screen)
-            self.yesbutton.enabled(True)
-
-            self.nobutton = PushButton((self.nobutton_x, self.nobutton_y, self.nobutton_width, self.nobutton_height), self.nobutton_event, label='NO', parent=screen)
-            self.nobutton.enabled(True)
-
-            self.yesbutton_enabled = False
+        
 
 
     def resize_texts(self):
         """Update text surfaces.
         """
-
         rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
                             self._rect.width / 2 - 2 * self._text_border,
                             self._rect.height - 2 * self._text_border)
         align = 'center'
-    
         Background.resize_texts(self, rect, align)
 
-        text = get_translated_text(self.action_statement)
-        self.document_name = None 
-        self.num_of_pages = None
         if self.document_name:
-            text = text + ": " + str(self.document_name)
-            second_text = self.num_of_pages
-        if text:
-            if align == 'center':
-                rect = pygame.Rect(0, 0,
-                                self._rect.width // 5 - 2 * self._text_border,
-                                self._rect.height * 0.3 - 2 * self._text_border)
-            else:
-                rect = pygame.Rect(self._rect.width // 2, 0,
-                                self._rect.width // 5 - 2 * self._text_border,
-                                self._rect.height * 0.3 - 2 * self._text_border)
-            if self.arrow_location == ARROW_TOP:
-                rect.top = self._rect.height * 0.08
-            else:
-                rect.bottom = self._rect.height - self._rect.height * 0.08
+            pages_text = get_translated_text('num_of_pages')
+            pages_text = pages_text + ": " + str(self.num_of_pages)
+        else:
+            pages_text = get_translated_text('')
 
-            self._write_text(text, rect)
+        if pages_text:
+            rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
+                            (self._rect.width / 2 - 2 * self._text_border)*0.65,
+                            self._rect.height - 2 * self._text_border)
+
+            self._write_text(pages_text, rect)
+
+        # if self.question == 'capture':
+        #     self.question = ''
+        question_text = get_translated_text(self.question)
+        if question_text:
+            rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
+                               self._rect.width/2 - 2 * self._text_border, self._rect.height - 2 * self._text_border)
+            self._write_text(question_text, rect)
+
+        # hold the height of each rectangle after drawing on the screen
+        height = 0
+        if self._name != 'capture_again':
+            if align == 'center':     
+                for text_surface in self._texts:
+                    text_surface[1].x=(self._rect.width//2-text_surface[1].width//2)
+                    text_surface[1].y=(self._rect.height//2-text_surface[1].height//2)+height
+                    text_surface = list(text_surface)
+                    height = text_surface[1].height + height
+                    if self._texts[-1]:
+                        self.nobutton_y = text_surface[1].y+height
+                        self.yesbutton_y = text_surface[1].y+height 
+
+            self.yesbutton_x = self._rect.width//2 - self.yesbutton_width
+            self.nobutton_x = self._rect.width//2 + self.nobutton_width
+        else:
+            if self.arrow_location == ARROW_BOTTOM:
+                rect = pygame.Rect(self._rect.width / 2 + self._text_border, self._text_border,
+                                self._rect.width / 2 - 2 * self._text_border,
+                                self._rect.height * 0.6 - self._text_border)
+                align = 'bottom-center'
+            Background.resize_texts(self, rect, align)
+
+            self.yesbutton_x = self._rect.width*0.75 - self.yesbutton_width
+            self.nobutton_x = self._rect.width*0.75 + self.nobutton_width
+        
+        if self.yesbutton_y is None:
+            self.yesbutton_y = self._rect.height * 0.75
+            self.nobutton_y = self._rect.height * 0.75
+        
 
     def paint(self, screen):
         Background.paint(self, screen)
-        if self.arrow_location != ARROW_HIDDEN:
-            screen.blit(self.right_arrow, self.right_arrow_pos)
-            screen.blit(self.left_arrow, self.left_arrow_pos)
+
+        if self.yesbutton_enabled:
+            self.yesbutton = PushButton((self.yesbutton_x, self.yesbutton_y, self.yesbutton_width, self.yesbutton_height), self.yesbutton_event, label='YES', parent=screen)
+            self.yesbutton.enabled(False)
+
+            self.nobutton = PushButton((self.nobutton_x, self.nobutton_y, self.nobutton_width, self.nobutton_height), self.nobutton_event, label='NO', parent=screen)
+            self.nobutton.enabled(False)
+
+            self.yesbutton_enabled = False
+        
 
 
 class FinishedBackground(Background):
