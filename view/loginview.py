@@ -227,11 +227,11 @@ class PushButton:
         if not event:
             return None
         if event.type == pygame.FINGERUP or event.type == pygame.FINGERDOWN:
-            event.pos = event.x, event.y
-                
-        if event.type==pygame.MOUSEBUTTONDOWN or event.type == pygame.FINGERDOWN and self.button_rect.collidepoint(event.pos) and self.button_enabled:
+            w, h = self.screen.get_size()
+            event.pos = (w*event.x), (h*event.y)
+        if (event.type==pygame.MOUSEBUTTONDOWN or event.type == pygame.FINGERDOWN) and self.button_rect.collidepoint(event.pos) and self.button_enabled:
             return 'BUTTONDOWN'
-        if event.type==pygame.MOUSEBUTTONUP or event.type == pygame.FINGERUP and self.button_rect.collidepoint(event.pos) and self.button_enabled:
+        if (event.type==pygame.MOUSEBUTTONUP or event.type == pygame.FINGERUP) and self.button_rect.collidepoint(event.pos) and self.button_enabled:
             if isinstance(self.event, tuple):
                 pygame.event.post(pygame.event.Event(self.event[0], self.event[1]))
             else:
@@ -260,17 +260,15 @@ class PushButton:
         self.button_rect.width, self.button_rect.height = width+6, height+6
         
         if self.button_enabled:
-            if self.hovered(event):
+            pygame.draw.rect(self.screen, 'dark gray', self.button_rect)
+            clicked = self.clicked(event)
+            if clicked == 'BUTTONDOWN':
+                pygame.draw.rect(self.screen, 'black', self.button_rect)
+            elif clicked == 'BUTTONUP':
                 pygame.draw.rect(self.screen, 'dark gray', self.button_rect)
-                clicked = self.clicked(event)
-                if clicked == 'BUTTONDOWN':
-                    pygame.draw.rect(self.screen, 'black', self.button_rect)
-                elif clicked == 'BUTTONUP':
-                    pygame.draw.rect(self.screen, 'dark gray', self.button_rect)
-            else:
-                pygame.draw.rect(self.screen, 'light gray', self.button_rect)
         else:
             pygame.draw.rect(self.screen, 'blue', self.button_rect)
+        self.screen.blit(self.button_text, self.coord)
         
     
     def use_icon(self, icon):
@@ -303,7 +301,7 @@ class button(object):
         #Call this method to draw the button on the screen
         if self.button_enabled:
             pygame.draw.rect(window, 'light gray', self.button_rect,0)
-            clicked = self.clicked(event)
+            clicked = self.clicked(window, event)
             if clicked=='BUTTONDOWN':
                 pygame.draw.rect(window, 'black', self.button_rect)
             elif clicked=='BUTTONUP':
@@ -328,18 +326,16 @@ class button(object):
         except:
             pass
         
-    def clicked(self, event):
+    def clicked(self, screen, event):
         if not event:
             return None
         if event.type == pygame.FINGERUP or event.type == pygame.FINGERDOWN:
-            event.pos = event.x, event.y 
-            w, h = pygame.display.get_surface().get_size()
+            w, h = screen.get_size()
             event.pos = (w*event.x), (h*event.y)
-        if (event.type==pygame.MOUSEBUTTONDOWN or event.type==pygame.FINGERDOWN and self.button_rect.collidepoint(event.pos)) and self.button_enabled:
-            # print("This is the event position for mouse",event.pos)
-            # sys.exit()  
+    
+        if (event.type==pygame.MOUSEBUTTONDOWN or event.type==pygame.FINGERDOWN) and self.button_rect.collidepoint(event.pos) and self.button_enabled:
             return 'BUTTONDOWN'
-        if (event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP and self.button_rect.collidepoint(event.pos)) and self.button_enabled:
+        if (event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP) and self.button_rect.collidepoint(event.pos) and self.button_enabled:
             if self.text == 'x':
                 BUTTON_EVENT= CLEARBUTTON
             elif self.text == '<':
@@ -347,6 +343,7 @@ class button(object):
             else:
                 BUTTON_EVENT = pygame.USEREVENT+5+int(self.text)
             pygame.event.post(pygame.event.Event(BUTTON_EVENT))
+            print(BUTTON_EVENT)
             return 'BUTTONUP'
         else:
             return None
