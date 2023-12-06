@@ -51,16 +51,13 @@ class InmateRow(object):
         self.inmate_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
         
         if self.documents:
-            if self.hovered(event):
+            pygame.draw.rect(screen, 'dark gray', self.inmate_rect)
+            clicked = self.clicked(screen, event)
+            if clicked == 'BUTTONDOWN':
+                pygame.draw.rect(screen, 'black', self.inmate_rect)
+            elif clicked == 'BUTTONUP':
                 pygame.draw.rect(screen, 'dark gray', self.inmate_rect)
-                clicked = self.clicked(event)
-                if clicked == 'BUTTONDOWN':
-                    pygame.draw.rect(screen, 'black', self.inmate_rect)
-                elif clicked == 'BUTTONUP':
-                    pygame.draw.rect(screen, 'dark gray', self.inmate_rect)
-            else:
-                pygame.draw.rect(screen, 'light gray', self.inmate_rect)
-
+            
         pygame.draw.rect(screen, 'black', self.inmate_rect, 2)
         
         screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
@@ -86,17 +83,23 @@ class InmateRow(object):
     def hovered(self, event):
         if not event:
             return None
-        if self.inmate_rect.collidepoint(event.pos):
-            return True 
-        else:
-            return None        
+        try:
+            if self.inmate_rect.collidepoint(event.pos):
+                return True 
+            else:
+                return None  
+        except:
+            pass      
 
-    def clicked(self, event):
+    def clicked(self, screen, event):
         if not event:
             return None
-        if event.type==pygame.MOUSEBUTTONDOWN and self.inmate_rect.collidepoint(event.pos):  
+        if event.type == pygame.FINGERUP or event.type == pygame.FINGERDOWN:
+            w, h = screen.get_size()
+            event.pos = (w*event.x), (h*event.y)
+        if (event.type==pygame.MOUSEBUTTONDOWN or event.type==pygame.FINGERDOWN) and self.inmate_rect.collidepoint(event.pos):  
             return 'BUTTONDOWN'
-        if event.type==pygame.MOUSEBUTTONUP and self.inmate_rect.collidepoint(event.pos):
+        if (event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP) and self.inmate_rect.collidepoint(event.pos):
             pygame.event.post(pygame.event.Event(CHOSEEVENT))
             self.chosen = True
             return 'BUTTONUP'
@@ -138,16 +141,13 @@ class DocumentRow(object):
         self.document_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
         
         if self.document:
-            if self.hovered(event):
-                pygame.draw.rect(screen, 'dark gray', self.document_rect)
-                
-                clicked = self.clicked(event)
-                if clicked == 'BUTTONDOWN':
-                    pygame.draw.rect(screen, 'black', self.document_rect)
-                elif clicked == 'BUTTONUP':
-                    pygame.draw.rect(screen, 'dark gray', self.document_rect)
-            else:
+            pygame.draw.rect(screen, 'light gray', self.document_rect)
+            clicked = self.clicked(screen, event)
+            if clicked == 'BUTTONDOWN':
+                pygame.draw.rect(screen, 'black', self.document_rect)
+            elif clicked == 'BUTTONUP':
                 pygame.draw.rect(screen, 'light gray', self.document_rect)
+        
 
         pygame.draw.rect(screen, 'black', self.document_rect, 2) 
         
@@ -175,17 +175,23 @@ class DocumentRow(object):
     def hovered(self, event):
         if not event:
             return None
-        if self.document_rect.collidepoint(event.pos):
-            return True 
-        else:
-            return None 
+        try:
+            if self.document_rect.collidepoint(event.pos):
+                return True 
+            else:
+                return None 
+        except:
+            pass
 
-    def clicked(self, event):
+    def clicked(self, screen, event):
         if not event:
             return None
-        if event.type==pygame.MOUSEBUTTONDOWN and self.document_rect.collidepoint(event.pos):  
+        if event.type == pygame.FINGERUP or event.type == pygame.FINGERDOWN:
+            w, h = screen.get_size()
+            event.pos = (w*event.x), (h*event.y)
+        if (event.type==pygame.MOUSEBUTTONDOWN or event.type==pygame.FINGERDOWN) and self.document_rect.collidepoint(event.pos):  
             return 'BUTTONDOWN'
-        if event.type==pygame.MOUSEBUTTONUP and self.document_rect.collidepoint(event.pos):
+        if (event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP) and self.document_rect.collidepoint(event.pos):
             pygame.event.post(pygame.event.Event(CHOSEEVENT))
             self.chosen = True
             return 'BUTTONUP'
