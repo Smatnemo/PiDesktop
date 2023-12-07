@@ -283,15 +283,15 @@ class PiWindow(object):
         if state:
             self._update_background(background.IntroBackground(self.arrow_location, self.arrow_offset, state, count))
 
-    def show_login(self):
+    def show_login(self, previous_state):
         self._update_background(background.LoginBackground())
         # Find logic to display login
-        lv = LoginView(self.surface)
+        lv = LoginView(self.surface, previous_state)
         return lv
     
-    def show_decrypt(self):
+    def show_decrypt(self, previous_state):
         self._update_background(background.DecryptBackground())
-        lv = LoginView(self.surface)
+        lv = LoginView(self.surface, previous_state)
         # Write logic to paint button on on screen surface
         return lv
         
@@ -354,24 +354,9 @@ class PiWindow(object):
                                                            document_name,
                                                            number_of_pages))
         if pil_image:
-            self._update_foreground(pil_image, self.LEFT)
-            print("Current foreground:{}".format(self._current_foreground))
-            print("Buffered images:{}".format(self._buffered_images))
-        else:
-            self._current_foreground = None
-
-    def show_finished(self, pil_image=None):
-        """Show finished view (image resized fullscreen).
-        """
-        self._capture_number = (0, self._capture_number[1])
-        if pil_image:
-            bg = background.FinishedWithImageBackground(pil_image.size)
-            if self._buffered_images.get(str(bg), bg).foreground_size != pil_image.size:
-                self._buffered_images.pop(str(bg))  # Drop cache, foreground size ratio has changed
-            self._update_background(background.FinishedWithImageBackground(pil_image.size))
-            self._update_foreground(pil_image, self.FULLSCREEN)
-        else:
-            self._update_background(background.FinishedBackground())
+            self._update_foreground(pil_image, self.LEFT)  
+            
+        
 
     @contextlib.contextmanager
     def flash(self, count):
