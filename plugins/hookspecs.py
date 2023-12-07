@@ -221,7 +221,7 @@ def state_wait_exit(cfg, app, win):
 # --- Login State --------------------------------------------------------------
 
 @hookspec
-def state_login_enter(win):
+def state_login_enter(app, win):
     """Actions performed when application enters the login state.
     :param win: graphical window 
     """
@@ -428,7 +428,7 @@ def state_chosen_exit(cfg, app, win):
 # --- Decrypt State ------------------------------------------------------------
 
 @hookspec
-def state_decrypt_enter(win):
+def state_decrypt_enter(app, win):
     """Actions performed when application enters the login state.
     :param win: graphical window 
     """
