@@ -262,11 +262,6 @@ class PiWindow(object):
     def get_display_dimensions(self):
         """Build dictionary to have all the dimensions required for the screen
         """
-        self._d["screen_height"] = self.display_size[1]
-        self._d["screen_width"] = self.display_size[0]
-        # self._d["footer"] = self._d["screen_height"]-74
-        # self._d["header"] = 74
-        self._d["row_height"] = 64
         
         _ts = self.surface.get_rect()
         _pad = 5
@@ -309,6 +304,11 @@ class PiWindow(object):
         self._d['firstcolumnx'] = self._d['xcenter'] - self._d['halfgridwidth']
         self._d['secondcolumnx'] = self._d['firstcolumnx']+self._d['iconsizex']+self._d['marginx']
         self._d['thirdcolumnx'] = self._d['secondcolumnx']+self._d['iconsizex']+self._d['marginx']
+        self._d["screen_height"] = self.display_size[1]
+        self._d["screen_width"] = self.display_size[0]
+        # self._d["footer"] = self._d["screen_height"]-74
+        # self._d["header"] = 74
+        self._d["row_height"] = 64
 
 
     def show_oops(self):
