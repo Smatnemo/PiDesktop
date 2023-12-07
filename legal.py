@@ -14,10 +14,10 @@ from warnings import filterwarnings
 package_dir = osp.abspath(osp.dirname(__file__))
 
 search_dir = osp.abspath(osp.dirname(package_dir))
-print("Search Dir:", search_dir)
+# print("Search Dir:", search_dir)
 sys.path.append(search_dir)
 
-print(sys.path)
+# print(sys.path)
 
 from gpiozero import Device, ButtonBoard, LEDBoard, pi_info
 from gpiozero.exc import BadPinFactory, PinFactoryFallback
@@ -319,11 +319,22 @@ class PiApplication:
     
     def find_next_back_event(self, events):
         for event in events:
-            if event.type == BACKBUTTON:
+            if event.type == BUTTONDOWN and event.previous:
                 return event
-            if event.type == NEXTBUTTON:
+            if event.type == BUTTONDOWN and event.next:
                 return event 
+            if event.type == BUTTONDOWN and event.back:
+                return event
         return None 
+
+    def find_touch_effects_event(self, events):
+        # For keypad
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN or event.type==pygame.MOUSEMOTION or event.type==pygame.MOUSEBUTTONUP \
+                or event.type==pygame.FINGERUP or event.type==pygame.FINGERDOWN: 
+                self.update_needed = event
+            else:
+                self.update_needed = None
 
     def find_capture_event(self, events):
         """Return the first found event if found in the list.
@@ -363,13 +374,8 @@ class PiApplication:
                 event = self.find_resize_event(events)
                 if event:
                     self._window.resize(event.size)
-                # For keypad
-                for event in events:
-                    if event.type == pygame.MOUSEBUTTONDOWN or event.type==pygame.MOUSEMOTION or event.type==pygame.MOUSEBUTTONUP \
-                        or event.type==pygame.FINGERUP or event.type==pygame.FINGERDOWN: 
-                        self.update_needed = event
-                    else:
-                        self.update_needed = None
+                
+                # self.find_touch_effects_event(events)
 
                 if not self._menu and self.find_settings_event(events):
                     self.camera.stop_preview()

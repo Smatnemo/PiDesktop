@@ -81,6 +81,9 @@ class PiWindow(object):
 
         self.documents_foreground = {}
 
+        self._d = {}
+        self.get_display_dimensions()
+
         self._pos_map = {self.CENTER: self._center_pos,
                          self.RIGHT: self._right_pos,
                          self.LEFT: self._left_pos,
@@ -255,6 +258,58 @@ class PiWindow(object):
             self._update_print_number()
         if self._current_foreground:
             self._update_foreground(*self._current_foreground)
+    
+    def get_display_dimensions(self):
+        """Build dictionary to have all the dimensions required for the screen
+        """
+        self._d["screen_height"] = self.display_size[1]
+        self._d["screen_width"] = self.display_size[0]
+        # self._d["footer"] = self._d["screen_height"]-74
+        # self._d["header"] = 74
+        self._d["row_height"] = 64
+        
+        _ts = self.surface.get_rect()
+        _pad = 5
+        _margin = 10
+        _iconsize = 64
+        _inputheight = 38
+        _fontsize = 14
+        _fontstyle = "normal"
+        _handf = _iconsize+_margin
+        self._d = {'screen': _ts, 
+              'pad': _pad,
+              'padx': _pad,
+              'pady': _pad,
+              'margin': _margin,
+              'marginx': _margin,
+              'marginy': _margin,
+              'iconsize': _iconsize,
+              'iconsizex': _iconsize,
+              'iconsizey': _iconsize,
+              'w': _ts[2],
+              'h': _ts[3],
+              'xcenter': (_ts[2]/2),
+              'ycenter': (_ts[3]/2),
+              'xpos': _ts[0],
+              'ypos': _ts[1],
+              'gridwidth': (3*_iconsize)+(2*_margin),
+              'inputheight': _inputheight,
+              'header': _handf,
+              'footer': _handf}
+        
+        self._d['halfgridwidth'] = self._d['gridwidth']/2
+        self._d['halfinputheight'] = self._d['inputheight']/2
+        self._d['startrowgridx'] = self._d['xcenter'] - self._d['halfgridwidth']
+        self._d['startrowgridy'] = self._d['ycenter'] - self._d['inputheight'] - (self._d['iconsizey']*2)
+        self._d['firstrowy'] = self._d['startrowgridy'] + self._d['inputheight'] + self._d['marginy'] 
+        self._d['secondrowy'] = self._d['firstrowy']+self._d['iconsizey']+self._d['marginy']
+        self._d['thirdrowy'] = self._d['secondrowy']+self._d['iconsizey']+self._d['marginy']
+        self._d['fourthrowy'] = self._d['thirdrowy']+self._d['iconsizey']+self._d['marginy']
+        self._d['loginbuttony'] = self._d['fourthrowy']+self._d['iconsizey']+self._d['marginy']
+        self._d['firstcolumnx'] = self._d['xcenter'] - self._d['halfgridwidth']
+        self._d['secondcolumnx'] = self._d['firstcolumnx']+self._d['iconsizex']+self._d['marginx']
+        self._d['thirdcolumnx'] = self._d['secondcolumnx']+self._d['iconsizex']+self._d['marginx']
+
 
     def show_oops(self):
         """Show failure view in case of exception.
@@ -283,27 +338,27 @@ class PiWindow(object):
         if state:
             self._update_background(background.IntroBackground(self.arrow_location, self.arrow_offset, state, count))
 
-    def show_login(self):
+    def show_login(self, previous_state):
         self._update_background(background.LoginBackground())
         # Find logic to display login
-        lv = LoginView(self.surface)
+        lv = LoginView(self.surface, previous_state, self._d)
         return lv
     
-    def show_decrypt(self):
+    def show_decrypt(self, previous_state):
         self._update_background(background.DecryptBackground())
-        lv = LoginView(self.surface)
+        lv = LoginView(self.surface, previous_state, self._d)
         # Write logic to paint button on on screen surface
         return lv
         
 
-    def show_choice(self, choices, selected=None):
-        """Show the choice view.
-        """
-        self._capture_number = (0, self._capture_number[1])
-        if not selected:
-            self._update_background(background.ChooseBackground(choices, self.arrow_location, self.arrow_offset))
-        else:
-            self._update_background(background.ChosenBackground(choices, selected))
+    # def show_choice(self, choices, selected=None):
+    #     """Show the choice view.
+    #     """
+    #     self._capture_number = (0, self._capture_number[1])
+    #     if not selected:
+    #         self._update_background(background.ChooseBackground(choices, self.arrow_location, self.arrow_offset))
+    #     else:
+    #         self._update_background(background.ChosenBackground(choices, selected))
 
 # After log in
     def show_choices(self, documents, selected=None):
@@ -313,11 +368,11 @@ class PiWindow(object):
         if documents:
             if not selected:
                 self._update_background(background.ChooseInmateDocumentBackground("choose_inmate"))
-                self._update_documents_foreground(foreground.ChooseInmateDocumentForeground(documents))
+                self._update_documents_foreground(foreground.ChooseInmateDocumentForeground(documents, self._d))
             else:
                 # This leads to the choices documents for the inmate
                 self._update_background(background.ChooseInmateDocumentBackground("choose_document"))
-                self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, selected))
+                self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, self._d, selected))
         else:
             self._update_background(background.ChooseInmateDocumentBackground("No_Document"))
             self._update_documents_foreground(foreground.NoDocumentForeground())
@@ -354,24 +409,9 @@ class PiWindow(object):
                                                            document_name,
                                                            number_of_pages))
         if pil_image:
-            self._update_foreground(pil_image, self.LEFT)
-            print("Current foreground:{}".format(self._current_foreground))
-            print("Buffered images:{}".format(self._buffered_images))
-        else:
-            self._current_foreground = None
-
-    def show_finished(self, pil_image=None):
-        """Show finished view (image resized fullscreen).
-        """
-        self._capture_number = (0, self._capture_number[1])
-        if pil_image:
-            bg = background.FinishedWithImageBackground(pil_image.size)
-            if self._buffered_images.get(str(bg), bg).foreground_size != pil_image.size:
-                self._buffered_images.pop(str(bg))  # Drop cache, foreground size ratio has changed
-            self._update_background(background.FinishedWithImageBackground(pil_image.size))
-            self._update_foreground(pil_image, self.FULLSCREEN)
-        else:
-            self._update_background(background.FinishedBackground())
+            self._update_foreground(pil_image, self.LEFT)  
+            
+        
 
     @contextlib.contextmanager
     def flash(self, count):

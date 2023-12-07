@@ -244,19 +244,28 @@ class DocumentsView(object):
 
 
 class InmateDocumentsView(object):
-    def __init__(self, inmate_documents):
+    def __init__(self, inmate_documents, dimension):
         self.inmate_numbers = list(inmate_documents.keys())
         self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number) for row_number, inmate_number in enumerate(self.inmate_numbers)]
         self.update_needed = None
         self.choseninmaterow = None
         self.titlerow = InmateRow()
         self.inmate_rows.insert(0, self.titlerow)
-        self.x_limit = None 
-        self.y_limit = None
-    
 
+        self.gap = dimension["footer"]-dimension["header"]
+        self.offset = self.gap//dimension["row_height"]
+        
+        self.offset = 3
+        self.start = 1
+        self.change_view = None
+
+        
     def draw(self, foreground_rect, screen):
-        for inmate_row in self.inmate_rows:
+        self.inmate_rows[0].draw(foreground_rect, screen, self.update_needed)
+        if self.change_view:
+            self.start = self.offset 
+            self.offset = self.offset + self.offset
+        for inmate_row in self.inmate_rows[self.start:self.offset]:
             inmate_row.draw(foreground_rect, screen, self.update_needed)
 
     def update(self):

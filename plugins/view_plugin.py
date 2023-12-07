@@ -2,6 +2,7 @@ import LDS
 import os
 import sys
 import pygame
+import time
 from LDS.utils import LOGGER, get_crash_message, PoolingTimer
 from LDS.accounts import LogIn, LogOut
 from LDS.documents.document import decrypt_content, document_authentication
@@ -35,6 +36,8 @@ class ViewPlugin(object):
         self.finish_timer = PoolingTimer(1)
         # Lock screen timer for failed login or failed decryption after 3 attempts
         self.lock_screen_timer = PoolingTimer(30)
+        # Create a delay before allowing the next state
+        self.delay_state_timer = PoolingTimer(2)
 
         self.login_view = None 
         self.decrypt_view = None
@@ -64,19 +67,19 @@ class ViewPlugin(object):
     def state_wait_validate(self, cfg, app, events):
         event = app.find_screen_event(events)
         if event:
-            LOGGER.info("This is the event from wait state:{}".format(event))
             return 'login'
       
 
     @LDS.hookimpl
     def state_wait_exit(self, win):
         self.count = 0
+        pygame.event.clear()
         win.show_image(None)  # Clear currently displayed image
 
     @LDS.hookimpl
-    def state_login_enter(self, win):
+    def state_login_enter(self, app, win):
         LOGGER.info("Attempting to Login")
-        self.login_view = win.show_login() # Create a function in window module to display login page
+        self.login_view = win.show_login(app.previous_state) # Create a function in window module to display login page
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         # Find way to display it in the login window during login in activity
         self.choose_timer.start()
@@ -85,8 +88,10 @@ class ViewPlugin(object):
     def state_login_do(self, app, win, events):
         
         if events:
-            # LOGGER.info("Events:{}".format(events))
             self.choose_timer.start()
+
+        app.find_touch_effects_event(events)
+
         if app.find_login_event(events):
             if self.login_view.passcode_box.input_text != '':
                 app.password = self.login_view.passcode_box.input_text 
@@ -94,6 +99,7 @@ class ViewPlugin(object):
                 app.password = self.login_view.get_input_text() 
             self.login_view.passcode_box.text=''
             self.login_view.passcode_box.txt_surface = self.login_view.passcode_box.font.render(self.login_view.passcode_box.text, True, self.login_view.passcode_box.color)
+        
         self.login_view.update_needed = app.update_needed
         self.login_view.passcode_box.handle_event(events)
         self.login_view.draw(win.surface)
@@ -137,6 +143,8 @@ class ViewPlugin(object):
         if events:
             self.choose_timer.start()
 
+        app.find_touch_effects_event(events)
+
         win._current_documents_foreground.inmate_documents_view.update_needed = app.update_needed
         win.show_choices(app.documents)
 
@@ -149,10 +157,13 @@ class ViewPlugin(object):
         event = app.find_choose_event(events)
         if event:
             app.inmate_number = win._current_documents_foreground.inmate_documents_view.choseninmaterow.inmate_number
+
+        next_previous_foreground_event = app.find_next_back_event(events)
    
     @LDS.hookimpl
     def state_choose_validate(self, cfg, app, events):
-        if app.find_next_back_event(events):
+        event = app.find_next_back_event(events)
+        if event.back:
             return 'login'
         elif app.find_lockscreen_event(events):
             app.previous_state = 'choose'
@@ -202,12 +213,13 @@ class ViewPlugin(object):
             win.documents_foreground = {}
             return 'choose'
         elif app.find_lockscreen_event(events):
-            app.previous_state = 'chosen'
+            app.previous_state = 'wait'
             return 'wait'
         elif app.chosen_document:
+            app.previous_state = 'chosen'
             return 'decrypt'
         elif self.choose_timer.is_timeout():
-            app.previous_state = 'chosen'
+            app.previous_state = 'wait'
             return 'wait'
         
         
@@ -218,10 +230,10 @@ class ViewPlugin(object):
 
 
     @LDS.hookimpl
-    def state_decrypt_enter(self, win):
+    def state_decrypt_enter(self, app, win):
         LOGGER.info("Entered the decrypt state")
-        # win.surface.fill((255,255,255))
-        self.decrypt_view = win.show_decrypt() # Create a function in window module to display login page
+        print("This is the previous state", app.previous_state)
+        self.decrypt_view = win.show_decrypt(app.previous_state) # Create a function in window module to display login page
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         # Find way to display it in the login window during login in activity
         self.choose_timer.start()
@@ -298,7 +310,6 @@ class ViewPlugin(object):
     def state_lock_enter(self,app,win):
         LOGGER.info("This is the lock state")
         self.lock_screen_timer.start()
-        
         win.show_locked('locked', app.attempt_count)
 
     @LDS.hookimpl
@@ -311,7 +322,6 @@ class ViewPlugin(object):
             return 'login' 
 
     # ----------------------------- PassFail State           --------------------------------
-
     @LDS.hookimpl
     def state_passfail_enter(self,app,win):
         LOGGER.info("This is the passfail state")
@@ -481,6 +491,7 @@ class ViewPlugin(object):
                 return 'login'
             
             elif self.forgotten.answer == 'YES':
+                win._current_foreground = None
                 return 'preview'
             
 
