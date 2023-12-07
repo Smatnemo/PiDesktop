@@ -32,6 +32,7 @@ BUTTON_8 = pygame.USEREVENT + 13
 BUTTON_9 = pygame.USEREVENT + 14
 BACKSPACEBUTTON = pygame.USEREVENT + 15
 
+
 button_events = [BUTTON_0,BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8, BUTTON_9]
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -278,6 +279,10 @@ class PushButton:
         self.left_arrow = pictures.get_pygame_image("camera.png", size, vflip=False, color=self._text_color)
 
 
+
+
+
+
 class button(object):
     def __init__(self, color, x,y,width,height, text=''):
         self.color = color
@@ -326,11 +331,12 @@ class button(object):
             return None
         if event.type == pygame.FINGERUP or event.type == pygame.FINGERDOWN:
             w, h = screen.get_size()
-            event.pos = (w*event.x), (h*event.y)    
+            event.pos = (w*event.x), (h*event.y)
+    
         if (event.type==pygame.MOUSEBUTTONDOWN or event.type==pygame.FINGERDOWN) and self.button_rect.collidepoint(event.pos) and self.button_enabled:
             return 'BUTTONDOWN'
         if (event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP) and self.button_rect.collidepoint(event.pos) and self.button_enabled:
-            if self.text == 'X':
+            if self.text == 'x':
                 BUTTON_EVENT= CLEARBUTTON
             elif self.text == '<':
                 BUTTON_EVENT = BACKSPACEBUTTON
@@ -347,97 +353,74 @@ class button(object):
 
 class LoginView(object):
     def __init__(self, screen):
+        # Set up the input boxes
+        # self.username_box = pg.Rect(200, 200, 400, 50)
         self.update_needed = None
+        passcode_box_width = 230
+        passcode_box_height = 38
+        x = screen.get_rect().center[0] - passcode_box_width//2
+        y = screen.get_rect().center[1] - passcode_box_height//2 - 200
         
-        _ts = screen.get_rect()
-        _pad = 5
-        _margin = 10
-        _iconsize = 64
-        _inputheight = 38
-        _fontsize = 14
-        _fontstyle = "normal"
-        _handf = _iconsize+_margin
-        self._d = {'screen': _ts, 
-              'pad': _pad,
-              'padx': _pad,
-              'pady': _pad,
-              'margin': _margin,
-              'marginx': _margin,
-              'marginy': _margin,
-              'iconsize': _iconsize,
-              'iconsizex': _iconsize,
-              'iconsizey': _iconsize,
-              'w': _ts[2],
-              'h': _ts[3],
-              'xcenter': (_ts[2]/2),
-              'ycenter': (_ts[3]/2),
-              'xpos': _ts[0],
-              'ypos': _ts[1],
-              'gridwidth': (3*_iconsize)+(2*_margin),
-              'inputheight': _inputheight,
-              'header': _handf,
-              'footer': _handf}
-	
-        self._d['halfgridwidth'] = self._d['gridwidth']/2
-        self._d['halfinputheight'] = self._d['inputheight']/2
-        self._d['startrowgridx'] = self._d['xcenter'] - self._d['halfgridwidth']
-        self._d['startrowgridy'] = self._d['ycenter'] - self._d['inputheight'] - (self._d['iconsizey']*2)
-        self._d['firstrowy'] = self._d['startrowgridy'] + self._d['inputheight'] + self._d['marginy'] 
-        self._d['secondrowy'] = self._d['firstrowy']+self._d['iconsizey']+self._d['marginy']
-        self._d['thirdrowy'] = self._d['secondrowy']+self._d['iconsizey']+self._d['marginy']
-        self._d['fourthrowy'] = self._d['thirdrowy']+self._d['iconsizey']+self._d['marginy']
-        self._d['loginbuttony'] = self._d['fourthrowy']+self._d['iconsizey']+self._d['marginy']
-        self._d['firstcolumnx'] = self._d['xcenter'] - self._d['halfgridwidth']
-        self._d['secondcolumnx'] = self._d['firstcolumnx']+self._d['iconsizex']+self._d['marginx']
-        self._d['thirdcolumnx'] = self._d['secondcolumnx']+self._d['iconsizex']+self._d['marginx']
-        
-        print(self._d)
+        self.passcode_box = InputBox((x, y, passcode_box_width, passcode_box_height), parent=screen)
+        self.passcode_box.key_pad_rect = [pygame.Rect(x, y, passcode_box_width, passcode_box_height)]
+        button_width = 70 
+        button_height = 66
+        row_margin = 10
+        column_margin = 10
+        first_row_y_position = y+58
+        second_row_y_position = first_row_y_position + button_height + column_margin
+        third_row_y_position = second_row_y_position + button_height + column_margin 
+        fourth_row_y_position = third_row_y_position + button_height + column_margin
 
-        self.passcode_box = InputBox((self._d['startrowgridx'], self._d['startrowgridy'], self._d['gridwidth'], self._d['inputheight']), parent=screen)
-        self.passcode_box.key_pad_rect = [pygame.Rect(self._d['startrowgridx'], self._d['startrowgridy'], self._d['gridwidth'], self._d['inputheight'])]
+        first_column_x_position = x
+        second_column_x_position = first_column_x_position + button_width + row_margin
+        third_column_x_position = second_column_x_position + button_width + row_margin 
         
         # the numbers for the calcaltor
-        s_1s = button((0,255,0),self._d['firstcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey'], '1')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['firstcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_1s = button((0,255,0),first_column_x_position,first_row_y_position,button_width,button_height, '1')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(first_column_x_position,first_row_y_position,button_width,button_height))
 
-        s_2s = button((0,255,0),self._d['secondcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey'], '2')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['secondcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_2s = button((0,255,0),second_column_x_position,first_row_y_position,button_width,button_height, '2')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(second_column_x_position,first_row_y_position,button_width,button_height))
 
-        s_3s = button((0,255,0),self._d['thirdcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey'], '3')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['thirdcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_3s = button((0,255,0),third_column_x_position,first_row_y_position,button_width,button_height, '3')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(third_column_x_position,first_row_y_position,button_width,button_height))
 
-        s_4s = button((0,255,0),self._d['firstcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey'], '4')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['firstcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_4s = button((0,255,0),first_column_x_position,second_row_y_position,button_width,button_height, '4')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(first_column_x_position,second_row_y_position,button_width,button_height))
 
-        s_5s = button((0,255,0),self._d['secondcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey'], '5')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['secondcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_5s = button((0,255,0),second_column_x_position,second_row_y_position,button_width,button_height, '5')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(second_column_x_position,second_row_y_position,button_width,button_height))
 
-        s_6s = button((0,255,0),self._d['thirdcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey'], '6')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['thirdcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_6s = button((0,255,0),third_column_x_position,second_row_y_position,button_width,button_height, '6')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(third_column_x_position,second_row_y_position,button_width,button_height))
 
-        s_7s = button((0,255,0),self._d['firstcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey'], '7')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['firstcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_7s = button((0,255,0),first_column_x_position,third_row_y_position,button_width,button_height, '7')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(first_column_x_position,third_row_y_position,button_width,button_height))
 
-        s_8s = button((0,255,0),self._d['secondcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey'], '8')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['secondcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_8s = button((0,255,0),second_column_x_position,third_row_y_position,button_width,button_height, '8')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(second_column_x_position,third_row_y_position,button_width,button_height))
 
-        s_9s = button((0,255,0),self._d['thirdcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey'], '9')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['thirdcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_9s = button((0,255,0),third_column_x_position,third_row_y_position,button_width,button_height, '9')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(third_column_x_position,third_row_y_position,button_width,button_height))
 
-        s_clears = button((0,255,0),self._d['firstcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey'], 'X')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['firstcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_clears = button((0,255,0),first_column_x_position,fourth_row_y_position,button_width,button_height, 'x')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(first_column_x_position,fourth_row_y_position,button_width,button_height))
 
-        s_0s = button((0,255,0),self._d['secondcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey'], '0')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['secondcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_0s = button((0,255,0),second_column_x_position,fourth_row_y_position,button_width,button_height, '0')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(second_column_x_position,fourth_row_y_position,button_width,button_height))
 
-        s_back = button((0,255,0),self._d['thirdcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey'], '<')
-        self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['thirdcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey']))
+        s_back = button((0,255,0),third_column_x_position,fourth_row_y_position,button_width,button_height, '<')
+        self.passcode_box.key_pad_rect.append(pygame.Rect(third_column_x_position,fourth_row_y_position,button_width,button_height))
         
 
         self.numbers = [s_1s,s_2s,s_3s,s_4s,s_5s,s_6s,s_7s,s_8s,s_9s,s_clears,s_0s,s_back]
         
         # Set up the buttons
-        self.login_button = PushButton((self._d['firstcolumnx'], self._d['loginbuttony'], self._d['gridwidth'], self._d['iconsizey']),LOGINEVENT, label='UNLOCK', parent=screen)
+        login_button_x = x + 50
+        login_button_y = fourth_row_y_position + button_width + column_margin
+
+        self.login_button = PushButton((login_button_x, login_button_y, 200, 38),LOGINEVENT, label='UNLOCK', parent=screen)
         self.login_button.enabled(True)
 
     def get_input_text(self):
@@ -450,6 +433,17 @@ class LoginView(object):
         for button in self.numbers:
             button.draw(screen, self.update_needed)
         self.login_button.draw(self.update_needed)
+
+
+    # def MouseOverNumbers(self):
+
+# class DecryptView(LoginView):
+#     def __init__(self, screen):
+#         LoginView.__init__(screen)
+#         self.login_button = PushButton((login_button_x, login_button_y, 200, 38),LOGINEVENT, label='Decrypt', parent=screen)
+
+
+
 
 def main_loop():
     clock = pygame.time.Clock()
@@ -481,6 +475,8 @@ def main_loop():
         
         pygame.display.flip()
         clock.tick(60)
+
+
 
 
 if __name__ == "__main__":
