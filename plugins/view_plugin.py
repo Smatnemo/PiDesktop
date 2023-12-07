@@ -74,9 +74,9 @@ class ViewPlugin(object):
         win.show_image(None)  # Clear currently displayed image
 
     @LDS.hookimpl
-    def state_login_enter(self, win):
+    def state_login_enter(self, app, win):
         LOGGER.info("Attempting to Login")
-        self.login_view = win.show_login() # Create a function in window module to display login page
+        self.login_view = win.show_login(app.previous_state) # Create a function in window module to display login page
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         # Find way to display it in the login window during login in activity
         self.choose_timer.start()
@@ -202,12 +202,13 @@ class ViewPlugin(object):
             win.documents_foreground = {}
             return 'choose'
         elif app.find_lockscreen_event(events):
-            app.previous_state = 'chosen'
+            app.previous_state = 'wait'
             return 'wait'
         elif app.chosen_document:
+            app.previous_state = 'chosen'
             return 'decrypt'
         elif self.choose_timer.is_timeout():
-            app.previous_state = 'chosen'
+            app.previous_state = 'wait'
             return 'wait'
         
         
@@ -218,10 +219,10 @@ class ViewPlugin(object):
 
 
     @LDS.hookimpl
-    def state_decrypt_enter(self, win):
+    def state_decrypt_enter(self, app, win):
         LOGGER.info("Entered the decrypt state")
-        # win.surface.fill((255,255,255))
-        self.decrypt_view = win.show_decrypt() # Create a function in window module to display login page
+        print("This is the previous state", app.previous_state)
+        self.decrypt_view = win.show_decrypt(app.previous_state) # Create a function in window module to display login page
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         # Find way to display it in the login window during login in activity
         self.choose_timer.start()
@@ -481,6 +482,7 @@ class ViewPlugin(object):
                 return 'login'
             
             elif self.forgotten.answer == 'YES':
+                win._current_foreground = None
                 return 'preview'
             
 
