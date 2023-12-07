@@ -185,7 +185,7 @@ class PushButton:
         self.text_color = WHITE
         self.font_size = 32
         self.button_rect = pygame.Rect(rect)
-        self.coord = self.button_rect.x+3, self.button_rect.y+3
+        self.coord = [self.button_rect.x+3, self.button_rect.y+3]
         self.button_enabled = True
         self.button_clicked = False 
         self.button_released = True
@@ -257,17 +257,19 @@ class PushButton:
     def draw(self, event):
         self.button_text = self.font.render(self.label, True, self.button_color)
         width, height = self.font.size(self.label)
-        self.button_rect.width, self.button_rect.height = width+6, height+6
+        # self.button_rect.width, self.button_rect.height = width+6, height+6
+        self.coord[0]=self.button_rect.centerx-width//2
+        self.coord[1]=self.button_rect.centery-height//2
         
         if self.button_enabled:
-            pygame.draw.rect(self.screen, 'dark gray', self.button_rect)
+            pygame.draw.rect(self.screen, 'dark gray', self.button_rect, 0, 3)
             clicked = self.clicked(event)
             if clicked == 'BUTTONDOWN':
-                pygame.draw.rect(self.screen, 'black', self.button_rect)
+                pygame.draw.rect(self.screen, 'black', self.button_rect, 0, 3)
             elif clicked == 'BUTTONUP':
-                pygame.draw.rect(self.screen, 'dark gray', self.button_rect)
+                pygame.draw.rect(self.screen, 'dark gray', self.button_rect, 0, 3)
         else:
-            pygame.draw.rect(self.screen, 'blue', self.button_rect)
+            pygame.draw.rect(self.screen, 'blue', self.button_rect, 0, 3)
         self.screen.blit(self.button_text, self.coord)
         
     
@@ -300,14 +302,14 @@ class button(object):
     def draw(self,window,event):
         #Call this method to draw the button on the screen
         if self.button_enabled:
-            pygame.draw.rect(window, 'light gray', self.button_rect,0)
+            pygame.draw.rect(window, 'light gray', self.button_rect,0, 3)
             clicked = self.clicked(window, event)
             if clicked=='BUTTONDOWN':
-                pygame.draw.rect(window, 'black', self.button_rect)
+                pygame.draw.rect(window, 'black', self.button_rect, 0, 3)
             elif clicked=='BUTTONUP':
-                pygame.draw.rect(window, 'light gray', self.button_rect)
+                pygame.draw.rect(window, 'light gray', self.button_rect, 0, 3)
         else:   
-            pygame.draw.rect(window, 'blue', self.button_rect,0)  
+            pygame.draw.rect(window, 'blue', self.button_rect,0, 3)  
  
         if self.text != '':
             font = pygame.font.SysFont('comicsans', 60)
@@ -352,19 +354,18 @@ class button(object):
         
 
 class LoginView(object):
-    def __init__(self, screen):
-        # Set up the input boxes
-        # self.username_box = pg.Rect(200, 200, 400, 50)
+    def __init__(self, screen, previous_state):
+        
         self.update_needed = None
-        passcode_box_width = 230
+        passcode_box_width = 212
         passcode_box_height = 38
         x = screen.get_rect().center[0] - passcode_box_width//2
         y = screen.get_rect().center[1] - passcode_box_height//2 - 200
         
         self.passcode_box = InputBox((x, y, passcode_box_width, passcode_box_height), parent=screen)
         self.passcode_box.key_pad_rect = [pygame.Rect(x, y, passcode_box_width, passcode_box_height)]
-        button_width = 70 
-        button_height = 66
+        button_width = 64 
+        button_height = 64
         row_margin = 10
         column_margin = 10
         first_row_y_position = y+58
@@ -417,10 +418,13 @@ class LoginView(object):
         self.numbers = [s_1s,s_2s,s_3s,s_4s,s_5s,s_6s,s_7s,s_8s,s_9s,s_clears,s_0s,s_back]
         
         # Set up the buttons
-        login_button_x = x + 50
         login_button_y = fourth_row_y_position + button_width + column_margin
-
-        self.login_button = PushButton((login_button_x, login_button_y, 200, 38),LOGINEVENT, label='UNLOCK', parent=screen)
+        
+        if previous_state == 'chosen':
+            label = 'DECRYPT'
+        else:
+            label = 'UNLOCK'
+        self.login_button = PushButton((x, login_button_y, passcode_box_width, 38),LOGINEVENT, label, parent=screen)
         self.login_button.enabled(True)
 
     def get_input_text(self):
