@@ -30,8 +30,8 @@ class Foreground(object):
         self.foreground_rect = screen.get_rect()
         # Reduce the height by 20 percent and make self._rect have 20 percent less height than screen
         height = self.foreground_rect.height
-        self.foreground_rect.height = 0.75 * height 
-        self.foreground_rect.y = self.foreground_rect.y + (0.25 * height)
+        self.foreground_rect.height = height - 74 
+        self.foreground_rect.y = self.foreground_rect.y + 74
         # Write code to determine the height of each row based on screen size
 
     def resize_texts(self, rect=None, align='center'):
@@ -54,10 +54,10 @@ class ChooseInmateDocumentForeground(Foreground):
     attr inmate_documents: a dictionary with inmate number and their associated documents
     type inmate_documents: dictionary
     """
-    def __init__(self, inmate_documents):
+    def __init__(self, inmate_documents, dimensions):
         Foreground.__init__(self, "choose_inmate")
         # inmate_documents argument is a tuple
-        self.inmate_documents_view = InmateDocumentsView(inmate_documents) 
+        self.inmate_documents_view = InmateDocumentsView(inmate_documents, dimensions) 
         # Make sure that drawn inmates documents view should stop at 10 pixels before the button 
 
         self.previousbutton = None
@@ -65,7 +65,7 @@ class ChooseInmateDocumentForeground(Foreground):
         self.previousbutton_height = 38
  
         self.button_enabled = True
-        self.previousbutton_event = pygame.USEREVENT + 17
+        self.previousbutton_event = pygame.USEREVENT+1, {'previous':True}
 
         self.update_needed = None
 
@@ -73,7 +73,7 @@ class ChooseInmateDocumentForeground(Foreground):
         self.nextbutton_width = 200
         self.nextbutton_height = 38
 
-        self.nextbutton_event = pygame.USEREVENT + 18
+        self.nextbutton_event = pygame.USEREVENT+1, {'next':True}
 
     def resize(self, screen):
         Foreground.resize(self, screen)
@@ -105,7 +105,7 @@ class ChooseInmateDocumentForeground(Foreground):
 
 
 class ChosenInmateDocumentForeground(Foreground):
-    def __init__(self, inmate_documents, selected_inmate):
+    def __init__(self, inmate_documents, dimensions, selected_inmate):
         Foreground.__init__(self, "chosen_inmate")
         # self.selected_inmate_documents = inmate_documents[selected_inmate]
         self.document_view = DocumentsView(inmate_documents, selected_inmate)
