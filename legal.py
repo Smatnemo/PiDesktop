@@ -131,6 +131,7 @@ class PiApplication:
         self.chosen_document = None
         self.document_row = None
         self.documents = self.settings['inmate_documents']
+        self.documents_number = self.settings['documents_number']
         self.previous_picture = None
         self.previous_animated = None
         self.previous_picture_file = None
@@ -142,6 +143,7 @@ class PiApplication:
         self.decrypted_file = None
         self.print_job = None
         self.picture_name = None
+        self.database_updated = None
         self.questions_answers = ['' for _ in range(21)]
         # Get count from data base
         if self.settings['attempt_count']:
@@ -174,6 +176,8 @@ class PiApplication:
                                config.getint('PRINTER', 'max_pages'),
                                config.gettyped('PRINTER', 'printer_options'),
                                self.count)
+        
+        print("This is the dictionary:{}".format(self.settings["inmate_documents"]))
 
     def _initialize(self):
         self.printer.max_pages = self._config.getint('PRINTER', 'max_pages')

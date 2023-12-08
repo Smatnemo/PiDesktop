@@ -422,15 +422,6 @@ class LoginView(object):
         self.login_button.draw(self.update_needed)
 
 
-    # def MouseOverNumbers(self):
-
-# class DecryptView(LoginView):
-#     def __init__(self, screen):
-#         LoginView.__init__(screen)
-#         self.login_button = PushButton((login_button_x, login_button_y, 200, 38),LOGINEVENT, label='Decrypt', parent=screen)
-
-
-
 
 def main_loop():
     clock = pygame.time.Clock()

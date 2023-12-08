@@ -79,8 +79,13 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_login_enter(self, app, win):
         LOGGER.info("Attempting to Login")
-        self.login_view = win.show_login(app.previous_state) # Create a function in window module to display login page
+        self.login_view = win.show_login(app.previous_state) 
+
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
+        if app.database_updated:
+            db = DataBase()
+            app.documents, app.documents_number = db.get_inmate_documents()
+            app.database_updated = None
         # Find way to display it in the login window during login in activity
         self.choose_timer.start()
         
@@ -116,7 +121,7 @@ class ViewPlugin(object):
             LOGGER.info(app.validated)
             if app.validated:
                 app.validated = None
-                return app.previous_state if app.previous_state != 'wait' and app.previous_state != 'login' and app.previous_state is not None else 'choose'
+                return app.previous_state if app.previous_state != 'wait' and app.previous_state != 'finish' and app.previous_state != 'login' and app.previous_state is not None else 'choose'
             else:
                 self.count_failed_attempts += 1
                 LOGGER.info("This is failed attempt number {}".format(self.count_failed_attempts))
@@ -508,11 +513,15 @@ class ViewPlugin(object):
                 db = DataBase()
                 db.__update__(document_update_query, (app.chosen_document.document[16], app.chosen_document.document[0]))
                 db.__insert__(Questions_Answers_insert_query, tuple(app.questions_answers))
+                app.database_updated = True
                 # print(app.chosen_document.document[16])
                 # insert tuple into database
                 app.chosen_document = None
                 app.previous_picture = None
                 app.previous_state = 'finish'
+                app.inmate_number = None 
+                win._current_foreground = None
+                app.questions_answers = ['' for _ in range(21)]
                 return 'login'
             
             elif self.forgotten.answer == 'YES':

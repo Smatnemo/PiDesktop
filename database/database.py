@@ -303,7 +303,7 @@ class DataBase(object):
         self.settings['watermarkpath'] = self.get_object(self.entity[6])
         self.settings['capture_nbr'] = self.get_object()
         self.settings['background'] = self.get_object(self.entity[7])
-        self.settings['inmate_documents'] = self.get_inmate_documents()[0]
+        self.settings['inmate_documents'], self.settings['documents_number'] = self.get_inmate_documents()
         self.settings['attempt_count'] = None
         self.settings['use_camera'] = True
 
@@ -322,13 +322,16 @@ class DataBase(object):
         self.cursor.execute("SELECT " + column + " FROM " + table_name)
         return self.cursor.fetchall()
 
-    def get_record(self, table_name:str, column:str, column_value):
+    def get_record(self, table_name:str, column:str, column_value, status):
         # Get all the records from a table where field conditions meet certain requirements
-        self.cursor.execute("SELECT * FROM " + table_name + " WHERE " + column +"=(?)",(column_value,))
+        self.cursor.execute("SELECT * FROM " + table_name + " WHERE " + column +"=(?) AND status=(?)",(column_value, status))
         return self.cursor.fetchall()
     
-    def get_table(self, table_name:str):
-        self.cursor.execute("SELECT * FROM " + table_name)
+    def get_table(self, table_name:str, condition=None):
+        if condition:
+            self.cursor.execute("SELECT * FROM " + table_name + " WHERE status=(?)", (condition,))
+        else:
+            self.cursor.execute("SELECT * FROM " + table_name)
         return self.cursor.fetchall()
 
     def get_inmate_documents(self):
@@ -345,7 +348,7 @@ class DataBase(object):
         unique_inmate_number_list = list(set(inmate_number_list))
         
         for inmate_number in unique_inmate_number_list:
-            docs = self.get_record("Documents", "inmate_number", inmate_number[0])
+            docs = self.get_record("Documents", "inmate_number", inmate_number[0], "ready")
             inmate_documents[inmate_number[0]] = docs
         self.close()
         return inmate_documents, number_of_documents

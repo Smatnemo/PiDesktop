@@ -115,7 +115,7 @@ class ChosenInmateDocumentForeground(Foreground):
         self.previousbutton_height = 38
  
         self.button_enabled = True
-        self.previousbutton_event = pygame.USEREVENT + 17
+        self.previousbutton_event = pygame.USEREVENT + 1, {'change_view':'previous'}
 
         self.update_needed = None
 
@@ -123,7 +123,7 @@ class ChosenInmateDocumentForeground(Foreground):
         self.nextbutton_width = 200
         self.nextbutton_height = 38
 
-        self.nextbutton_event = pygame.USEREVENT + 18
+        self.nextbutton_event = pygame.USEREVENT + 1, {'change_view':'next'}
 
     def resize(self, screen):
         Foreground.resize(self, screen)
