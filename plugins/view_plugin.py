@@ -151,19 +151,21 @@ class ViewPlugin(object):
         # update for buttons
         win._current_background.backbutton.draw(app.update_needed)
         win._current_background.lockbutton.draw(app.update_needed)
-        
         win._current_documents_foreground.nextbutton.draw(app.update_needed)
         win._current_documents_foreground.previousbutton.draw(app.update_needed)
+
 
         event = app.find_choose_event(events)
         if event:
             app.inmate_number = win._current_documents_foreground.inmate_documents_view.choseninmaterow.inmate_number
 
-        next_previous_foreground_event = app.find_next_back_event(events)
+        next_previous_foreground_event = app.find_next_previous_event(events)
+        if next_previous_foreground_event:
+            win._current_documents_foreground.inmate_documents_view.change_view = next_previous_foreground_event
    
     @LDS.hookimpl
     def state_choose_validate(self, cfg, app, events):
-        if app.find_next_back_event(events):
+        if app.find_back_event(events):
             return 'login'
         elif app.find_lockscreen_event(events):
             app.previous_state = 'choose'
@@ -206,7 +208,7 @@ class ViewPlugin(object):
 
     @LDS.hookimpl
     def state_chosen_validate(self, app, win, events):
-        if app.find_next_back_event(events):
+        if app.find_back_event(events):
             app.inmate_number = None
             app.chosen_document = None
             # Drop cached foreground

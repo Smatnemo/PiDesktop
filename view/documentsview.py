@@ -9,6 +9,7 @@ CHOSEEVENT = pygame.USEREVENT + 16
 
 class InmateRow(object):
     total_pages_x = None
+    row_y = None
     def __init__(self, inmate_number=None, documents:list=None, row_number:int=0):
 
         self.documents = documents
@@ -47,7 +48,10 @@ class InmateRow(object):
 
         self.font = pygame.font.Font('freesansbold.ttf', self.row_text_size)
 
-    def draw(self, foreground_rect, screen, event):
+    def draw(self, foreground_rect, screen, event, offset):
+        if self.row_num >= offset:
+            self.row_num = (self.row_num % offset)+1
+        
         self.inmate_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
         
         if self.documents:
@@ -79,6 +83,12 @@ class InmateRow(object):
     def set_total_pages_x(cls, foreground_rect):
         if InmateRow.total_pages_x is None:
             cls.total_pages_x = foreground_rect.width
+    
+    @classmethod 
+    def set_row_y(cls, foreground_rect, offset):
+        if cls.row_y is None:
+            cls.row_y = foreground_rect.y
+        
 
     def hovered(self, event):
         if not event:
@@ -255,18 +265,24 @@ class InmateDocumentsView(object):
         self.gap = dimension["footer"]-dimension["header"]
         self.offset = self.gap//dimension["row_height"]
         
-        self.offset = 3
+        self.offset = 6
+        self._offset = self.offset
         self.start = 1
         self.change_view = None
-
         
     def draw(self, foreground_rect, screen):
-        self.inmate_rows[0].draw(foreground_rect, screen, self.update_needed)
+        self.inmate_rows[0].draw(foreground_rect, screen, self.update_needed, self.offset)
         if self.change_view:
-            self.start = self.offset 
-            self.offset = self.offset + self.offset
-        for inmate_row in self.inmate_rows[self.start:self.offset]:
-            inmate_row.draw(foreground_rect, screen, self.update_needed)
+            if self.change_view.change_view=='next':
+                self.start = self.start + (self.offset-1)
+                self._offset = self._offset + (self.offset-1)
+                self.change_view = None
+            elif self.change_view.change_view=='previous':
+                self.start = self.start - (self.offset-1) 
+                self._offset = self._offset - (self.offset-1)
+                self.change_view = None
+        for inmate_row in self.inmate_rows[self.start:self._offset]:
+            inmate_row.draw(foreground_rect, screen, self.update_needed, self.offset)
 
     def update(self):
         # When button is clicked, return the inmate number
