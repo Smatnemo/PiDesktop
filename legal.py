@@ -142,6 +142,7 @@ class PiApplication:
         self.decrypted_file = None
         self.print_job = None
         self.picture_name = None
+        self.questions_answers = ['' for _ in range(21)]
         # Get count from data base
         if self.settings['attempt_count']:
             self.attempt_count = self.settings['attempt_count']
@@ -311,8 +312,11 @@ class PiApplication:
 
     def find_next_previous_event(self, events):
         for event in events:
-            if event.type == BUTTONDOWN and event.change_view:
-                return event
+            try:
+                if event.type == BUTTONDOWN and event.change_view:
+                    return event
+            except: 
+                pass
         return None 
 
     def find_touch_effects_event(self, events):

@@ -53,7 +53,7 @@ class InmateRow(object):
             self.row_num = offset 
         else:
             self.row_num = self.row_num % offset
-        print("For this number {}, the offset is {} and the text number is {}".format(self.row_num, offset, self.row_num_text))
+        # print("For this number {}, the offset is {} and the text number is {}".format(self.row_num, offset, self.row_num_text))
         self.inmate_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
         
         if self.documents:

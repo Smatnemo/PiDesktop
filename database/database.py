@@ -107,34 +107,34 @@ document_update_query = """UPDATE 'Documents'
                             SET printed = 1,
                                 decrypted = 1,
                                 status = 'printed',
-                                inmate_photo= ?
+                                inmate_photo= ?,
+                                printed_date= date('now')
                             WHERE order_id= ? """
 
 Questions_Answers_insert_query = """
 INSERT INTO `Questions_Answers` (
-  'id' int PRIMARY KEY AUTOINCREMENT,
-  'document_id' bigint,
-  'Q1' tinyint(1),
-  'Q2' tinyint(1),
-  'Q3' tinyint(1),
-  'Q4' tinyint(1),
-  'Q5' tinyint(1),
-  'Q6' tinyint(1),
-  'Q7' tinyint(1),
-  'Q8' tinyint(1),
-  'Q9' tinyint(1),
-  'Q10' tinyint(1),
-  'Q11' tinyint(1),
-  'Q12' tinyint(1),
-  'Q13' tinyint(1),
-  'Q14' tinyint(1),
-  'Q15' tinyint(1),
-  'Q16' tinyint(1),
-  'Q17' tinyint(1),
-  'Q18' tinyint(1),
-  'Q19' tinyint(1),
-  'Q20' tinyint(1)
-)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  'document_id',
+  'Q1',
+  'Q2',
+  'Q3',
+  'Q4',
+  'Q5',
+  'Q6',
+  'Q7',
+  'Q8',
+  'Q9',
+  'Q10',
+  'Q11',
+  'Q12',
+  'Q13',
+  'Q14',
+  'Q15',
+  'Q16',
+  'Q17',
+  'Q18',
+  'Q19',
+  'Q20'
+)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """
 # A list of standard queries for settings
 # 1. query for getting the number of enabled products. int 

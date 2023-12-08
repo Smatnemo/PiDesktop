@@ -298,7 +298,7 @@ class ChooseInmateDocumentBackground(Background):
 
         
         self.button_enabled = True
-        self.backbutton_event = pygame.USEREVENT + 17
+        self.backbutton_event = BUTTONDOWN, {'back':True}
 
         self.update_needed = None
 
@@ -358,7 +358,7 @@ class DecryptBackground(Background):
 
         
         self.backbutton_enabled = True
-        self.backbutton_event = pygame.USEREVENT + 17
+        self.backbutton_event = BUTTONDOWN, {'back':True}
 
         self.lockbutton = None
         
