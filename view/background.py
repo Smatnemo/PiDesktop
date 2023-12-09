@@ -201,7 +201,6 @@ class Background(object):
 
 
 class IntroBackground(Background):
-
     def __init__(self, arrow_location=ARROW_BOTTOM, arrow_offset=0, state="intro", count=3):
         Background.__init__(self, state)
         self.arrow_location = arrow_location
@@ -285,7 +284,7 @@ class LoginBackground(Background):
 
 
 class ChooseInmateDocumentBackground(Background):
-    def __init__(self, bkg_string="choose_document"):
+    def __init__(self, dimensions, bkg_string="choose_document"):
         Background.__init__(self, bkg_string)
         self.layout0 = None 
         self.layout0_pos = None 
@@ -308,17 +307,19 @@ class ChooseInmateDocumentBackground(Background):
 
         self.lockbutton_event = pygame.USEREVENT + 19
 
+        self.dimensions = dimensions
+
 
     def resize(self, screen):
         Background.resize(self, screen) 
 
         #  Create parameters for button 
         self._rect = screen.get_rect()
-        self.backbutton_x = self._rect.x+10
-        self.backbutton_y = self._rect.y+10  
+        self.backbutton_x = self._rect.x+self.dimensions['pad']
+        self.backbutton_y = self._rect.y+self.dimensions['pad'] 
 
-        self.lockbutton_x = self._rect.width - 250
-        self.lockbutton_y = self._rect.y+10
+        self.lockbutton_x = self._rect.width - self.dimensions['pad'] - self.lockbutton_width
+        self.lockbutton_y = self._rect.y+self.dimensions['pad']
 
         if self.button_enabled:
             self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
@@ -331,8 +332,11 @@ class ChooseInmateDocumentBackground(Background):
     def resize_texts(self):
         """Update text Surfaces
         """
-        rect = pygame.Rect(self._text_border, self._text_border,
-                           self._rect.width - 2 * self._text_border, self._rect.height * 0.15)
+        # rect = pygame.Rect(self._text_border, self._text_border,
+        #                    self._rect.width - 2 * self._text_border, self._rect.height * 0.15)
+
+        rect = pygame.Rect(self._text_border, self.dimensions['pad'],
+                           self._rect.width - 2 * self._text_border, self.dimensions['row_height'])
         Background.resize_texts(self, rect)
     
     def paint(self, screen):

@@ -149,7 +149,11 @@ class DocumentRow(object):
         self.chosen = False
         
 
-    def draw(self, foreground_rect, screen, event):
+    def draw(self, foreground_rect, screen, event, offset):
+        if self.document and self.row_num % offset == 0:
+            self.row_num = offset 
+        else:
+            self.row_num = self.row_num % offset
         self.document_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
         
         if self.document:
@@ -213,7 +217,7 @@ class DocumentRow(object):
 
 
 class DocumentsView(object):
-    def __init__(self, inmate_documents, selected):
+    def __init__(self, inmate_documents, dimension, selected):
         self.inmate_documents = inmate_documents
         self.documents = inmate_documents[selected]
         self.document_rows = [DocumentRow(document, doc_num) for doc_num, document in enumerate(self.documents)]
@@ -221,10 +225,28 @@ class DocumentsView(object):
         self.chosendocumentrow = None 
         self.titlerow = DocumentRow()
         self.document_rows.insert(0, self.titlerow)
+
+        self.gap = dimension["h"]-dimension["footer"]-dimension["header"]
+        self.offset = self.gap//dimension["row_height"]
+        
+        self._offset = self.offset - 1
+        self.start = 1
+        self.end = self.start + self._offset
+        self.change_view = None
     
     def draw(self, foreground_rect, screen):
-        for document_row in self.document_rows:
-            document_row.draw(foreground_rect, screen, self.update_needed)
+        self.document_rows[0].draw(foreground_rect, screen, self.update_needed, self.offset)
+        if self.change_view:
+            if self.change_view.change_view=='next' and self.end < len(self.inmate_rows):
+                self.start = self.end
+                self.end = self.start + self._offset
+                self.change_view = None
+            elif self.change_view.change_view=='previous' and (self.start - self._offset) > 0:
+                self.start = self.start - self._offset
+                self.end = self.end - self._offset
+                self.change_view = None
+        for document_row in self.document_rows[self.start:self.end]:
+            document_row.draw(foreground_rect, screen, self.update_needed, self.offset)
 
     def update(self):
         # When button is clicked, return the inmate number
@@ -264,10 +286,9 @@ class InmateDocumentsView(object):
         self.titlerow = InmateRow()
         self.inmate_rows.insert(0, self.titlerow)
 
-        self.gap = dimension["footer"]-dimension["header"]
+        self.gap = dimension["h"]-dimension["footer"]-dimension["header"]
         self.offset = self.gap//dimension["row_height"]
         
-        self.offset = 6
         self._offset = self.offset - 1
         self.start = 1
         self.end = self.start + self._offset

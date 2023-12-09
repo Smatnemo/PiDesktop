@@ -177,7 +177,7 @@ class PiApplication:
                                config.gettyped('PRINTER', 'printer_options'),
                                self.count)
         
-        print("This is the dictionary:{}".format(self.settings["inmate_documents"]))
+        
 
     def _initialize(self):
         self.printer.max_pages = self._config.getint('PRINTER', 'max_pages')

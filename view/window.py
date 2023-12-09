@@ -305,6 +305,7 @@ class PiWindow(object):
         self._d['secondcolumnx'] = self._d['firstcolumnx']+self._d['iconsizex']+self._d['marginx']
         self._d['thirdcolumnx'] = self._d['secondcolumnx']+self._d['iconsizex']+self._d['marginx']
         self._d["row_height"] = 64
+        self._d['bottombuttony'] = self._d['h']+self._d['pad']-self._d['footer']
 
 
     def show_oops(self):
@@ -346,16 +347,6 @@ class PiWindow(object):
         # Write logic to paint button on on screen surface
         return lv
         
-
-    # def show_choice(self, choices, selected=None):
-    #     """Show the choice view.
-    #     """
-    #     self._capture_number = (0, self._capture_number[1])
-    #     if not selected:
-    #         self._update_background(background.ChooseBackground(choices, self.arrow_location, self.arrow_offset))
-    #     else:
-    #         self._update_background(background.ChosenBackground(choices, selected))
-
 # After log in
     def show_choices(self, documents, selected=None):
         """
@@ -363,11 +354,11 @@ class PiWindow(object):
         """
         if documents:
             if not selected:
-                self._update_background(background.ChooseInmateDocumentBackground("choose_inmate"))
+                self._update_background(background.ChooseInmateDocumentBackground(self._d,"choose_inmate"))
                 self._update_documents_foreground(foreground.ChooseInmateDocumentForeground(documents, self._d))
             else:
                 # This leads to the choices documents for the inmate
-                self._update_background(background.ChooseInmateDocumentBackground("choose_document"))
+                self._update_background(background.ChooseInmateDocumentBackground(self._d,"choose_document"))
                 self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, self._d, selected))
         else:
             self._update_background(background.ChooseInmateDocumentBackground("No_Document"))

@@ -75,16 +75,18 @@ class ChooseInmateDocumentForeground(Foreground):
 
         self.nextbutton_event = pygame.USEREVENT+1, {'change_view':"next"}
 
+        self.dimensions = dimensions
+
     def resize(self, screen):
         Foreground.resize(self, screen)
 
         #  Create parameters for button
         self._rect = screen.get_rect() 
         self.nextbutton_x =  self.foreground_rect.width - 210
-        self.nextbutton_y = self._rect.height-150  
+        self.nextbutton_y = self.dimensions['bottombuttony']
 
         self.previousbutton_x = self.foreground_rect.x+10
-        self.previousbutton_y = self._rect.height-150
+        self.previousbutton_y = self.nextbutton_y
 
         if self.button_enabled:
             self.previousbutton = PushButton((self.previousbutton_x, self.previousbutton_y, self.previousbutton_width, self.previousbutton_height), self.previousbutton_event, label='PREVIOUS', parent=screen)
@@ -107,8 +109,8 @@ class ChooseInmateDocumentForeground(Foreground):
 class ChosenInmateDocumentForeground(Foreground):
     def __init__(self, inmate_documents, dimensions, selected_inmate):
         Foreground.__init__(self, "chosen_inmate")
-        # self.selected_inmate_documents = inmate_documents[selected_inmate]
-        self.document_view = DocumentsView(inmate_documents, selected_inmate)
+       
+        self.document_view = DocumentsView(inmate_documents, dimensions, selected_inmate)
 
         self.previousbutton = None
         self.previousbutton_width = 200
@@ -153,14 +155,6 @@ class ChosenInmateDocumentForeground(Foreground):
         self.nextbutton.draw(self.update_needed)
         self.previousbutton.draw(self.update_needed)
 
-
-# class ChooseDocumentForeground(Foreground):
-#     def __init__(self):
-#         Foreground.__init__(self, "choose_document")
-
-# class ChosenDocumentForeground(Foreground):
-#     def __init__(self, document):
-#         Foreground.__init__(self, "chosen_document")
 
 class NoDocumentForeground(Foreground):
     def __init__(self):
