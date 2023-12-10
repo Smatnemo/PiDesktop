@@ -302,8 +302,8 @@ class ChooseInmateDocumentBackground(Background):
         self.update_needed = None
 
         self.lockbutton = None
-        self.lockbutton_width = 200
-        self.lockbutton_height = 38
+        self.lockbutton_width = dimensions['iconsize']
+        self.lockbutton_height = dimensions['iconsize']
 
         self.lockbutton_event = pygame.USEREVENT + 19
 
@@ -325,7 +325,7 @@ class ChooseInmateDocumentBackground(Background):
             self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
             self.backbutton.enabled(True)
 
-            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.backbutton_width, self.backbutton_height), self.lockbutton_event, label='LOCK SCREEN', parent=screen)
+            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.lockbutton_width, self.lockbutton_height), self.lockbutton_event, label='padlock.jpg', parent=screen)
             self.lockbutton.enabled(True)
             self.button_enabled = False
 
@@ -348,7 +348,7 @@ class ChooseInmateDocumentBackground(Background):
 
 
 class DecryptBackground(Background):
-    def __init__(self):
+    def __init__(self, dimensions):
         Background.__init__(self, "decrypt")
         self.layout0 = None
         self.layout0_pos = None
@@ -370,6 +370,8 @@ class DecryptBackground(Background):
         self.lockbutton_event = pygame.USEREVENT + 19
 
         self.update_needed = None
+
+        self.dimensions = dimensions
         
     def resize(self, screen):
         Background.resize(self, screen)
@@ -379,14 +381,14 @@ class DecryptBackground(Background):
         self.backbutton_x = self._rect.x+60
         self.backbutton_y = self._rect.height-120  
 
-        self.lockbutton_x = self._rect.width - 250
-        self.lockbutton_y = self._rect.y+10
+        self.lockbutton_x = self._rect.width - self.dimensions['iconsize'] - self.dimensions['pad']
+        self.lockbutton_y = self._rect.y+self.dimensions['pad']
 
         if self.backbutton_enabled:
             self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
             self.backbutton.enabled(True)
 
-            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.backbutton_width, self.backbutton_height), self.lockbutton_event, label='LOCK SCREEN', parent=screen)
+            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.dimensions['iconsize'], self.dimensions['iconsize']), self.lockbutton_event, label='padlock_icon.jpg', parent=screen, label_clicked='padlock.jpg')
             self.lockbutton.enabled(True)
 
             self.backbutton_enabled = False
@@ -500,7 +502,7 @@ class PrintBackground(Background):
         """
         rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
                             self._rect.width / 2 - 2 * self._text_border,
-                            self._rect.height - 2 * self._text_border)
+                            64)
         align = 'center'
         Background.resize_texts(self, rect, align)
 
@@ -513,16 +515,14 @@ class PrintBackground(Background):
         if pages_text:
             rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
                             (self._rect.width / 2 - 2 * self._text_border)*0.65,
-                            self._rect.height - 2 * self._text_border)
+                            64)
 
             self._write_text(pages_text, rect)
 
-        # if self.question == 'capture':
-        #     self.question = ''
         question_text = get_translated_text(self.question)
         if question_text:
             rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
-                               self._rect.width/2 - 2 * self._text_border, self._rect.height - 2 * self._text_border)
+                               self._rect.width/2 - 2 * self._text_border, 64)
             self._write_text(question_text, rect)
 
         # hold the height of each rectangle after drawing on the screen
@@ -538,8 +538,8 @@ class PrintBackground(Background):
                         self.nobutton_y = text_surface[1].y+height
                         self.yesbutton_y = text_surface[1].y+height 
 
-            self.yesbutton_x = self._rect.width//2 - self.yesbutton_width
-            self.nobutton_x = self._rect.width//2 + self.nobutton_width
+            self.yesbutton_x = self._rect.width//2 - self.yesbutton_width - 5
+            self.nobutton_x = self._rect.width//2 + 5
         else:
             if self.arrow_location == ARROW_BOTTOM:
                 rect = pygame.Rect(self._rect.width / 2 + self._text_border, self._text_border,
@@ -549,7 +549,7 @@ class PrintBackground(Background):
             Background.resize_texts(self, rect, align)
 
             self.yesbutton_x = self._rect.width*0.75 - self.yesbutton_width
-            self.nobutton_x = self._rect.width*0.75 + self.nobutton_width
+            self.nobutton_x = self._rect.width*0.75 + 5
         
         if self.yesbutton_y is None:
             self.yesbutton_y = self._rect.height * 0.75

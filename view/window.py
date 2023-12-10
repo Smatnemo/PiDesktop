@@ -342,7 +342,7 @@ class PiWindow(object):
         return lv
     
     def show_decrypt(self, previous_state):
-        self._update_background(background.DecryptBackground())
+        self._update_background(background.DecryptBackground(self._d))
         lv = LoginView(self.surface, previous_state, self._d)
         # Write logic to paint button on on screen surface
         return lv

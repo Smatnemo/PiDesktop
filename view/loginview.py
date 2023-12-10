@@ -5,6 +5,7 @@ import sys
 import os.path as osp
 
 from LDS import fonts, pictures
+from LDS.media import get_filename
 
 pygame.init()
 WIDTH = 640
@@ -172,15 +173,17 @@ class InputBox:
         # Blit the text.
         screen.blit(self.txt_surface, (self.input_rect_border.x+5, self.input_rect_border.y+5))
         
-        
-
-
-     
 
 
 class PushButton:
-    def __init__(self, rect:tuple, user_event, label:str='Button', parent=None):
-        self.label = label
+    def __init__(self, rect:tuple, user_event, label:str='Button', parent=None, label_clicked=None):
+        if label.endswith('.png') or label.endswith('.jpg'):
+            self.icon, self.icon_clicked = self.use_icon(label, label_clicked)
+            self.label = None
+        else:
+            self.label = label
+            self.icon = None
+            self.icon_clicked = None
         self.button_color = COLOR_INACTIVE 
         self.text_color = WHITE
         self.font_size = 32
@@ -196,8 +199,6 @@ class PushButton:
             self.screen = parent
             self.set_font()
         
-
-
     def iniScreen(self):
         pygame.init()
         self.set_font()
@@ -255,30 +256,52 @@ class PushButton:
         self.font = pygame.font.Font('freesansbold.ttf', self.font_size)
 
     def draw(self, event):
-        self.button_text = self.font.render(self.label, True, self.button_color)
-        width, height = self.font.size(self.label)
-        # self.button_rect.width, self.button_rect.height = width+6, height+6
-        self.coord[0]=self.button_rect.centerx-width//2
-        self.coord[1]=self.button_rect.centery-height//2
-        
+        # Do this for text
+        if self.label:
+            self.button_text = self.font.render(self.label, True, self.button_color)
+            width, height = self.font.size(self.label)
+            self.coord[0]=self.button_rect.centerx-width//2
+            self.coord[1]=self.button_rect.centery-height//2
+
         if self.button_enabled:
             pygame.draw.rect(self.screen, 'dark gray', self.button_rect, 0, 3)
+            if self.icon:
+                self.screen.blit(self.icon, self.icon.get_rect(center=self.button_rect.center))
+            else:
+                self.screen.blit(self.button_text, self.coord) 
             clicked = self.clicked(event)
             if clicked == 'BUTTONDOWN':
                 pygame.draw.rect(self.screen, 'black', self.button_rect, 0, 3)
+                if self.icon_clicked:
+                    self.screen.blit(self.icon_clicked, self.icon_clicked.get_rect(center=self.button_rect.center))
+                else:
+                    self.screen.blit(self.button_text, self.coord)
             elif clicked == 'BUTTONUP':
                 pygame.draw.rect(self.screen, 'dark gray', self.button_rect, 0, 3)
+                if self.icon:
+                    self.screen.blit(self.icon, self.icon.get_rect(center=self.button_rect.center))
+                else:
+                    self.screen.blit(self.button_text, self.coord)
         else:
             pygame.draw.rect(self.screen, 'blue', self.button_rect, 0, 3)
-        self.screen.blit(self.button_text, self.coord)
+            if self.icon:
+                self.screen.blit(self.icon, self.icon.get_rect(center=self.button_rect.center))
+            else:
+                self.screen.blit(self.button_text, self.coord)
+        
         
     
-    def use_icon(self, icon):
-        if osp.exists(icon) and osp.isfile(icon):
-            pass 
+    def use_icon(self, icon, icon_clicked=None):
         # Write code to resize image when given icon
-        size = (self._rect.width * 0.2, self._rect.height * 0.2)
-        self.left_arrow = pictures.get_pygame_image("camera.png", size, vflip=False, color=self._text_color)
+        size = (64, 64)
+        icon_path = get_filename(icon)
+        icon = pictures.get_pygame_image(icon_path, size, vflip=False, color=None)
+        icon_color = (255, 255, 255, 0.5)
+        if icon_clicked:
+            icon_path = get_filename(icon_clicked)
+            icon_color = None
+        icon_clicked = pictures.get_pygame_image(icon_path, size, vflip=False, color=icon_color)
+        return icon, icon_clicked
 
 
 
@@ -407,7 +430,7 @@ class LoginView(object):
         else:
             label = 'UNLOCK'
         # Set up the buttons
-        self.login_button = PushButton((self._d['firstcolumnx'], self._d['loginbuttony'], self._d['gridwidth'], self._d['iconsizey']),LOGINEVENT, label, parent=screen)
+        self.login_button = PushButton((self._d['firstcolumnx'], self._d['loginbuttony'], self._d['gridwidth'], self._d['iconsizey']),LOGINEVENT, label, screen)
         self.login_button.enabled(True)
 
     def get_input_text(self):
