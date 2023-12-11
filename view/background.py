@@ -325,7 +325,7 @@ class ChooseInmateDocumentBackground(Background):
             self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
             self.backbutton.enabled(True)
 
-            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.lockbutton_width, self.lockbutton_height), self.lockbutton_event, label='padlock.jpg', parent=screen)
+            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.lockbutton_width, self.lockbutton_height), self.lockbutton_event, label='padlock_icon.jpg', parent=screen)
             self.lockbutton.enabled(True)
             self.button_enabled = False
 

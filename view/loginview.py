@@ -293,10 +293,10 @@ class PushButton:
     
     def use_icon(self, icon, icon_clicked=None):
         # Write code to resize image when given icon
-        size = (64, 64)
+        size = (64,64)
         icon_path = get_filename(icon)
         icon = pictures.get_pygame_image(icon_path, size, vflip=False, color=None)
-        icon_color = (255, 255, 255, 0.5)
+        icon_color = None
         if icon_clicked:
             icon_path = get_filename(icon_clicked)
             icon_color = None
