@@ -131,6 +131,7 @@ class PiApplication:
         self.chosen_document = None
         self.document_row = None
         self.documents = self.settings['inmate_documents']
+        self.documents_number = self.settings['documents_number']
         self.previous_picture = None
         self.previous_animated = None
         self.previous_picture_file = None
@@ -142,6 +143,8 @@ class PiApplication:
         self.decrypted_file = None
         self.print_job = None
         self.picture_name = None
+        self.database_updated = None
+        self.questions_answers = ['' for _ in range(21)]
         # Get count from data base
         if self.settings['attempt_count']:
             self.attempt_count = self.settings['attempt_count']
@@ -173,6 +176,8 @@ class PiApplication:
                                config.getint('PRINTER', 'max_pages'),
                                config.gettyped('PRINTER', 'printer_options'),
                                self.count)
+        
+        
 
     def _initialize(self):
         self.printer.max_pages = self._config.getint('PRINTER', 'max_pages')
@@ -291,24 +296,7 @@ class PiApplication:
         """Return the first found event if found in the list.
         """
         for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                return event
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                return event
-            if (event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2, 3)) or event.type == pygame.FINGERUP:
-                pos = get_event_pos(self._window.display_size, event)
-                rect = self._window.get_rect()
-                if pygame.Rect(0, 0, rect.width // 2, rect.height).collidepoint(pos):
-                    event.key = pygame.K_LEFT
-                else:
-                    event.key = pygame.K_RIGHT
-                return event
-            if event.type == BUTTONDOWN:
-                if event.capture:
-                    event.key = pygame.K_LEFT
-                else:
-                    event.key = pygame.K_RIGHT
-                return event
+            return None
         return None
     
     def find_choose_event(self, events):
@@ -317,14 +305,22 @@ class PiApplication:
                 return event
         return None
     
-    def find_next_back_event(self, events):
+    def find_back_event(self, events):
         for event in events:
-            if event.type == BUTTONDOWN and event.previous:
-                return event
-            if event.type == BUTTONDOWN and event.next:
-                return event 
-            if event.type == BUTTONDOWN and event.back:
-                return event
+            try:
+                if event.type == BUTTONDOWN and event.back:
+                    return event
+            except:
+                pass
+        return None 
+
+    def find_next_previous_event(self, events):
+        for event in events:
+            try:
+                if event.type == BUTTONDOWN and event.change_view:
+                    return event
+            except: 
+                pass
         return None 
 
     def find_touch_effects_event(self, events):

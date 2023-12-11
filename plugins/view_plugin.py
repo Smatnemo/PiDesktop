@@ -6,7 +6,7 @@ import time
 from LDS.utils import LOGGER, get_crash_message, PoolingTimer
 from LDS.accounts import LogIn, LogOut
 from LDS.documents.document import decrypt_content, document_authentication
-from LDS.database.database import DataBase, document_update_query
+from LDS.database.database import DataBase, document_update_query, Questions_Answers_insert_query
 
 BUTTONDOWN = pygame.USEREVENT + 1
 class ViewPlugin(object):
@@ -79,8 +79,13 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_login_enter(self, app, win):
         LOGGER.info("Attempting to Login")
-        self.login_view = win.show_login(app.previous_state) # Create a function in window module to display login page
+        self.login_view = win.show_login(app.previous_state) 
+
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
+        if app.database_updated:
+            db = DataBase()
+            app.documents, app.documents_number = db.get_inmate_documents()
+            app.database_updated = None
         # Find way to display it in the login window during login in activity
         self.choose_timer.start()
         
@@ -116,7 +121,7 @@ class ViewPlugin(object):
             LOGGER.info(app.validated)
             if app.validated:
                 app.validated = None
-                return app.previous_state if app.previous_state != 'wait' and app.previous_state != 'login' and app.previous_state is not None else 'choose'
+                return app.previous_state if app.previous_state != 'wait' and app.previous_state != 'finish' and app.previous_state != 'login' and app.previous_state is not None else 'choose'
             else:
                 self.count_failed_attempts += 1
                 LOGGER.info("This is failed attempt number {}".format(self.count_failed_attempts))
@@ -151,19 +156,21 @@ class ViewPlugin(object):
         # update for buttons
         win._current_background.backbutton.draw(app.update_needed)
         win._current_background.lockbutton.draw(app.update_needed)
-        
         win._current_documents_foreground.nextbutton.draw(app.update_needed)
         win._current_documents_foreground.previousbutton.draw(app.update_needed)
+
 
         event = app.find_choose_event(events)
         if event:
             app.inmate_number = win._current_documents_foreground.inmate_documents_view.choseninmaterow.inmate_number
 
-        next_previous_foreground_event = app.find_next_back_event(events)
+        next_previous_foreground_event = app.find_next_previous_event(events)
+        if next_previous_foreground_event:
+            win._current_documents_foreground.inmate_documents_view.change_view = next_previous_foreground_event
    
     @LDS.hookimpl
     def state_choose_validate(self, cfg, app, events):
-        if app.find_next_back_event(events):
+        if app.find_back_event(events):
             return 'login'
         elif app.find_lockscreen_event(events):
             app.previous_state = 'choose'
@@ -189,6 +196,8 @@ class ViewPlugin(object):
             LOGGER.info("Restarting timer in chosen state")
             self.choose_timer.start()
 
+        app.find_touch_effects_event(events)
+
         win._current_documents_foreground.document_view.update_needed = app.update_needed
         win.show_choices(app.documents, selected=app.inmate_number)
 
@@ -206,7 +215,7 @@ class ViewPlugin(object):
 
     @LDS.hookimpl
     def state_chosen_validate(self, app, win, events):
-        if app.find_next_back_event(events):
+        if app.find_back_event(events):
             app.inmate_number = None
             app.chosen_document = None
             # Drop cached foreground
@@ -242,6 +251,9 @@ class ViewPlugin(object):
     def state_decrypt_do(self, app, win, events):
         if events:
             self.choose_timer.start()
+        
+        app.find_touch_effects_event(events)
+
         if app.find_login_event(events):
             if self.decrypt_view.passcode_box.input_text != '':
                 app.decrypt_key = self.decrypt_view.passcode_box.input_text 
@@ -292,7 +304,7 @@ class ViewPlugin(object):
                     app.previous_state = 'decrypt'
                     return 'passfail'
             # Write code to return to previous state if the last state was not choose
-        elif app.find_next_back_event(events):
+        elif app.find_back_event(events):
             app.chosen_document = None
             return 'chosen'
         elif app.find_lockscreen_event(events):
@@ -384,13 +396,14 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_print_do(self, cfg, app, win, events):
         
+        app.find_touch_effects_event(events)
+
         printed = app.find_print_status_event(events)
         if printed:
             self.enable_button = True
             win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
             app.print_job = None
         
-        question_answers = {}
         answered = app.find_question_event(events)
         if answered:
             self.enable_button = True
@@ -402,16 +415,27 @@ class ViewPlugin(object):
                     self.print_status = "print_successful"
                 else:
                     self.print_status = "print_unsuccessful"
-                # Write the answer to the database for Q1
+                # append answers to the list
+                if answered.answer == 'YES':
+                    app.questions_answers[1] = 1
+                elif answered.answer == 'NO':
+                    app.questions_answers[1] = 0
             elif answered.question == 'Q2':
                 self.question = 'Q3'
                 self.print_status = ""
-                # Write this into the database for Q2
+                # append the answers to the 
+                if answered.answer == 'YES':
+                    app.questions_answers[2] = 1
+                elif answered.answer == 'NO':
+                    app.questions_answers[2] = 0
             elif answered.question == 'Q3':
                 self.question = 'capture_photo'
-                # win._current_background.yesbutton_enabled = False
-
-                # Write this into the database for Q3
+                # append the answer to the questions answers list
+                if answered.answer == 'YES':
+                    app.questions_answers[3] = 1
+                elif answered.answer == 'NO':
+                    app.questions_answers[3] = 0
+                
             self.document_name = ''
         # Draw screen with the new question
         win.show_print(app.previous_picture, self.print_status, self.question, self.document_name)
@@ -461,6 +485,9 @@ class ViewPlugin(object):
 
     @LDS.hookimpl
     def state_finish_do(self, cfg, app, win, events):
+
+        app.find_touch_effects_event(events)
+
         # Enable the buttons of the page
         win._current_background.yesbutton.enabled(self.enable_button)
         win._current_background.nobutton.enabled(self.enable_button)
@@ -482,12 +509,19 @@ class ViewPlugin(object):
                 win._current_documents_foreground.document_view.update_view(app.inmate_number, blob, decrypted=True, printed=True)
                 app.documents = win._current_documents_foreground.document_view.inmate_documents  
                 win.documents_foreground = {}
+                app.questions_answers[0] = app.chosen_document.document[0]
                 db = DataBase()
                 db.__update__(document_update_query, (app.chosen_document.document[16], app.chosen_document.document[0]))
+                db.__insert__(Questions_Answers_insert_query, tuple(app.questions_answers))
+                app.database_updated = True
                 # print(app.chosen_document.document[16])
                 # insert tuple into database
                 app.chosen_document = None
                 app.previous_picture = None
+                app.previous_state = 'finish'
+                app.inmate_number = None 
+                win._current_foreground = None
+                app.questions_answers = ['' for _ in range(21)]
                 return 'login'
             
             elif self.forgotten.answer == 'YES':

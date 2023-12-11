@@ -39,7 +39,11 @@ def colorize_pil_image(pil_image, color, bg_color=None):
     """
     if not bg_color:
         bg_color = (abs(color[0] - 255), abs(color[1] - 255), abs(color[2] - 255))
+    # try:
     _, _, _, alpha = pil_image.split()
+    # except: 
+    #     pil_image = pil_image.convert('RGBA')
+    #     _, _, _, alpha = pil_image.split()
     gray_pil_image = pil_image.convert('L')
     new_pil_image = ImageOps.colorize(gray_pil_image, black=bg_color, white=color)
     new_pil_image.putalpha(alpha)
@@ -80,7 +84,11 @@ def get_pygame_image(name, size=None, antialiasing=True, hflip=False, vflip=Fals
     :return: pygame.Surface with image
     :rtype: object
     """
-    path = get_filename(name)
+    if osp.isfile(name):
+        path = name
+    else:
+        path = get_filename(name)
+        
     if not size and not color:
         image = pygame.image.load(path).convert()
     else:
@@ -90,6 +98,7 @@ def get_pygame_image(name, size=None, antialiasing=True, hflip=False, vflip=Fals
             pil_image = Image.new('RGBA', (int(size[0]), int(size[1])), (0, 0, 0, 0))
 
         if color:
+            pil_image = pil_image.convert('RGBA')
             pil_image = colorize_pil_image(pil_image, color, bg_color)
 
         if crop:

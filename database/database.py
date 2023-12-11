@@ -107,34 +107,34 @@ document_update_query = """UPDATE 'Documents'
                             SET printed = 1,
                                 decrypted = 1,
                                 status = 'printed',
-                                inmate_photo= ?
+                                inmate_photo= ?,
+                                printed_date= date('now')
                             WHERE order_id= ? """
 
 Questions_Answers_insert_query = """
 INSERT INTO `Questions_Answers` (
-  'id' int PRIMARY KEY AUTOINCREMENT,
-  'document_id' bigint,
-  'Q1' tinyint(1),
-  'Q2' tinyint(1),
-  'Q3' tinyint(1),
-  'Q4' tinyint(1),
-  'Q5' tinyint(1),
-  'Q6' tinyint(1),
-  'Q7' tinyint(1),
-  'Q8' tinyint(1),
-  'Q9' tinyint(1),
-  'Q10' tinyint(1),
-  'Q11' tinyint(1),
-  'Q12' tinyint(1),
-  'Q13' tinyint(1),
-  'Q14' tinyint(1),
-  'Q15' tinyint(1),
-  'Q16' tinyint(1),
-  'Q17' tinyint(1),
-  'Q18' tinyint(1),
-  'Q19' tinyint(1),
-  'Q20' tinyint(1)
-)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+  'document_id',
+  'Q1',
+  'Q2',
+  'Q3',
+  'Q4',
+  'Q5',
+  'Q6',
+  'Q7',
+  'Q8',
+  'Q9',
+  'Q10',
+  'Q11',
+  'Q12',
+  'Q13',
+  'Q14',
+  'Q15',
+  'Q16',
+  'Q17',
+  'Q18',
+  'Q19',
+  'Q20'
+)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 """
 # A list of standard queries for settings
 # 1. query for getting the number of enabled products. int 
@@ -303,7 +303,7 @@ class DataBase(object):
         self.settings['watermarkpath'] = self.get_object(self.entity[6])
         self.settings['capture_nbr'] = self.get_object()
         self.settings['background'] = self.get_object(self.entity[7])
-        self.settings['inmate_documents'] = self.get_inmate_documents()[0]
+        self.settings['inmate_documents'], self.settings['documents_number'] = self.get_inmate_documents()
         self.settings['attempt_count'] = None
         self.settings['use_camera'] = True
 
@@ -322,13 +322,16 @@ class DataBase(object):
         self.cursor.execute("SELECT " + column + " FROM " + table_name)
         return self.cursor.fetchall()
 
-    def get_record(self, table_name:str, column:str, column_value):
+    def get_record(self, table_name:str, column:str, column_value, status):
         # Get all the records from a table where field conditions meet certain requirements
-        self.cursor.execute("SELECT * FROM " + table_name + " WHERE " + column +"=(?)",(column_value,))
+        self.cursor.execute("SELECT * FROM " + table_name + " WHERE " + column +"=(?) AND status=(?)",(column_value, status))
         return self.cursor.fetchall()
     
-    def get_table(self, table_name:str):
-        self.cursor.execute("SELECT * FROM " + table_name)
+    def get_table(self, table_name:str, condition=None):
+        if condition:
+            self.cursor.execute("SELECT * FROM " + table_name + " WHERE status=(?)", (condition,))
+        else:
+            self.cursor.execute("SELECT * FROM " + table_name)
         return self.cursor.fetchall()
 
     def get_inmate_documents(self):
@@ -345,7 +348,7 @@ class DataBase(object):
         unique_inmate_number_list = list(set(inmate_number_list))
         
         for inmate_number in unique_inmate_number_list:
-            docs = self.get_record("Documents", "inmate_number", inmate_number[0])
+            docs = self.get_record("Documents", "inmate_number", inmate_number[0], "ready")
             inmate_documents[inmate_number[0]] = docs
         self.close()
         return inmate_documents, number_of_documents
