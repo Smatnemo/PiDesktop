@@ -299,16 +299,18 @@ class ViewPlugin(object):
                 except Exception as ex:
                     LOGGER.error("Encountered an error:{}".format(ex))
                     self.failure_message = "decryption_failed"
+                    if result:
+                        result.close()
+                        os.unlink(result.name)
                     return 'failsafe'
                 if verify_decryption:
                     LOGGER.info("Done Decrypting")
-                    app.print_job = result.name        
+                    app.print_job = result       
                     return 'print'
                 else:
                     LOGGER.error("Encountered error verifying decrypted file:{}".format(app.chosen_document.document_name))
                     app.chosen_document = None
                     # write code to clean decrypted 
-                    app.decrypte_file = None
                     app.print_job = None 
                     result.close
                     os.unlink(result.name)
@@ -404,7 +406,7 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_print_enter(self, cfg, app, win):
         LOGGER.info("Display the Document details to be printed")
-        LOGGER.info("Printing Document: {}".format(app.print_job))
+        LOGGER.info("Printing Document: {}".format(app.print_job.name))
         self.print_status = "print"
         self.question = "Q1"
         self.document_name = app.chosen_document.document_name
@@ -425,13 +427,12 @@ class ViewPlugin(object):
         if printed:
             self.enable_button = True
             win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
-            app.print_job = None
+            # app.print_job = None
         
         answered = app.find_question_event(events)
         if answered:
             self.enable_button = True
-            # Fetch different question
-            print(answered)
+            
             if answered.question == 'Q1':
                 self.question = 'Q2'
                 if answered.answer=='YES':
@@ -482,9 +483,9 @@ class ViewPlugin(object):
             app.picture_name = str(app.inmate_number) + str(app.chosen_document.document[0])
             app.capture_nbr = 1
             return 'preview'
-        if not app.printer.is_ready():
-            self.failure_message = "no_printer"
-            return 'failsafe'
+        # if not app.printer.is_ready():
+        #     self.failure_message = "no_printer"
+        #     return 'failsafe'
         
     @LDS.hookimpl
     def state_capture_signature_enter(self):
@@ -534,20 +535,23 @@ class ViewPlugin(object):
                 # win._current_documents_foreground.document_view.inmate_documents
                 win._current_documents_foreground.document_view.update_view(app.inmate_number, blob, decrypted=True, printed=True)
                 app.documents = win._current_documents_foreground.document_view.inmate_documents  
-                win.documents_foreground = {}
+
                 app.questions_answers[0] = app.chosen_document.document[0]
                 db = DataBase()
-                db.__update__(document_update_query, (app.chosen_document.document[16], app.chosen_document.document[0]))
+                db.__update__(document_update_query, (app.questions_answers[1], app.chosen_document.document[16], app.chosen_document.document[0]))
                 db.__insert__(Questions_Answers_insert_query, tuple(app.questions_answers))
                 app.database_updated = True
-                # print(app.chosen_document.document[16])
-                # insert tuple into database
+                
                 app.chosen_document = None
                 app.previous_picture = None
                 app.previous_state = 'finish'
                 app.inmate_number = None 
-                win._current_foreground = None
+                
+                # delete file
+                app.print_job.close()
+                os.unlink(app.print_job.name)
                 app.questions_answers = ['' for _ in range(21)]
+                win.drop_cache()
                 return 'login'
             
             elif self.forgotten.answer == 'YES':

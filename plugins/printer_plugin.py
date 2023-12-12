@@ -24,7 +24,7 @@ class PrinterPlugin(object):
 
     def print_document(self, cfg, app):
         LOGGER.info("Send final document to printer")
-        app.printer.print_file(app.print_job)
+        app.printer.print_file(app.print_job.name)
         app.count.printed += 1
         app.count.remaining_duplicates -= 1
     

@@ -104,7 +104,7 @@ document_insert_query = """ INSERT INTO 'Documents'
                                   inmate_photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
 
 document_update_query = """UPDATE 'Documents'
-                            SET printed = 1,
+                            SET printed = ?,
                                 decrypted = 1,
                                 status = 'printed',
                                 inmate_photo= ?,

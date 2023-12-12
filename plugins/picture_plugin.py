@@ -1,4 +1,3 @@
-
 import os
 import os.path as osp
 import itertools
@@ -50,7 +49,7 @@ class PicturePlugin(object):
 
         texts = [str(app.inmate_number),
                  str(app.chosen_document.document_name)]
-        print(texts)
+        
         colors = cfg.gettuple('PICTURE', 'text_colors', 'color', len(texts))
         text_fonts = cfg.gettuple('PICTURE', 'text_fonts', str, len(texts))
         alignments = cfg.gettuple('PICTURE', 'text_alignments', str, len(texts))
