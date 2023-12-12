@@ -696,8 +696,8 @@ class FinishedWithImageBackground(FinishedBackground):
 
 class OopsBackground(Background):
 
-    def __init__(self):
-        Background.__init__(self, "oops")
+    def __init__(self, message):
+        Background.__init__(self, message)
 
 
 class WrongPasswordBackground(Background):

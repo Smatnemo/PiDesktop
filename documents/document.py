@@ -85,19 +85,20 @@ def document_authentication(decrypted, document):
     # check if the decrypted checksum matches the original document checksum
     page_count_match = False 
     checksum_match = False
-    page_count = count_pdf_pages(decrypted)
-    file_checksum = get_file_checksum(decrypted, "original")
+    
     try:
+        page_count = count_pdf_pages(decrypted)
         if page_count == document[8]:
             page_count_match = True
         else:
             LOGGER.error("Page count did not match")
+        file_checksum = get_file_checksum(decrypted, "original")
         if file_checksum == document[15]:
             checksum_match = True 
         else:
             LOGGER.error("Database checksum: {} Checksum did not match:{}".format(document[15], file_checksum))
     except Exception as ex:
-        LOGGER.error("Error {} occured while decrypting".format(ex))
+        LOGGER.error("Error {} occured while documenting".format(ex))
     
     return True if page_count_match and checksum_match else False 
          
@@ -130,7 +131,8 @@ def decrypt_content(password, filename):
 def decrypt_content2(password, filename):
     temp_file = make_temp_file()
     filename_full_path = osp.join(osp.abspath(osp.dirname(DOC_DIR)), filename)
-    with open(filename, 'rb') as in_file, open(temp_file.name, 'wb') as out_file:
+    print("This is filename:", filename_full_path)
+    with open(filename_full_path, 'rb') as in_file, open(temp_file.name, 'wb') as out_file:
         decrypt2(password, in_file, out_file)
 
     return temp_file

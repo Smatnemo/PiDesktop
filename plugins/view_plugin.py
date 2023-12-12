@@ -9,6 +9,8 @@ from LDS.documents.document import decrypt_content2, document_authentication
 from LDS.database.database import DataBase, document_update_query, Questions_Answers_insert_query
 
 BUTTONDOWN = pygame.USEREVENT + 1
+
+
 class ViewPlugin(object):
 
     """Plugin to manage the LDS window dans transitions.
@@ -42,16 +44,21 @@ class ViewPlugin(object):
         self.login_view = None 
         self.decrypt_view = None
 
+        self.failure_message = ""
+
     @LDS.hookimpl
     def state_failsafe_enter(self, win):
-        win.show_oops()
+        win.show_oops(self.failure_message)
         self.failed_view_timer.start()
         LOGGER.error(get_crash_message())
 
     @LDS.hookimpl
     def state_failsafe_validate(self):
-        if self.failed_view_timer.is_timeout():
+        if (self.failure_message == 'no_printer' or self.failure_message) and self.failed_view_timer.is_timeout():
+            return 'chosen'
+        elif self.failed_view_timer.is_timeout():
             return 'wait'
+        
         
     @LDS.hookimpl
     def state_wait_enter(self, cfg, app, win):
@@ -109,7 +116,6 @@ class ViewPlugin(object):
         self.login_view.passcode_box.handle_event(events)
         self.login_view.draw(win.surface)
         
-        
 
     @LDS.hookimpl 
     def state_login_validate(self, cfg, app, win, events):
@@ -142,6 +148,7 @@ class ViewPlugin(object):
         win.set_print_number(0, False)  # Hide printer status
         # Create logic to fetch documents from database
         win.show_choices(app.documents)
+        app.inmate_number = None
         self.choose_timer.start()
 
     @LDS.hookimpl
@@ -225,8 +232,13 @@ class ViewPlugin(object):
             app.previous_state = 'wait'
             return 'wait'
         elif app.chosen_document:
-            app.previous_state = 'chosen'
-            return 'decrypt'
+            if app.printer.is_ready():
+                app.previous_state = 'chosen'
+                return 'decrypt'
+            elif not app.printer.is_ready():
+                self.failure_message = "no_printer"
+                app.chosen_document = None
+                return 'failsafe'
         elif self.choose_timer.is_timeout():
             app.previous_state = 'wait'
             return 'wait'
@@ -260,8 +272,7 @@ class ViewPlugin(object):
                 app.decrypt_key = self.decrypt_view.get_input_text() 
             self.decrypt_view.passcode_box.text=''
             self.decrypt_view.passcode_box.txt_surface = self.decrypt_view.passcode_box.font.render(self.decrypt_view.passcode_box.text, True, self.decrypt_view.passcode_box.color)
-            # print('From Login',app.password) 
-        # win.surface.fill((255, 255, 255))
+            
         self.decrypt_view.update_needed = app.update_needed
 
         # update for backbutton and lockbutton
@@ -287,15 +298,21 @@ class ViewPlugin(object):
                     verify_decryption = document_authentication(result.name, app.chosen_document.document)
                 except Exception as ex:
                     LOGGER.error("Encountered an error:{}".format(ex))
+                    self.failure_message = "decryption_failed"
                     return 'failsafe'
                 if verify_decryption:
-                    app.decrypted_file = result.name
                     LOGGER.info("Done Decrypting")
                     app.print_job = result.name        
                     return 'print'
                 else:
-                    LOGGER.error("Encountered error decrypting file:".format(app.chosen_document.document_name))
+                    LOGGER.error("Encountered error verifying decrypted file:{}".format(app.chosen_document.document_name))
                     app.chosen_document = None
+                    # write code to clean decrypted 
+                    app.decrypte_file = None
+                    app.print_job = None 
+                    result.close
+                    os.unlink(result.name)
+                    self.failure_message = "incomplete"
                     return 'failsafe'
             else:
                 self.count_failed_attempts += 1
@@ -466,6 +483,7 @@ class ViewPlugin(object):
             app.capture_nbr = 1
             return 'preview'
         if not app.printer.is_ready():
+            self.failure_message = "no_printer"
             return 'failsafe'
         
     @LDS.hookimpl

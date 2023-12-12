@@ -84,6 +84,8 @@ class PiWindow(object):
         self._d = {}
         self.get_display_dimensions()
 
+        self._f = {}
+
         self._pos_map = {self.CENTER: self._center_pos,
                          self.RIGHT: self._right_pos,
                          self.LEFT: self._left_pos,
@@ -308,11 +310,12 @@ class PiWindow(object):
         self._d['bottombuttony'] = self._d['h']+self._d['pad']-self._d['footer']
 
 
-    def show_oops(self):
+    def show_oops(self, message):
         """Show failure view in case of exception.
+        :param message: the exception message
         """
         self._capture_number = (0, self._capture_number[1])
-        self._update_background(background.OopsBackground())
+        self._update_background(background.OopsBackground(message))
 
     def show_intro(self, pil_image=None, with_print=True, state=None):
         """Show introduction view.
