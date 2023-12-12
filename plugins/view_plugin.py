@@ -5,7 +5,7 @@ import pygame
 import time
 from LDS.utils import LOGGER, get_crash_message, PoolingTimer
 from LDS.accounts import LogIn, LogOut
-from LDS.documents.document import decrypt_content, document_authentication
+from LDS.documents.document import decrypt_content2, document_authentication
 from LDS.database.database import DataBase, document_update_query, Questions_Answers_insert_query
 
 BUTTONDOWN = pygame.USEREVENT + 1
@@ -79,7 +79,7 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_login_enter(self, app, win):
         LOGGER.info("Attempting to Login")
-        self.login_view = win.show_login(app.previous_state) 
+        self.login_view = win.show_login() 
 
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         if app.database_updated:
@@ -121,7 +121,8 @@ class ViewPlugin(object):
             LOGGER.info(app.validated)
             if app.validated:
                 app.validated = None
-                return app.previous_state if app.previous_state != 'wait' and app.previous_state != 'finish' and app.previous_state != 'login' and app.previous_state is not None else 'choose'
+                return app.previous_state if (app.previous_state=='chosen' and app.inmate_number) or app.previous_state != 'wait' and app.previous_state != 'finish'\
+                      and app.previous_state != 'login' and app.previous_state is not None else 'choose'
             else:
                 self.count_failed_attempts += 1
                 LOGGER.info("This is failed attempt number {}".format(self.count_failed_attempts))
@@ -193,7 +194,6 @@ class ViewPlugin(object):
     def state_chosen_do(self, app, win, events):
         if events:
             # If there is any event restart timer
-            LOGGER.info("Restarting timer in chosen state")
             self.choose_timer.start()
 
         app.find_touch_effects_event(events)
@@ -241,8 +241,7 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_decrypt_enter(self, app, win):
         LOGGER.info("Entered the decrypt state")
-        print("This is the previous state", app.previous_state)
-        self.decrypt_view = win.show_decrypt(app.previous_state) # Create a function in window module to display login page
+        self.decrypt_view = win.show_decrypt() # Create a function in window module to display login page
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         # Find way to display it in the login window during login in activity
         self.choose_timer.start()
@@ -283,8 +282,12 @@ class ViewPlugin(object):
             if app.validated:
                 app.validated = None
                 # Decrypt the document using the document file path and check if the documents pages match
-                result = decrypt_content(app.chosen_document.document[7], app.chosen_document.document[1])
-                verify_decryption = document_authentication(result.name, app.chosen_document.document)
+                try:
+                    result = decrypt_content2(app.chosen_document.document[7], app.chosen_document.document[1])
+                    verify_decryption = document_authentication(result.name, app.chosen_document.document)
+                except Exception as ex:
+                    LOGGER.error("Encountered an error:{}".format(ex))
+                    return 'failsafe'
                 if verify_decryption:
                     app.decrypted_file = result.name
                     LOGGER.info("Done Decrypting")
@@ -390,8 +393,11 @@ class ViewPlugin(object):
         self.document_name = app.chosen_document.document_name
         self.enable_button = False
         win.show_print(app.previous_picture, self.print_status, self.question, self.document_name, app.chosen_document.page_count)
+        
         if app.print_job and app.printer.is_ready():
             app.print_event()
+        elif not app.printer.is_ready():
+            LOGGER.info("Printer status is not available")
 
     @LDS.hookimpl
     def state_print_do(self, cfg, app, win, events):
@@ -459,6 +465,8 @@ class ViewPlugin(object):
             app.picture_name = str(app.inmate_number) + str(app.chosen_document.document[0])
             app.capture_nbr = 1
             return 'preview'
+        if not app.printer.is_ready():
+            return 'failsafe'
         
     @LDS.hookimpl
     def state_capture_signature_enter(self):

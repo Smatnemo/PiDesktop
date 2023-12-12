@@ -93,12 +93,6 @@ class InputBox:
                         self.text = self.text + input_text
                         if self.hide_text:
                             self.hidden_input_text += '*'
-                # elif event.type == BACKSPACEBUTTON:
-                #     pygame.event.post(pygame.event.Event(LOGINEVENT))
-                #     self.input_text = self.text
-                #     self.text = ''
-                #     if self.hide_text:
-                #         self.hidden_input_text = self.text
                 elif event.type==BACKSPACEBUTTON:
                     self.text = self.text[:-1]
                     if self.hide_text:
@@ -224,7 +218,6 @@ class PushButton:
                 self.button_enabled = False
 
         # Else log in error 
-        
     def clicked(self, event):
         if not event:
             return None
@@ -294,10 +287,10 @@ class PushButton:
     
     def use_icon(self, icon, icon_clicked=None):
         # Write code to resize image when given icon
-        size = (64, 64)
+        size = (64,64)
         icon_path = get_filename(icon)
         icon = pictures.get_pygame_image(icon_path, size, vflip=False, color=None)
-        icon_color = (255, 255, 255, 0.5)
+        icon_color = None
         if icon_clicked:
             icon_path = get_filename(icon_clicked)
             icon_color = None
@@ -369,7 +362,6 @@ class button(object):
             else:
                 BUTTON_EVENT = pygame.USEREVENT+5+int(self.text)
             pygame.event.post(pygame.event.Event(BUTTON_EVENT))
-            print(BUTTON_EVENT)
             return 'BUTTONUP'
         else:
             return None
@@ -378,7 +370,7 @@ class button(object):
         
 
 class LoginView(object):
-    def __init__(self, screen, previous_state, dimensions):
+    def __init__(self, screen, label, dimensions):
         
         self.update_needed = None
         self._d = dimensions
@@ -426,10 +418,7 @@ class LoginView(object):
 
         self.numbers = [s_1s,s_2s,s_3s,s_4s,s_5s,s_6s,s_7s,s_8s,s_9s,s_clears,s_0s,s_back]
         
-        if previous_state == 'chosen':
-            label = 'DECRYPT'
-        else:
-            label = 'UNLOCK'
+
         # Set up the buttons
         self.login_button = PushButton((self._d['firstcolumnx'], self._d['loginbuttony'], self._d['gridwidth'], self._d['iconsizey']),LOGINEVENT, label, screen)
         self.login_button.enabled(True)

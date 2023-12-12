@@ -37,12 +37,13 @@ def multiline_text_to_surfaces(text, color, rect, align='center'):
     for i, line in enumerate(lines):
         surface = font.render(line, True, color)
 
+        width = surface.get_rect().width
         if align.endswith('left'):
             x = rect.left
         elif align.endswith('center'):
-            x = rect.centerx - surface.get_rect().width / 2
+            x = rect.centerx - width / 2
         elif align.endswith('right'):
-            x = rect.right - surface.get_rect().width / 2
+            x = rect.right - width / 2
         else:
             raise ValueError("Invalid horizontal alignment '{}'".format(align))
 
@@ -263,23 +264,56 @@ class IntroBackground(Background):
 class LoginBackground(Background):
     def __init__(self):
         Background.__init__(self, "login")
-        self.layout0 = None
-        self.layout0_pos = None
-        self.layout1 = None
-        self.layout1_pos = None
+        self.time = pygame.time.get_ticks()
+        self._custom_text = []
         
     def resize(self, screen):
-        Background.resize(self, screen)      
+        Background.resize(self, screen)   
+
+    def _write_custom_text(self, text, rect=None, align='center'):
+        if not rect:
+            rect = self._rect.inflate(-self._text_border, -self._text_border)
+        if self._show_outlines:
+            self._outlines.append((self._make_outlines(rect.size), rect))
+        self._custom_text.extend(multiline_text_to_surfaces(text, self._text_color, rect, align))
 
     def resize_texts(self):
         """Update text surfaces.
         """
         rect = pygame.Rect(self._text_border, self._text_border,
-                           self._rect.width - 2 * self._text_border, self._rect.height * 0.15)
-        Background.resize_texts(self, rect)
+                           self._rect.width - 2 * self._text_border, 74)
+        align = 'top-left'
+        Background.resize_texts(self, rect, align)
+
+        text = get_translated_text("code_required")
+        rect = pygame.Rect(self._text_border, self._text_border,
+                           self._rect.width - 2 * self._text_border, 64)
+        align = 'top-right'
+        self._write_custom_text(text, rect, align)
+
+        text = get_translated_text("version")
+        rect = pygame.Rect(self._text_border, self._rect.height-69,
+                           self._rect.width - 2 * self._text_border, 64)
+        align = 'bottom-left'
+        self._write_custom_text(text, rect, align)
+
+    def time_count(self):
+        self.time_since_enter = pygame.time.get_ticks()
+        self.timebox = 'Locked for {} seconds'.format(str(30-self.time_since_enter//1000))
+        # self._write_text(self.message, self.text_rect, align='top-center')
+        rect = pygame.Rect(self._text_border, self._rect.height-69,
+                           self._rect.width - 2 * self._text_border, 64)
+        align = 'bottom-right'
+        self._write_custom_text(self.timebox, rect, align)
 
     def paint(self, screen):
         Background.paint(self, screen)
+        
+        for text_surface, pos in self._custom_text:
+            if pos.x + pos.width > screen.get_rect().width:
+               pos.x = screen.get_rect().width - (pos.width + self._text_border)
+            screen.blit(text_surface, pos)
+        
         
 
 
@@ -325,7 +359,7 @@ class ChooseInmateDocumentBackground(Background):
             self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
             self.backbutton.enabled(True)
 
-            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.lockbutton_width, self.lockbutton_height), self.lockbutton_event, label='padlock.jpg', parent=screen)
+            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.lockbutton_width, self.lockbutton_height), self.lockbutton_event, label='padlock_icon.jpg', parent=screen)
             self.lockbutton.enabled(True)
             self.button_enabled = False
 

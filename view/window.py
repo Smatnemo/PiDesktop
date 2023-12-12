@@ -340,13 +340,13 @@ class PiWindow(object):
         if state:
             self._update_background(background.IntroBackground(self.arrow_location, self.arrow_offset, state, count))
 
-    def show_login(self, previous_state):
+    def show_login(self, previous_state="UNLOCK"):
         self._update_background(background.LoginBackground())
         # Find logic to display login
         lv = LoginView(self.surface, previous_state, self._d)
         return lv
     
-    def show_decrypt(self, previous_state):
+    def show_decrypt(self, previous_state="DECRYPT"):
         self._update_background(background.DecryptBackground(self._d))
         lv = LoginView(self.surface, previous_state, self._d)
         # Write logic to paint button on on screen surface

@@ -39,17 +39,14 @@ def colorize_pil_image(pil_image, color, bg_color=None):
     """
     if not bg_color:
         bg_color = (abs(color[0] - 255), abs(color[1] - 255), abs(color[2] - 255))
-    # try:
     _, _, _, alpha = pil_image.split()
-    # except: 
-    #     pil_image = pil_image.convert('RGBA')
-    #     _, _, _, alpha = pil_image.split()
     gray_pil_image = pil_image.convert('L')
     new_pil_image = ImageOps.colorize(gray_pil_image, black=bg_color, white=color)
     new_pil_image.putalpha(alpha)
     return new_pil_image
 
-
+def get_transparent_image(pil_img):
+    pass
 def get_pygame_main_color(surface):
     """Return the main color of the given pygame surface.
     """
@@ -98,7 +95,7 @@ def get_pygame_image(name, size=None, antialiasing=True, hflip=False, vflip=Fals
             pil_image = Image.new('RGBA', (int(size[0]), int(size[1])), (0, 0, 0, 0))
 
         if color:
-            pil_image = pil_image.convert('RGBA')
+            # pil_image = pil_image.convert('RGBA')
             pil_image = colorize_pil_image(pil_image, color, bg_color)
 
         if crop:
@@ -136,7 +133,7 @@ def get_pygame_layout_image(text_color, bg_color, layout_number, size):
         rect = pygame.Rect(rect.x + rect.width * 0.3 / 2,
                            rect.y + rect.height * 0.76,
                            rect.width * 0.7, rect.height * 0.20)
-        text_font = fonts.get_pygame_font(text, fonts.CURRENT, rect.width, rect.height)
+        text_font = fonts.get_pygame_font(text, fonts.MONOID, rect.width, rect.height)
         surface = text_font.render(text, True, bg_color)
         layout_image.blit(surface, surface.get_rect(center=rect.center))
     return layout_image
