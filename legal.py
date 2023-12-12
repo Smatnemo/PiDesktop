@@ -117,6 +117,7 @@ class PiApplication:
         self._machine.add_state('finish')
         self._machine.add_state('lock') # log out 
         self._machine.add_state('passfail')
+        self._machine.add_state('failsafe')
 
         # State to return to after screen is locked and logged back into
         self.previous_state = None

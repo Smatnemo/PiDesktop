@@ -101,19 +101,36 @@ def document_authentication(decrypted, document):
     
     return True if page_count_match and checksum_match else False 
          
-         
+
+def decrypt2(password, in_file, out_file):
+    bs = AES.block_size
+    password = hashlib.sha256(password.encode()).hexdigest()[:32].encode()      
+    iv = hashlib.sha256(secret_iv).hexdigest()[:16].encode()
+    cipher = AES.new(password, AES.MODE_CBC, iv)
+    next_chunk = b''
+    finished = False
+    while not finished:
+        chunk, next_chunk = next_chunk, cipher.decrypt(in_file.read(1024 * bs))
+        if len(next_chunk) == 0:
+            padding_length = ord(chr(chunk[-1]))
+            chunk = chunk[:-padding_length]
+            finished = True
+        out_file.write(chunk)     
 
 def decrypt_content(password, filename):
     filename_full_path = osp.join(osp.abspath(osp.dirname(DOC_DIR)), filename)
     encrypted = get_file_contents(filename_full_path)       
-
     decrypted = decrypt(encrypted, password) 
-
     temp_file = make_temp_file()  
 
     with open(temp_file.name, 'ab') as temp:
          temp.write(decrypted) 
-
     return temp_file            
 
+def decrypt_content2(password, filename):
+    temp_file = make_temp_file()
+    filename_full_path = osp.join(osp.abspath(osp.dirname(DOC_DIR)), filename)
+    with open(filename, 'rb') as in_file, open(temp_file.name, 'wb') as out_file:
+        decrypt2(password, in_file, out_file)
 
+    return temp_file

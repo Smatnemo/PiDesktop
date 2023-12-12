@@ -58,9 +58,9 @@ class CameraPlugin(object):
     def state_choose_do(self, app, events):
         event = app.find_choice_event(events)
         if event:
-            if event.key == pygame.K_LEFT:
+            if event.key == pygame.K_DOWN:
                 app.capture_nbr = app.capture_choices[0]
-            elif event.key == pygame.K_RIGHT:
+            elif event.key == pygame.K_UP:
                 app.capture_nbr = app.capture_choices[1]
 
     @LDS.hookimpl
@@ -68,7 +68,11 @@ class CameraPlugin(object):
         LOGGER.info("Show preview before next capture")
         if not app.capture_date:
             app.capture_date = time.strftime("%Y-%m-%d-%H-%M-%S")
-        app.camera.preview(win)
+        try:
+            app.camera.preview(win)
+        except Exception as ex:
+            LOGGER.error("Camera could not be configured {}".format(ex))
+            return 'failsafe'
 
 
     @LDS.hookimpl

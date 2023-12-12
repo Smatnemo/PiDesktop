@@ -4,6 +4,7 @@
 import io
 import os
 import os.path as osp
+import LDS
 from configparser import ConfigParser
 from LDS.utils import LOGGER, open_text_editor
 
@@ -15,8 +16,7 @@ CURRENT = 'en'  # Dynamically set at startup
 DEFAULT = {
     'en': {
         'intro': "Legal",
-        'intro_print': "Or you can\nstill print\nthis photo",
-        'login': "Please Unlock",
+        'login': "Unlock Screen",
         'choose_document': "Choose Document",
         'choose_inmate': "Choose Inmate",
         'No_documents': "No Documents",
@@ -45,6 +45,9 @@ DEFAULT = {
         'Q2':"Was your image captured?",
         'Q3':"Was your signature captured?",
         'Q4':"Did the correctional officer see the document?",
+        'code_required':"CO Unlock Code Required",
+        'version':"Legal Version {}".format(LDS.__version__),
+        'intro_print': "Or you can\nstill print\nthis photo",
         '':"",
     },
     'sp': {
