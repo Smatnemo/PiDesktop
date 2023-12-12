@@ -73,8 +73,6 @@ class PiWindow(object):
         pygame.display.set_caption(title)
         self.is_fullscreen = True
         self.display_size = (info.current_w, info.current_h)
-        # self.surface = pygame.display.set_mode(self.__size, pygame.NOFRAME)
-        # self.surface = pygame.display.set_mode(self.display_size, pygame.RESIZABLE)
         self.surface = pygame.display.set_mode(self.display_size, pygame.NOFRAME)
 
         self._buffered_images = {}
