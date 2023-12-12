@@ -281,19 +281,19 @@ class LoginBackground(Background):
         """Update text surfaces.
         """
         rect = pygame.Rect(self._text_border, self._text_border,
-                           self._rect.width - 2 * self._text_border, 74)
+                           self._rect.width - 2 * self._text_border, 54)
         align = 'top-left'
         Background.resize_texts(self, rect, align)
 
         text = get_translated_text("code_required")
         rect = pygame.Rect(self._text_border, self._text_border,
-                           self._rect.width - 2 * self._text_border, 64)
+                           self._rect.width - 2 * self._text_border, 54)
         align = 'top-right'
         self._write_custom_text(text, rect, align)
 
         text = get_translated_text("version")
         rect = pygame.Rect(self._text_border, self._rect.height-69,
-                           self._rect.width - 2 * self._text_border, 64)
+                           self._rect.width - 2 * self._text_border, 54)
         align = 'bottom-left'
         self._write_custom_text(text, rect, align)
 
@@ -488,12 +488,6 @@ class PrintBackground(Background):
 
     def __init__(self, arrow_location=ARROW_BOTTOM, arrow_offset=0, print_status="print", question="", document_name="", number_of_pages=""):
         Background.__init__(self, print_status, document_name)
-        # self.arrow_location = arrow_location
-        # self.arrow_offset = arrow_offset
-        # self.right_arrow = None
-        # self.right_arrow_pos = None
-        # self.left_arrow = None
-        # self.left_arrow_pos = None
         self.question = question
 
         self._rect = None

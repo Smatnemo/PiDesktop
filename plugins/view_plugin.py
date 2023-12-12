@@ -483,9 +483,7 @@ class ViewPlugin(object):
             app.picture_name = str(app.inmate_number) + str(app.chosen_document.document[0])
             app.capture_nbr = 1
             return 'preview'
-        # if not app.printer.is_ready():
-        #     self.failure_message = "no_printer"
-        #     return 'failsafe'
+
         
     @LDS.hookimpl
     def state_capture_signature_enter(self):
