@@ -8,11 +8,12 @@ from LDS import fonts, pictures
 from LDS.media import get_filename
 
 pygame.init()
-WIDTH = 640
-HEIGHT = 480
+WIDTH = 1024
+HEIGHT = 600
 DEFAULT_SIZE = WIDTH, HEIGHT
-vid_info = pygame.display.Info()
-vid_size = vid_info.current_w, vid_info.current_h
+vid_size = (WIDTH, HEIGHT)
+#vid_info = pygame.display.Info()
+#vid_size = vid_info.current_w, vid_info.current_h
 screen = pygame.display.set_mode(vid_size)
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
