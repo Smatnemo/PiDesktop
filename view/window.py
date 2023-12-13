@@ -69,11 +69,12 @@ class PiWindow(object):
         
 
         pygame.display.set_caption(title)
-        self.is_fullscreen = True
+        #self.is_fullscreen = True
         res_check = pygame.display.info()
-        self.surface = pygame.display.set_mode((vid_size), pygame.NOFRAME)
+        self.surface = pygame.display.set_mode((vid_size), pygame.FULLSCREEN)
         if res_check.current_w == 800:
-            self.surface = pygame.transform.scale(self.surface, (800,480))
+            SCREEN2 = pygame.display.set_mode((vid_size), pygame.FULLSCREEN)
+            self.surface = pygame.transform.scale(self.surface, (800,480), SCREEN2)
 
         self._buffered_images = {}
         self._current_background = None
