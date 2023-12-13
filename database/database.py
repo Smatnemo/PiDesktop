@@ -82,13 +82,55 @@ CREATE TABLE IF NOT EXISTS `Questions_Answers` (
   FOREIGN KEY ('document_id') REFERENCES 'Documents' ('order_id')
 );
 """
+create_languages_table = """
+CREATE TABLE IF NOT EXISTS 'Languages' (
+  `language_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+  `iso-code` varchar(3) NOT NULL DEFAULT '',
+  `description` varchar(20) NOT NULL DEFAULT '',
+  `icon` varchar(20) NOT NULL DEFAULT '',
+  `enabled` tinyint(1) NOT NULL DEFAULT '0'
+);"""
 
-create_tables = [create_object_table, create_entity_table, create_documents_table, create_Questions_Answers_table,]
+create_questions_table = """
+CREATE TABLE IF NOT EXISTS `Questions` (
+  `question_id` bigint NOT NULL PRIMARY KEY,
+  `sequence_number` int NOT NULL,
+  `created_date` DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
+create_questions_answers_table = """
+CREATE TABLE `Questions_answers` (
+  `question_answer_id` bigint NOT NULL PRIMARY KEY,
+  `question_id` bigint DEFAULT NULL,
+  `answer` int DEFAULT NULL,
+  `object_id` bigint DEFAULT NULL,
+  `answer_date` DATETIME DEFAULT CURRENT_TIMESTAMP
+);"""
+
+create_unique_index = """
+CREATE UNIQUE INDEX 'question_id' on 'Questions_Answers' ('question_id', 'object_id');
+"""
+
+create_questions_text_table = """
+CREATE TABLE IF NOT EXISTS `Questions_text` (
+  `questions_text_id` INTEGER PRIMARY KEY AUTOINCREMENT,
+  `question_id` bigint NOT NULL,
+  `language_id` bigint NOT NULL,
+  `question_text` text NOT NULL,
+  FOREIGN KEY (`language_id`) REFERENCES `Languages` (`language_id`),
+  FOREIGN KEY (`question_id`) REFERENCES `Questions` (`question_id`)
+);"""
+
+
+create_tables = [create_object_table, create_entity_table, create_documents_table, create_Questions_Answers_table, \
+                 create_languages_table,create_questions_table, create_questions_text_table]
 
 document_insert_query = """ INSERT INTO 'Documents'
                                   (order_id, 
                                   document_path, 
-                                  width, height, 
+                                  width, 
+                                  height, 
                                   created_by, 
                                   downloaded_on, 
                                   deleted_on, 
@@ -101,7 +143,12 @@ document_insert_query = """ INSERT INTO 'Documents'
                                   decrypted,
                                   encrypted_file_checksum,
                                   original_file_checksum,
-                                  inmate_photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
+                                  inmate_photo,
+                                  original_extension,
+                                  printed_date,
+                                  inmate_name,
+                                  title,
+                                  document_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
 
 document_update_query = """UPDATE 'Documents'
                             SET printed = ?,
@@ -111,31 +158,36 @@ document_update_query = """UPDATE 'Documents'
                                 printed_date= date('now')
                             WHERE order_id= ? """
 
-Questions_Answers_insert_query = """
-INSERT INTO `Questions_Answers` (
-  'document_id',
-  'Q1',
-  'Q2',
-  'Q3',
-  'Q4',
-  'Q5',
-  'Q6',
-  'Q7',
-  'Q8',
-  'Q9',
-  'Q10',
-  'Q11',
-  'Q12',
-  'Q13',
-  'Q14',
-  'Q15',
-  'Q16',
-  'Q17',
-  'Q18',
-  'Q19',
-  'Q20'
-)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-"""
+Questions_Answers_insert_query = """INSERT INTO `Questions_Answers` (
+                            'document_id',
+                            'Q1',
+                            'Q2',
+                            'Q3',
+                            'Q4',
+                            'Q5',
+                            'Q6',
+                            'Q7',
+                            'Q8',
+                            'Q9',
+                            'Q10',
+                            'Q11',
+                            'Q12',
+                            'Q13',
+                            'Q14',
+                            'Q15',
+                            'Q16',
+                            'Q17',
+                            'Q18',
+                            'Q19',
+                            'Q20'
+                            )  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
+insert_questions_text_query = """
+INSERT INTO `Questions_text` (
+  `questions_text_id`,
+  `question_id`,
+  `language_id`,
+  `question_text`,
+) VALUES (?, ?, ?, ?);"""
 # A list of standard queries for settings
 # 1. query for getting the number of enabled products. int 
 # 2. query for getting the photocount per product
@@ -153,15 +205,6 @@ class DataBase(object):
     settings key value pair
     :attr watermarkpath: This is the logo path
     :type watermarkpath: string
-    :attr videopath: video path for playback on startup
-    :type videopath: str
-    :attr capture_choices: possible choices of capture numbers which is got from the number of products. A tuple of photo count
-    :type capture_choices: tuple: if length of tuple is more than 3, create overflow display to preview products
-    :attr capture_nbr: This is from photo count, the number of images on a photo/template of a product
-    :type capture_nbr: int
-    :attr product_length: This is the number of enabled products
-    :type product_length: int
-
 
     :attr template_number: The number of templates associated with a particular product
     :type template_number: int: if templates number is more than 3, create overflow display to preview captured images with templates
@@ -173,10 +216,6 @@ class DataBase(object):
     :type session_length: float
     :attr session_type: This determines what products are available to the user. By default photos 
     :type session_type: str
-    :attr price_per_session: price 
-    :type price_per_session: float
-    :attr reprint: whether the client should be able to reprint their photos or not
-    :type reprint: boolean
     :attr price_per_print: the cost of each print. only available if reprint is true
     :type price_per_print: float 
     :attr reprint_number: the maximum number of reprints available per session

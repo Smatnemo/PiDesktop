@@ -64,14 +64,14 @@ class PiWindow(object):
 
         WIDTH = 1024
         HEIGHT = 600        
-        vid_size = (WIDTH, HEIGHT)
+        self.display_size = (WIDTH, HEIGHT)
         # Save the desktop mode, shall be done before `setmode` (SDL 1.2.10, and pygame 1.8.0)
         
 
         pygame.display.set_caption(title)
         self.is_fullscreen = True
-        res_check = pygame.display.info()
-        self.surface = pygame.display.set_mode((vid_size), pygame.NOFRAME)
+        res_check = pygame.display.Info()
+        self.surface = pygame.display.set_mode((self.display_size), pygame.NOFRAME)
         if res_check.current_w == 800:
             self.surface = pygame.transform.scale(self.surface, (800,480))
 

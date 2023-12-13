@@ -87,7 +87,7 @@ class ViewPlugin(object):
     def state_login_enter(self, app, win):
         LOGGER.info("Attempting to Login")
         self.login_view = win.show_login() 
-
+        app.database_updated = True
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         if app.database_updated:
             db = DataBase()
@@ -434,7 +434,7 @@ class ViewPlugin(object):
             self.enable_button = True
             
             if answered.question == 'Q1':
-                self.question = 'Q2'
+                self.question = 'capture_photo'
                 if answered.answer=='YES':
                     self.print_status = "print_successful"
                 else:
@@ -444,23 +444,28 @@ class ViewPlugin(object):
                     app.questions_answers[1] = 1
                 elif answered.answer == 'NO':
                     app.questions_answers[1] = 0
-            elif answered.question == 'Q2':
-                self.question = 'Q3'
-                self.print_status = ""
-                # append the answers to the 
-                if answered.answer == 'YES':
-                    app.questions_answers[2] = 1
-                elif answered.answer == 'NO':
-                    app.questions_answers[2] = 0
-            elif answered.question == 'Q3':
-                self.question = 'capture_photo'
-                # append the answer to the questions answers list
-                if answered.answer == 'YES':
-                    app.questions_answers[3] = 1
-                elif answered.answer == 'NO':
-                    app.questions_answers[3] = 0
+            
+        self.document_name = ''
+        # Query database to get questions 
+        db = DataBase()
+        
+            # elif answered.question == 'Q2':
+            #     self.question = 'Q3'
+            #     self.print_status = ""
+            #     # append the answers to the 
+            #     if answered.answer == 'YES':
+            #         app.questions_answers[2] = 1
+            #     elif answered.answer == 'NO':
+            #         app.questions_answers[2] = 0
+            # elif answered.question == 'Q3':
+            #     self.question = 'capture_photo'
+            #     # append the answer to the questions answers list
+            #     if answered.answer == 'YES':
+            #         app.questions_answers[3] = 1
+            #     elif answered.answer == 'NO':
+            #         app.questions_answers[3] = 0
                 
-            self.document_name = ''
+            
         # Draw screen with the new question
         win.show_print(app.previous_picture, self.print_status, self.question, self.document_name)
 

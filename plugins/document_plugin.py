@@ -5,6 +5,7 @@ from LDS.documents.document import decrypt_content2, document_authentication
 from LDS.database.database import DataBase, document_update_query, Questions_Answers_insert_query
 
 class DocumentPlugin:
+    name = 'LDS-core:document'
     def __init__(self):
         self.failure_message = ""
         self.failed_view_timer = PoolingTimer(5)
@@ -13,6 +14,14 @@ class DocumentPlugin:
         win.show_oops(self.failure_message)
         self.failed_view_timer.start()
         LOGGER.error(get_crash_message())
+
+    # @LDS.hookimpl
+    def state_login_enter(self, app):
+        # write code to query database and reveal the number of documents downloaded that are yet to be printed
+        if app.database_updated:
+            db = DataBase()
+            app.documents, app.documents_number = db.get_inmate_documents()
+            app.database_updated = None
 
     def state_decrypt_validate(self, cfg, app, win, events):
         # Create a way to compare decrypt key entered by the user and the one in the document

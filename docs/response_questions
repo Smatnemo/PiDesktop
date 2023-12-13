@@ -1,0 +1,94 @@
+{
+    "questions": [
+        {
+            "question_id": "10",
+            "sequence_number": "1",
+            "translations": [
+                {
+                    "questions_text_id": "19",
+                    "question_id": "10",
+                    "iso-code": "en",
+                    "question_text": "Did you recieve your printout?"
+                },
+                {
+                    "questions_text_id": "20",
+                    "question_id": "10",
+                    "iso-code": "es",
+                    "question_text": "\\u00bfRecibiste tu copia impresa?"
+                }
+            ]
+        },
+        {
+            "question_id": "4",
+            "sequence_number": "2",
+            "translations": [
+                {
+                    "questions_text_id": "7",
+                    "question_id": "4",
+                    "iso-code": "en",
+                    "question_text": "Were all pages printed out?"
+                },
+                {
+                    "questions_text_id": "8",
+                    "question_id": "4",
+                    "iso-code": "es",
+                    "question_text": "\\u00bfSe imprimieron todas las p\\u00e1ginas?"
+                }
+            ]
+        },
+        {
+            "question_id": "3",
+            "sequence_number": "3",
+            "translations": [
+                {
+                    "questions_text_id": "5",
+                    "question_id": "3",
+                    "iso-code": "en",
+                    "question_text": "Was the prision guard present with you when printing?"
+                },
+                {
+                    "questions_text_id": "6",
+                    "question_id": "3",
+                    "iso-code": "es",
+                    "question_text": "\\u00bfEstuvo presente el guardia de prisi\\u00f3n con usted durante la impresi\\u00f3n?"
+                }
+            ]
+        },
+        {
+            "question_id": "7",
+            "sequence_number": "4",
+            "translations": [
+                {
+                    "questions_text_id": "13",
+                    "question_id": "7",
+                    "iso-code": "en",
+                    "question_text": "Were you able to read the printed documents?"
+                },
+                {
+                    "questions_text_id": "14",
+                    "question_id": "7",
+                    "iso-code": "es",
+                    "question_text": "\\u00bfPudiste leer los documentos impresos?"
+                }
+            ]
+        },
+        {
+            "question_id": "6",
+            "sequence_number": "5",
+            "translations": [
+                {
+                    "questions_text_id": "11",
+                    "question_id": "6",
+                    "iso-code": "en",
+                    "question_text": "Did you get to print your doucments in a private room?"
+                },
+                {
+                    "questions_text_id": "12",
+                    "question_id": "6",
+                    "iso-code": "es",
+                    "question_text": "\\u00bfPudiste imprimir tus documentos en una sala privada?"
+                }
+            ]
+        }
+    ]
+}

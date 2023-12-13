@@ -12,6 +12,8 @@ import os
 import os.path as osp
 import base64
 import hashlib 
+import LDS
+import json
 
 TEMP_DIR = "/tmp/LDS"
 DOC_DIR = osp.join(package_dir, "docs")
@@ -20,7 +22,17 @@ secret_iv = b"8eejFb2rKCavp2uU"
 # password = "22222"
 
 
- 
+# List of responses from the backaoffice
+response_pi_check = osp.join(DOC_DIR, "response_pi_check")
+response_questions = osp.join(DOC_DIR, "response_questions")
+
+def get_response(filename):
+    if osp.isfile(filename):
+        with open(filename, 'r') as file:
+            content_dict = json.load(file)
+        os.remove(filename)
+    return content_dict
+    
 def decrypt(enc, password):        
     password = hashlib.sha256(password.encode()).hexdigest()[:32].encode()      
     iv = hashlib.sha256(secret_iv).hexdigest()[:16].encode()

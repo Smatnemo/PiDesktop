@@ -444,28 +444,10 @@ class CaptureBackground(Background):
 
     def __init__(self):
         Background.__init__(self, "capture")
-        self.left_people = None
-        self.left_people_pos = None
-        self.right_people = None
-        self.right_people_pos = None
-
+        
     def resize(self, screen):
         Background.resize(self, screen)
-        if self._need_update:
-            images_height = self._rect.height / 4
-            size = (images_height * 2, images_height)
-
-            self.left_people = pictures.get_pygame_image("capture_left.png", size=size,
-                                                         color=self._text_color)
-            self.right_people = pictures.get_pygame_image("capture_right.png", size=size,
-                                                          color=self._text_color)
-
-            x = int(self._rect.right - size[0])
-            y = int(self._rect.bottom - images_height)
-
-            self.left_people_pos = (0, y)
-            self.right_people_pos = (x + size[0] - 1.5 * self.right_people.get_rect().width, y)
-
+        
     def paint(self, screen):
         Background.paint(self, screen)
         
@@ -501,6 +483,10 @@ class PrintBackground(Background):
         self.nobutton_x = None
 
         self.yesbutton_enabled = True
+
+        self.camera_button_enabled = False
+        self.camerabutton_y = None
+        self.camerabutton_x = None 
         
         self.yesbutton_event = (BUTTONDOWN, {'question':question,'answer':'YES'})
         self.nobutton = None
@@ -594,6 +580,9 @@ class PrintBackground(Background):
             self.nobutton.enabled(False)
 
             self.yesbutton_enabled = False
+        
+        if self.camera_button_enabled:
+            self.camera_button = PushButton(())
         
 
 

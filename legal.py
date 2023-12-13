@@ -229,13 +229,9 @@ class PiApplication:
         Should only be used in wait state to activate login state
         """
         for event in events:
-            if event.type == pygame.FINGERDOWN:
-                LOGGER.info("This is a finger down:{}".format(event))
-                return event 
             if event.type == pygame.FINGERUP:
-                LOGGER.info("This is a finger up:{}".format(event))
                 return event
-            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONUP:
                 return event
         return None
         
