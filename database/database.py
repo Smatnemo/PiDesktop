@@ -181,13 +181,32 @@ Questions_Answers_insert_query = """INSERT INTO `Questions_Answers` (
                             'Q19',
                             'Q20'
                             )  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
-insert_questions_text_query = """
-INSERT INTO `Questions_text` (
-  `questions_text_id`,
-  `question_id`,
-  `language_id`,
-  `question_text`,
-) VALUES (?, ?, ?, ?);"""
+
+insert_questions_query ="""INSERT INTO `Questions` (
+                                        `question_id`, 
+                                        `sequence_number`, 
+                                        `created_date`) VALUES (?, ?, ?);
+"""
+insert_languages_query = """INSERT INTO `Languages` (
+                            `language_id`, 
+                            `iso-code`, 
+                            `description`, 
+                            `icon`, 
+                            `enabled`) VALUES (?, ?, ?, ?, ?);"""
+
+insert_questions_text_query = """INSERT INTO `Questions_text` (
+                            `questions_text_id`,
+                            `question_id`,
+                            `language_id`,
+                            `question_text`,
+                            ) VALUES (?, ?, ?, ?);"""
+insert_questions_answer_query="""INSERT INTO `Questions_answers` (
+                                            `question_answer_id`, 
+                                            `question_id`, 
+                                            `answer`, 
+                                            `object_id`, 
+                                            `answer_date`) VALUES (?, ?, ?, ?, ?);"""
+
 # A list of standard queries for settings
 # 1. query for getting the number of enabled products. int 
 # 2. query for getting the photocount per product
@@ -372,6 +391,13 @@ class DataBase(object):
         else:
             self.cursor.execute("SELECT * FROM " + table_name)
         return self.cursor.fetchall()
+
+    def get_questions(self, *values):
+        self.open()
+        # questions = self.get_record("Questions_text", "3")
+        questions = values
+        self.close()
+        return questions
 
     def get_inmate_documents(self):
         self.open()
