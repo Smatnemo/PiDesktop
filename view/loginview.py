@@ -14,7 +14,6 @@ COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font('freesansbold.ttf', 20)
 
-
 LOGINEVENT = pygame.USEREVENT + 3
 CLEARBUTTON = pygame.USEREVENT + 4
 BUTTON_0 = pygame.USEREVENT + 5
@@ -33,11 +32,6 @@ BACKSPACEBUTTON = pygame.USEREVENT + 15
 button_events = [BUTTON_0,BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8, BUTTON_9]
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-
-
-
-
-
 
 class InputBox:
 
