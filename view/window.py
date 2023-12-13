@@ -63,20 +63,17 @@ class PiWindow(object):
         pygame.init()
 
         WIDTH = 1024
-        HEIGHT = 600
-        DEFAULT_SIZE = WIDTH, HEIGHT
+        HEIGHT = 600        
         vid_size = (WIDTH, HEIGHT)
         # Save the desktop mode, shall be done before `setmode` (SDL 1.2.10, and pygame 1.8.0)
-        screen = self.display.set_mode(vid_size)
-        #info = self.display.Info()
-
         pygame.display.set_caption(title)
-        self.is_fullscreen = True
-        #self.display_size = (info.current_w, info.current_h)
-        # self.surface = pygame.display.set_mode(self.__size, pygame.NOFRAME)
-        # self.surface = pygame.display.set_mode(self.display_size, pygame.RESIZABLE)
-        self.surface = pygame.display.set_mode(vid_size, pygame.NOFRAME)
+        self.is_fullscreen = True        
 
+        res_check = pygame.display.info()
+        self.surface = pygame.display.set_mode((vid_size), pygame.NOFRAME)
+        if res_check.current_w == 800:
+            self.surface = pygame.transform.scale(self.surface, (800,480))
+        
         self._buffered_images = {}
         self._current_background = None
         self._current_foreground = None
