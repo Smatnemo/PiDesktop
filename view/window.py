@@ -66,14 +66,16 @@ class PiWindow(object):
         HEIGHT = 600        
         vid_size = (WIDTH, HEIGHT)
         # Save the desktop mode, shall be done before `setmode` (SDL 1.2.10, and pygame 1.8.0)
-        pygame.display.set_caption(title)
-        self.is_fullscreen = True        
+        screen = self.display.set_mode(vid_size)
+        #info = self.display.Info()
 
-        res_check = pygame.display.info()
-        self.surface = pygame.display.set_mode((vid_size), pygame.NOFRAME)
-        if res_check.current_w == 800:
-            self.surface = pygame.transform.scale(self.surface, (800,480))
-        
+        pygame.display.set_caption(title)
+        self.is_fullscreen = True
+        #self.display_size = (info.current_w, info.current_h)
+        # self.surface = pygame.display.set_mode(self.__size, pygame.NOFRAME)
+        # self.surface = pygame.display.set_mode(self.display_size, pygame.RESIZABLE)
+        self.surface = pygame.display.set_mode(vid_size, pygame.NOFRAME)
+
         self._buffered_images = {}
         self._current_background = None
         self._current_foreground = None
@@ -85,6 +87,8 @@ class PiWindow(object):
 
         self._d = {}
         self.get_display_dimensions()
+
+        self._f = {}
 
         self._pos_map = {self.CENTER: self._center_pos,
                          self.RIGHT: self._right_pos,
@@ -310,11 +314,12 @@ class PiWindow(object):
         self._d['bottombuttony'] = self._d['h']+self._d['pad']-self._d['footer']
 
 
-    def show_oops(self):
+    def show_oops(self, message):
         """Show failure view in case of exception.
+        :param message: the exception message
         """
         self._capture_number = (0, self._capture_number[1])
-        self._update_background(background.OopsBackground())
+        self._update_background(background.OopsBackground(message))
 
     def show_intro(self, pil_image=None, with_print=True, state=None):
         """Show introduction view.

@@ -6,7 +6,7 @@ from LDS import package_dir
 
 DB_PATH = osp.join(package_dir,"data/legal.db")
 LOGGER.info("Database path: {}".format(DB_PATH))
-print("Database Path:", DB_PATH)
+# print("Database Path:", DB_PATH)
 
 # Database quries
 create_object_table = """CREATE TABLE IF NOT EXISTS `Object` (
@@ -104,7 +104,7 @@ document_insert_query = """ INSERT INTO 'Documents'
                                   inmate_photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
 
 document_update_query = """UPDATE 'Documents'
-                            SET printed = 1,
+                            SET printed = ?,
                                 decrypted = 1,
                                 status = 'printed',
                                 inmate_photo= ?,
@@ -318,8 +318,8 @@ class DataBase(object):
         self.cursor.execute("SELECT decrypt_key FROM " + table_name + " WHERE decrypt_key=(?)",(decrypt_key,))
         return self.cursor.fetchone()
     
-    def get_column(self, table_name:str, column:str):
-        self.cursor.execute("SELECT " + column + " FROM " + table_name)
+    def get_column(self, table_name:str, column:str, condition):
+        self.cursor.execute("SELECT " + column + " FROM " + table_name + " WHERE status=(?)", (condition,))
         return self.cursor.fetchall()
 
     def get_record(self, table_name:str, column:str, column_value, status):
@@ -344,12 +344,13 @@ class DataBase(object):
 
         # use this list to build dictionary
         # Make this list a set
-        inmate_number_list = self.get_column("Documents", "inmate_number")
+        inmate_number_list = self.get_column("Documents", "inmate_number", "ready")
         unique_inmate_number_list = list(set(inmate_number_list))
         
         for inmate_number in unique_inmate_number_list:
             docs = self.get_record("Documents", "inmate_number", inmate_number[0], "ready")
-            inmate_documents[inmate_number[0]] = docs
+            inmate_documents[inmate_number[0]] = docs 
+        
         self.close()
         return inmate_documents, number_of_documents
 

@@ -163,7 +163,7 @@ DEFAULT = odict((
                  "RGB colors used for footer texts (list of tuples accepted)",
                  None, None)),
             ("text_fonts",
-                (('Amatic-Bold', 'AmaticSC-Regular'),
+                (('times', 'AmaticSC-Regular'),
                  "Fonts name or file path used for footer texts (list of quoted names accepted)",
                  None, None)),
             ("text_alignments",
