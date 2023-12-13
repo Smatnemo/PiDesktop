@@ -3,12 +3,16 @@ from LDS.utils import LOGGER, get_crash_message, PoolingTimer
 import LDS
 from LDS.documents.document import decrypt_content2, document_authentication
 from LDS.database.database import DataBase, document_update_query, Questions_Answers_insert_query
+from LDS.language import CURRENT
+
 
 class DocumentPlugin:
     name = 'LDS-core:document'
     def __init__(self):
         self.failure_message = ""
+        self.questions = []
         self.failed_view_timer = PoolingTimer(5)
+
 
     def state_failsafe_enter(self, win):
         win.show_oops(self.failure_message)
@@ -69,4 +73,26 @@ class DocumentPlugin:
             app.previous_state = 'decrypt'   
             return 'wait'
         
-     
+    @LDS.hookimpl
+    def state_print_enter(self, cfg, app, win): 
+        if app.database_updated:
+            # Get the list from database or configuration file
+            question_id_list = [3, 4, 6, 7]
+            # Get language choice from language module
+            language_id = 1
+            db = DataBase()
+            self.questions = db.get_questions(language_id, *question_id_list) 
+    
+    @LDS.hookimpl
+    def state_print_do(self, cfg, app, win, events):
+        answered = app.find_question_event(events)
+        if answered and self.questions:
+            question_id = self.questions[0][1]
+            if answered.question == 'Q2':
+                self.question = 'Q3'
+                self.print_status = ""
+                # append the answers to the 
+                if answered.answer == 'YES':
+                    app.questions_answers[2] = 1
+                elif answered.answer == 'NO':
+                    app.questions_answers[2] = 0

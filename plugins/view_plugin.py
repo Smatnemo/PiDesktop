@@ -45,6 +45,7 @@ class ViewPlugin(object):
         self.decrypt_view = None
 
         self.failure_message = ""
+        self.questions = ""
 
     @LDS.hookimpl
     def state_failsafe_enter(self, win):
@@ -406,33 +407,38 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_print_enter(self, cfg, app, win):
         LOGGER.info("Display the Document details to be printed")
-        LOGGER.info("Printing Document: {}".format(app.print_job.name))
-        self.print_status = "print"
-        self.question = "Q1"
-        self.document_name = app.chosen_document.document_name
-        self.enable_button = False
-        win.show_print(app.previous_picture, self.print_status, self.question, self.document_name, app.chosen_document.page_count)
-        
+        LOGGER.info("Printing Document: {}".format(app.print_job.name))   
         if app.print_job and app.printer.is_ready():
             app.print_event()
+            self.print_status = "print"
+            self.question = "Q1"
+            self.document_name = app.chosen_document.document_name
+            self.enable_button = False
+            win.show_print(app.previous_picture, self.print_status, self.question, self.document_name, app.chosen_document.page_count)     
         elif not app.printer.is_ready():
             LOGGER.info("Printer status is not available")
+        elif app.database_updated:
+            question_id_list = [3, 4, 6, 7]
+            language_id = 1
+            # Query database to get questions
+            db = DataBase()
+            self.questions = db.get_questions(language_id, *question_id_list)
+            self.question = ''
+        
 
     @LDS.hookimpl
     def state_print_do(self, cfg, app, win, events):
-        
+        # Flag for database questions
         app.find_touch_effects_event(events)
 
         printed = app.find_print_status_event(events)
         if printed:
             self.enable_button = True
             win.set_print_number(len(app.printer.get_all_tasks()), not app.printer.is_ready())
-            # app.print_job = None
         
         answered = app.find_question_event(events)
         if answered:
             self.enable_button = True
-            
             if answered.question == 'Q1':
                 self.question = 'capture_photo'
                 if answered.answer=='YES':
@@ -444,12 +450,13 @@ class ViewPlugin(object):
                     app.questions_answers[1] = 1
                 elif answered.answer == 'NO':
                     app.questions_answers[1] = 0
-            
-        self.document_name = ''
-        # Query database to get questions 
-        db = DataBase()
+            self.document_name = ''
+         
         
-            # elif answered.question == 'Q2':
+        if answered and self.questions:
+            question = str(self.questions[0][1])
+            print("Question id", question)
+            # if answered.question == 'Q2':
             #     self.question = 'Q3'
             #     self.print_status = ""
             #     # append the answers to the 
@@ -457,13 +464,7 @@ class ViewPlugin(object):
             #         app.questions_answers[2] = 1
             #     elif answered.answer == 'NO':
             #         app.questions_answers[2] = 0
-            # elif answered.question == 'Q3':
-            #     self.question = 'capture_photo'
-            #     # append the answer to the questions answers list
-            #     if answered.answer == 'YES':
-            #         app.questions_answers[3] = 1
-            #     elif answered.answer == 'NO':
-            #         app.questions_answers[3] = 0
+            
                 
             
         # Draw screen with the new question
@@ -476,8 +477,7 @@ class ViewPlugin(object):
         # Update the buttons to listen to events
         win._current_background.yesbutton.draw(app.update_needed)
         win._current_background.nobutton.draw(app.update_needed)
-
-        
+    
        
     @LDS.hookimpl
     def state_print_validate(self, app, win, events):
@@ -553,9 +553,10 @@ class ViewPlugin(object):
                 # delete file
                 app.print_job.close()
                 os.unlink(app.print_job.name)
+                app.print_job = None
                 app.questions_answers = ['' for _ in range(21)]
                 win.drop_cache()
-                return 'login'
+                return 'print'
             
             elif self.forgotten.answer == 'YES':
                 win._current_foreground = None

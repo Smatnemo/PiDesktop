@@ -392,10 +392,14 @@ class DataBase(object):
             self.cursor.execute("SELECT * FROM " + table_name)
         return self.cursor.fetchall()
 
-    def get_questions(self, *values):
+    def get_questions(self, language, *values):
         self.open()
-        # questions = self.get_record("Questions_text", "3")
-        questions = values
+        questions = []
+        query = "SELECT * FROM Questions_text WHERE language_id=(?) AND question_id=(?)"
+        for value in values:
+            self.cursor.execute(query, (language,value))
+            question = self.cursor.fetchone() 
+            questions.append(question)   
         self.close()
         return questions
 
