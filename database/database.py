@@ -54,34 +54,6 @@ CREATE TABLE IF NOT EXISTS 'Documents' (
   'deleted_on' datetime NOT NULL
 );"""
 
-create_Questions_Answers_table = """
-CREATE TABLE IF NOT EXISTS `Questions_Answers` (
-  'id' INTEGER PRIMARY KEY AUTOINCREMENT,
-  'document_id' bigint,
-  'Q1' tinyint(1),
-  'Q2' tinyint(1),
-  'Q3' tinyint(1),
-  'Q4' tinyint(1),
-  'Q5' tinyint(1),
-  'Q6' tinyint(1),
-  'Q7' tinyint(1),
-  'Q8' tinyint(1),
-  'Q9' tinyint(1),
-  'Q10' tinyint(1),
-  'Q11' tinyint(1),
-  'Q12' tinyint(1),
-  'Q13' tinyint(1),
-  'Q14' tinyint(1),
-  'Q15' tinyint(1),
-  'Q16' tinyint(1),
-  'Q17' tinyint(1),
-  'Q18' tinyint(1),
-  'Q19' tinyint(1),
-  'Q20' tinyint(1),
-  'date_answered' DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY ('document_id') REFERENCES 'Documents' ('order_id')
-);
-"""
 create_languages_table = """
 CREATE TABLE IF NOT EXISTS 'Languages' (
   `language_id` INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,14 +72,13 @@ CREATE TABLE IF NOT EXISTS `Questions` (
 """
 
 create_questions_answers_table = """
-CREATE TABLE `Questions_answers` (
-  `question_answer_id` bigint NOT NULL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS `Questions_answers` (
+  `question_answer_id` INTEGER PRIMARY KEY AUTOINCREMENT,
   `question_id` bigint DEFAULT NULL,
   `answer` int DEFAULT NULL,
   `object_id` bigint DEFAULT NULL,
   `answer_date` DATETIME DEFAULT CURRENT_TIMESTAMP
 );"""
-
 create_unique_index = """
 CREATE UNIQUE INDEX 'question_id' on 'Questions_Answers' ('question_id', 'object_id');
 """
@@ -123,7 +94,7 @@ CREATE TABLE IF NOT EXISTS `Questions_text` (
 );"""
 
 
-create_tables = [create_object_table, create_entity_table, create_documents_table, create_Questions_Answers_table, \
+create_tables = [create_object_table, create_entity_table, create_documents_table, create_questions_answers_table, \
                  create_languages_table,create_questions_table, create_questions_text_table]
 
 document_insert_query = """ INSERT INTO 'Documents'
@@ -158,30 +129,7 @@ document_update_query = """UPDATE 'Documents'
                                 printed_date= date('now')
                             WHERE order_id= ? """
 
-Questions_Answers_insert_query = """INSERT INTO `Questions_Answers` (
-                            'document_id',
-                            'Q1',
-                            'Q2',
-                            'Q3',
-                            'Q4',
-                            'Q5',
-                            'Q6',
-                            'Q7',
-                            'Q8',
-                            'Q9',
-                            'Q10',
-                            'Q11',
-                            'Q12',
-                            'Q13',
-                            'Q14',
-                            'Q15',
-                            'Q16',
-                            'Q17',
-                            'Q18',
-                            'Q19',
-                            'Q20'
-                            )  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
-
+# Questions_Answers_insert_query = 
 insert_questions_query ="""INSERT INTO `Questions` (
                                         `question_id`, 
                                         `sequence_number`, 
@@ -201,11 +149,9 @@ insert_questions_text_query = """INSERT INTO `Questions_text` (
                             `question_text`,
                             ) VALUES (?, ?, ?, ?);"""
 insert_questions_answer_query="""INSERT INTO `Questions_answers` (
-                                            `question_answer_id`, 
                                             `question_id`, 
                                             `answer`, 
-                                            `object_id`, 
-                                            `answer_date`) VALUES (?, ?, ?, ?, ?);"""
+                                            `object_id`) VALUES (?, ?, ?);"""
 
 # A list of standard queries for settings
 # 1. query for getting the number of enabled products. int 
@@ -392,14 +338,18 @@ class DataBase(object):
             self.cursor.execute("SELECT * FROM " + table_name)
         return self.cursor.fetchall()
 
-    def get_questions(self, language, *values):
+    def get_questions(self, language):
         self.open()
         questions = []
-        query = "SELECT * FROM Questions_text WHERE language_id=(?) AND question_id=(?)"
-        for value in values:
-            self.cursor.execute(query, (language,value))
-            question = self.cursor.fetchone() 
-            questions.append(question)   
+        # query = "SELECT * FROM Questions_text WHERE language_id=(?) AND question_id=(?)"
+        query = """select Questions_text.* 
+                    from Questions_text
+                    left join Questions on Questions.question_id = Questions_text.question_id
+                    left join Languages on Languages.language_id = Questions_text.language_id
+                    where Questions_text.language_id = ?
+                    order by Questions.sequence_number;"""
+        self.cursor.execute(query, (language,)) 
+        questions = self.cursor.fetchall()
         self.close()
         return questions
 

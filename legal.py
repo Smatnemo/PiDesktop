@@ -145,7 +145,7 @@ class PiApplication:
         self.print_job = None
         self.picture_name = None
         self.database_updated = None
-        self.questions_answers = ['' for _ in range(21)]
+        self.questions_answers = []
         # Get count from data base
         if self.settings['attempt_count']:
             self.attempt_count = self.settings['attempt_count']
@@ -186,7 +186,6 @@ class PiApplication:
         if not self._config.getboolean('GENERAL', 'debug'):
             set_logging_level()  # Restore default level
             self._machine.add_failsafe_state('failsafe')
-            print("Failsafe added: ")
         else:
             set_logging_level(logging.DEBUG)
             self._machine.remove_state('failsafe')
@@ -348,7 +347,7 @@ class PiApplication:
     
     def find_question_event(self, events):
         for event in events:
-            if event.type == BUTTONDOWN and event.answer:
+            if event.type == BUTTONDOWN and event.question:
                 return event 
         return None
         

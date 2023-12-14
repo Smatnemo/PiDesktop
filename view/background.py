@@ -488,10 +488,10 @@ class PrintBackground(Background):
         self.camerabutton_y = None
         self.camerabutton_x = None 
         
-        self.yesbutton_event = (BUTTONDOWN, {'question':question,'answer':'YES'})
+        self.yesbutton_event = (BUTTONDOWN, {'question':question,'answer':True})
         self.nobutton = None
 
-        self.nobutton_event = (BUTTONDOWN, {'question':question,'answer':'NO'})
+        self.nobutton_event = (BUTTONDOWN, {'question':question,'answer':False})
 
         self.update_needed = None
 
@@ -533,11 +533,17 @@ class PrintBackground(Background):
 
             self._write_text(pages_text, rect)
 
-        question_text = get_translated_text(self.question)
-        if question_text:
+        
+        if isinstance(self.question, str):
+            question_text = get_translated_text(self.question)
+            if question_text:
+                rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
+                                self._rect.width/2 - 2 * self._text_border, 64)
+                self._write_text(question_text, rect)
+        elif isinstance(self.question, tuple):
             rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
                                self._rect.width/2 - 2 * self._text_border, 64)
-            self._write_text(question_text, rect)
+            self._write_text(self.question[3], rect)           
 
         # hold the height of each rectangle after drawing on the screen
         height = 0

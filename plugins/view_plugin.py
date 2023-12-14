@@ -6,7 +6,7 @@ import time
 from LDS.utils import LOGGER, get_crash_message, PoolingTimer
 from LDS.accounts import LogIn, LogOut
 from LDS.documents.document import decrypt_content2, document_authentication
-from LDS.database.database import DataBase, document_update_query, Questions_Answers_insert_query
+from LDS.database.database import DataBase, document_update_query, insert_questions_answer_query
 
 BUTTONDOWN = pygame.USEREVENT + 1
 
@@ -414,23 +414,32 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_print_enter(self, cfg, app, win):
         LOGGER.info("Display the Document details to be printed")
-        LOGGER.info("Printing Document: {}".format(app.print_job.name))   
+           
         if app.print_job and app.printer.is_ready():
+            LOGGER.info("Printing Document: {}".format(app.print_job.name))
             app.print_event()
             self.print_status = "print"
             self.question = "Q1"
+            app.questions_answers = ['' for _ in range(1)]
             self.document_name = app.chosen_document.document_name
             self.enable_button = False
             win.show_print(app.previous_picture, self.print_status, self.question, self.document_name, app.chosen_document.page_count)     
         elif not app.printer.is_ready():
             LOGGER.info("Printer status is not available")
         elif app.database_updated:
-            question_id_list = [3, 4, 6, 7]
+            # Run this state after taking photograph or signature of the inmate
             language_id = 1
             # Query database to get questions
             db = DataBase()
-            self.questions = db.get_questions(language_id, *question_id_list)
-            self.question = ''
+            self.questions = db.get_questions(language_id)
+            
+            print("Questions", self.questions)
+            if self.questions:
+                self.index = 0
+                self.question = self.questions[0]
+                self.print_status = ''  
+                   
+
         
 
     @LDS.hookimpl
@@ -448,31 +457,34 @@ class ViewPlugin(object):
             self.enable_button = True
             if answered.question == 'Q1':
                 self.question = 'capture_photo'
-                if answered.answer=='YES':
+                if answered.answer==True:
                     self.print_status = "print_successful"
                 else:
                     self.print_status = "print_unsuccessful"
                 # append answers to the list
-                if answered.answer == 'YES':
+                if answered.answer == True:
+                    app.questions_answers[0] = 1
+                elif answered.answer == False:
+                    app.questions_answers[0] = 0
+            elif (answered.question in self.questions):
+                print("Question", answered.question, answered.answer)
+                app.questions_answers = [answered.question[1], answered.answer, 340]
+                # append answers to the list
+                if answered.answer == True:
                     app.questions_answers[1] = 1
-                elif answered.answer == 'NO':
+                elif answered.answer == False:
                     app.questions_answers[1] = 0
-                app.print_job = None
-            self.document_name = ''
-         
-        
-        if answered and self.questions:
-            question = str(self.questions[0][1])
-            print("Question id", question)
-            # if answered.question == 'Q2':
-            #     self.question = 'Q3'
+
+                db = DataBase()
+                db.__insert__(insert_questions_answer_query, tuple(app.questions_answers))
+                
             #     self.print_status = ""
             #     # append the answers to the 
             #     if answered.answer == 'YES':
             #         app.questions_answers[2] = 1
             #     elif answered.answer == 'NO':
             #         app.questions_answers[2] = 0
-            
+            self.document_name = ''
                 
             
         # Draw screen with the new question
@@ -496,6 +508,12 @@ class ViewPlugin(object):
             app.picture_name = str(app.inmate_number) + str(app.chosen_document.document[0])
             app.capture_nbr = 1
             return 'preview'
+        # After answering last questions and updating the database return to wait
+        answered = app.find_question_event(events)
+        # if answered and self.questions:
+        #     app.questions_answers = ['' for _ in range(len(answer_))]
+        #     db = DataBase()
+        #     db.__insert__(insert_questions_answer_query, tuple(app.questions_answers))
 
         
     @LDS.hookimpl
@@ -539,7 +557,7 @@ class ViewPlugin(object):
     def state_finish_validate(self, app, win, events):
         self.forgotten = app.find_capture_event(events)
         if self.forgotten:
-            if self.forgotten.answer == 'NO':
+            if self.forgotten.answer == False:
                 # read image into blob
                 blob=app.convertToBinaryData(app.previous_picture_file)
                 os.remove(app.previous_picture_file)
@@ -547,10 +565,8 @@ class ViewPlugin(object):
                 win._current_documents_foreground.document_view.update_view(app.inmate_number, blob, decrypted=True, printed=True)
                 app.documents = win._current_documents_foreground.document_view.inmate_documents  
 
-                app.questions_answers[0] = app.chosen_document.document[0]
                 db = DataBase()
-                db.__update__(document_update_query, (app.questions_answers[1], app.chosen_document.document[16], app.chosen_document.document[0]))
-                db.__insert__(Questions_Answers_insert_query, tuple(app.questions_answers))
+                db.__update__(document_update_query, (app.questions_answers[0], app.chosen_document.document[16], app.chosen_document.document[0]))
                 app.database_updated = True
                 
                 app.chosen_document = None
@@ -562,11 +578,11 @@ class ViewPlugin(object):
                 app.print_job.close()
                 os.unlink(app.print_job.name)
                 app.print_job = None
-                app.questions_answers = ['' for _ in range(21)]
+                
                 win.drop_cache()
                 return 'print'
             
-            elif self.forgotten.answer == 'YES':
+            elif self.forgotten.answer == True:
                 win._current_foreground = None
                 return 'preview'
             
