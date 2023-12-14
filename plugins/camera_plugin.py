@@ -18,6 +18,7 @@ class CameraPlugin(object):
         self._pm = plugin_manager
         self.count = 0
 
+
     @LDS.hookimpl(hookwrapper=True)
     def lds_setup_camera(self, cfg):
         outcome = yield  # all corresponding hookimpls are invoked here
@@ -44,7 +45,9 @@ class CameraPlugin(object):
         """
         app.capture_date = None
         app.capture_nbr = None
-        app.camera.drop_captures()  # Flush previous captures
+        if app.camera:
+            app.camera.drop_captures()  # Flush previous capturesi
+
 
     @LDS.hookimpl
     def state_wait_enter(self, app):

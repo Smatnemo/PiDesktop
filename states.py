@@ -60,6 +60,7 @@ class StatesMachine(object):
                 LOGGER.error(str(ex))
                 LOGGER.debug('Back to failsafe state due to error:', exc_info=True)
                 new_state_name = self.failsafe_state
+                
             else:
                 raise
         if isinstance(new_state_name, list):
@@ -67,13 +68,14 @@ class StatesMachine(object):
                 new_state_name = None
             else:
                 new_state_name = new_state_name[0]
-                
+           
         if new_state_name is not None:
             self.set_state(new_state_name)
 
     def set_state(self, state_name):
         """Change state machine's active state
         """
+        
         try:
             # Perform any exit actions of the current state
             if self.active_state is not None:
@@ -88,7 +90,9 @@ class StatesMachine(object):
                 state_name = self.failsafe_state
             else:
                 raise
-
+        
+        if state_name == 'failsafe':
+            print("This is failsafe")
         if state_name not in self.states:
             raise ValueError('"{}" not in registered states...'.format(state_name))
 

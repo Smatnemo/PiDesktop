@@ -44,7 +44,7 @@ class ViewPlugin(object):
         self.login_view = None 
         self.decrypt_view = None
 
-        self.failure_message = ""
+        self.failure_message = "oops"
         self.questions = ""
 
     @LDS.hookimpl
@@ -55,7 +55,9 @@ class ViewPlugin(object):
 
     @LDS.hookimpl
     def state_failsafe_validate(self):
-        if (self.failure_message == 'no_printer' or self.failure_message) and self.failed_view_timer.is_timeout():
+        if self.failure_message == 'no_printer' and self.failed_view_timer.is_timeout():
+            return 'chosen'
+        elif self.failure_message == 'no_camera' and self.failed_view_timer.is_timeout():
             return 'chosen'
         elif self.failed_view_timer.is_timeout():
             return 'wait'
@@ -233,13 +235,18 @@ class ViewPlugin(object):
             app.previous_state = 'wait'
             return 'wait'
         elif app.chosen_document:
-            if app.printer.is_ready():
+            if app.printer.is_ready() and app.camera:
                 app.previous_state = 'chosen'
                 return 'decrypt'
             elif not app.printer.is_ready():
                 self.failure_message = "no_printer"
                 app.chosen_document = None
                 return 'failsafe'
+            elif not app.camera:
+                self.failure_message = 'no_camera'
+                app.chosen_document = None
+                return 'failsafe'
+            
         elif self.choose_timer.is_timeout():
             app.previous_state = 'wait'
             return 'wait'
@@ -378,6 +385,7 @@ class ViewPlugin(object):
     def state_preview_enter(self, app, win):
         self.count += 1
         win.set_capture_number(self.count, app.capture_nbr)
+        self.failure_message = "no_camera"
 
     @LDS.hookimpl
     def state_preview_validate(self):
@@ -450,6 +458,7 @@ class ViewPlugin(object):
                     app.questions_answers[1] = 1
                 elif answered.answer == 'NO':
                     app.questions_answers[1] = 0
+                app.print_job = None
             self.document_name = ''
          
         

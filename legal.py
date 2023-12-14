@@ -162,6 +162,7 @@ class PiApplication:
         except Exception as ex:
             LOGGER.error("Camera could not be set up: {}".format(ex))
             self.settings['use_signature'] = True
+            self.camera = None
             pass
         try: 
             if self.settings['use_signature']:
@@ -181,6 +182,14 @@ class PiApplication:
 
     def _initialize(self):
         self.printer.max_pages = self._config.getint('PRINTER', 'max_pages')
+        # Handle debug mode
+        if not self._config.getboolean('GENERAL', 'debug'):
+            set_logging_level()  # Restore default level
+            self._machine.add_failsafe_state('failsafe')
+            print("Failsafe added: ")
+        else:
+            set_logging_level(logging.DEBUG)
+            self._machine.remove_state('failsafe')
 
     @property
     def picture_filename(self):
