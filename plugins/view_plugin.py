@@ -385,7 +385,6 @@ class ViewPlugin(object):
     def state_preview_enter(self, app, win):
         self.count += 1
         win.set_capture_number(self.count, app.capture_nbr)
-        self.failure_message = "no_camera"
 
     @LDS.hookimpl
     def state_preview_validate(self):
