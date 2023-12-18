@@ -5,6 +5,8 @@ from Crypto.Hash import SHA256
 from Crypto.Util.Padding import unpad
 from Crypto.Cipher import AES
 from LDS.utils import LOGGER
+from LDS.database.database import DataBase, document_insert_query
+from random import randint
 
 from hashlib import md5
 
@@ -14,6 +16,7 @@ import base64
 import hashlib 
 import LDS
 import json
+import requests 
 
 TEMP_DIR = "/tmp/LDS"
 DOC_DIR = osp.join(package_dir, "docs")
@@ -24,15 +27,99 @@ secret_iv = b"8eejFb2rKCavp2uU"
 
 # List of responses from the backaoffice
 response_pi_check = osp.join(DOC_DIR, "response_pi_check")
-response_questions = osp.join(DOC_DIR, "response_questions")
+response_pi_confirm_download = osp.join(DOC_DIR, "response_pi_confirm_download")
+# response_questions = osp.join(DOC_DIR, "response_questions")
+py_check_url = 'https://legal.2e-admin.co.uk/webhooks/entities/py_check'
+pi_confirm_download_url = 'https://legal.2e-admin.co.uk/webhooks/entities/pi_confirm_downloaded'
+download_url = 'https://legal.2e-admin.co.uk/webhooks/entities/pi_file_download'
 
+payload = {'eid':"10093", 'sha256': "d0135203a8026def89a131bcbca542160259526a548d0913029400f1b6d89c18"}
+headers = {'X-lds-secret':"uriJhfB9K2amvxSDEL4dGiatDSbfQbN8LRPGPk3iz3GzUD8q",
+            'User-Agent':"Legal_Document_System",
+            'Content-Type':"application/json"
+            }
+
+def random_with_N_digits(n):
+    range_start = 10**(n-1)
+    range_end = (10**n)-1
+    return randint(range_start, range_end)
+ 
 def get_response(filename):
     if osp.isfile(filename):
         with open(filename, 'r') as file:
             content_dict = json.load(file)
         os.remove(filename)
     return content_dict
+
+def get_document_list():
+    res = requests.post(py_check_url, json=payload, headers=headers)
+    if res.ok:
+        content = res.json()
+        return content
+    else:
+        return res.status_code
+
+def main():
+    document_list = get_document_list()
+    if isinstance(document_list, list):
+        # num_list = [] 
+        try:
+            for document in document_list:
+                file = download_document(document['object_id'])
+                # num = random_with_N_digits(2)    
+                   
+                # while num in num_list:
+                #     num = random_with_N_digits(2)
+
+                check_and_upload(file, document)
+                # num_list.append(num)
+        except Exception as ex:
+            print('Exception', ex)
+
+def download_document(object_id, doc_dir=DOC_DIR):
+    filename = "file_{}.pdf".format(object_id)
+    filepath = osp.join(doc_dir, filename)
+    payload.update({'object_id':"{}".format(object_id)})
     
+    res = requests.post(download_url, json=payload, headers=headers)
+    if res.ok:
+        with open(filepath, 'wb') as f:
+            f.write(res.content)
+        return filepath
+    else:
+        return res.status_code
+    
+
+def check_and_upload(file, document):
+    if osp.isfile(file):
+        file_checksum = sha_checksum(file)
+
+    if file_checksum == document['encrypted_file_checksum']:       
+        _, document_name = osp.split(file)
+        document_path = "docs/"+document_name         
+        payload.update({"checksum":"{}".format(file_checksum)})
+        data = (document_path, 
+                210,
+                297,
+                0,
+                0,
+                0,
+                document['encryption_key'], 
+                document['document_page_count'], 
+                document['inmate_number'], 
+                'ready',
+                0, 
+                0, 
+                document['encrypted_file_checksum'], 
+                document['original_file_checksum'], 
+                document['original_extension'], 
+                document['original_name'], 
+                document['object_id'])
+        db = DataBase()
+        db.__insert__(document_insert_query, data)
+    
+
+
 def decrypt(enc, password):        
     password = hashlib.sha256(password.encode()).hexdigest()[:32].encode()      
     iv = hashlib.sha256(secret_iv).hexdigest()[:16].encode()
@@ -143,7 +230,7 @@ def decrypt_content(password, filename):
 def decrypt_content2(password, filename):
     temp_file = make_temp_file()
     filename_full_path = osp.join(osp.abspath(osp.dirname(DOC_DIR)), filename)
-    print("This is filename:", filename_full_path)
+
     with open(filename_full_path, 'rb') as in_file, open(temp_file.name, 'wb') as out_file:
         decrypt2(password, in_file, out_file)
 

@@ -40,6 +40,9 @@ class ViewPlugin(object):
         self.lock_screen_timer = PoolingTimer(30)
         # Create a delay before allowing the next state
         self.delay_state_timer = PoolingTimer(2)
+        # query the database every 30 seconds for downloaded documents
+        self.query_database_timer = PoolingTimer(30)
+        self.query_database_timer.start()
 
         self.login_view = None 
         self.decrypt_view = None
@@ -90,12 +93,15 @@ class ViewPlugin(object):
     def state_login_enter(self, app, win):
         LOGGER.info("Attempting to Login")
         self.login_view = win.show_login() 
-        app.database_updated = True
+        
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
-        if app.database_updated:
+        if app.database_updated or self.query_database_timer.is_timeout():
+            print("From login", self.query_database_timer.is_timeout())
             db = DataBase()
             app.documents, app.documents_number = db.get_inmate_documents()
+            win.documents_foreground = {}
             app.database_updated = None
+            self.query_database_timer.start()
         # Find way to display it in the login window during login in activity
         self.choose_timer.start()
         
@@ -182,6 +188,7 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_choose_validate(self, cfg, app, events):
         if app.find_back_event(events):
+            app.previous_state = 'choose'
             return 'login'
         elif app.find_lockscreen_event(events):
             app.previous_state = 'choose'
@@ -413,9 +420,8 @@ class ViewPlugin(object):
 
     @LDS.hookimpl
     def state_print_enter(self, cfg, app, win):
-        LOGGER.info("Display the Document details to be printed")
-           
         if app.print_job and app.printer.is_ready():
+            LOGGER.info("Display the Document details to be printed")
             LOGGER.info("Printing Document: {}".format(app.print_job.name))
             app.print_event()
             self.print_status = "print"
@@ -427,21 +433,18 @@ class ViewPlugin(object):
         elif not app.printer.is_ready():
             LOGGER.info("Printer status is not available")
         elif app.database_updated:
-            # Run this state after taking photograph or signature of the inmate
-            language_id = 1
-            # Query database to get questions
-            db = DataBase()
-            self.questions = db.get_questions(language_id)
-            
-            print("Questions", self.questions)
+            if not self.questions:
+                # Run this state after taking photograph or signature of the inmate
+                language_id = 1
+                # Query database to get questions
+                db = DataBase()
+                self.questions = db.get_questions(language_id)
             if self.questions:
                 self.index = 0
                 self.question = self.questions[0]
-                self.print_status = ''  
+                self.print_status = ''
+              
                    
-
-        
-
     @LDS.hookimpl
     def state_print_do(self, cfg, app, win, events):
         # Flag for database questions
@@ -466,24 +469,6 @@ class ViewPlugin(object):
                     app.questions_answers[0] = 1
                 elif answered.answer == False:
                     app.questions_answers[0] = 0
-            elif (answered.question in self.questions):
-                print("Question", answered.question, answered.answer)
-                app.questions_answers = [answered.question[1], answered.answer, 340]
-                # append answers to the list
-                if answered.answer == True:
-                    app.questions_answers[1] = 1
-                elif answered.answer == False:
-                    app.questions_answers[1] = 0
-
-                db = DataBase()
-                db.__insert__(insert_questions_answer_query, tuple(app.questions_answers))
-                
-            #     self.print_status = ""
-            #     # append the answers to the 
-            #     if answered.answer == 'YES':
-            #         app.questions_answers[2] = 1
-            #     elif answered.answer == 'NO':
-            #         app.questions_answers[2] = 0
             self.document_name = ''
                 
             
@@ -510,11 +495,19 @@ class ViewPlugin(object):
             return 'preview'
         # After answering last questions and updating the database return to wait
         answered = app.find_question_event(events)
-        # if answered and self.questions:
-        #     app.questions_answers = ['' for _ in range(len(answer_))]
-        #     db = DataBase()
-        #     db.__insert__(insert_questions_answer_query, tuple(app.questions_answers))
+        if answered and (answered.question in self.questions):      
+            app.questions_answers = [answered.question[1], answered.answer, 340]
+            # append answers to the list
+            if answered.answer == True:
+                app.questions_answers[1] = 1
+            elif answered.answer == False:
+                app.questions_answers[1] = 0
 
+            db = DataBase()
+            db.__insert__(insert_questions_answer_query, tuple(app.questions_answers))
+            self.questions.pop(0)
+            return 'print' if self.questions else 'login'
+            
         
     @LDS.hookimpl
     def state_capture_signature_enter(self):

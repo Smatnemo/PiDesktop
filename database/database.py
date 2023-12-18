@@ -45,7 +45,9 @@ CREATE TABLE IF NOT EXISTS `Entity` (
 
 create_documents_table = """
 CREATE TABLE IF NOT EXISTS 'Documents' (
-  'order' bigint PRIMARY KEY,
+  'order_id' INTEGER PRIMARY KEY NOT NULL,
+  'document_id' INTEGER,
+  'original_name' VARCHAR(255) NOT NULL,
   'document_path' VARCHAR(255) NOT NULL,
   'width' int NOT NULL,
   'height' int NOT NULL,
@@ -97,29 +99,24 @@ CREATE TABLE IF NOT EXISTS `Questions_text` (
 create_tables = [create_object_table, create_entity_table, create_documents_table, create_questions_answers_table, \
                  create_languages_table,create_questions_table, create_questions_text_table]
 
-document_insert_query = """ INSERT INTO 'Documents'
-                                  (order_id, 
-                                  document_path, 
-                                  width, 
+document_insert_query = """INSERT INTO 'Documents'
+                                  (document_path, 
+                                  width,
                                   height, 
-                                  created_by, 
-                                  downloaded_on, 
-                                  deleted_on, 
+                                  created_by,
+                                  downloaded_on,
+                                  deleted_on,
                                   decrypt_key, 
                                   num_of_pages, 
                                   inmate_number, 
-                                  signature, 
                                   status, 
                                   printed, 
                                   decrypted,
                                   encrypted_file_checksum,
                                   original_file_checksum,
-                                  inmate_photo,
                                   original_extension,
-                                  printed_date,
-                                  inmate_name,
                                   title,
-                                  document_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
+                                  document_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
 
 document_update_query = """UPDATE 'Documents'
                             SET printed = ?,
