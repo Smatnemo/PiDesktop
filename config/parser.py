@@ -170,11 +170,7 @@ DEFAULT = odict((
                 ((8,8,8,8),
                  "The radius of the program bbuttons (TL, TR, BL, BR - list of tuples)",
                  None, None)),
-<<<<<<< HEAD
-
-=======
-        )
->>>>>>> f65cf95e72fef04945764d83ab9e60b48024255f
+        ))
     ),
     ("PICTURE",
         odict((
@@ -312,7 +308,7 @@ DEFAULT = odict((
                  None, None)),
         ))
      ),
-)))
+))
 
 class PiConfigParser(RawConfigParser):
     

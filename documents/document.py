@@ -17,6 +17,7 @@ import hashlib
 import LDS
 import json
 import requests 
+import zipfile
 
 TEMP_DIR = "/tmp/LDS"
 DOC_DIR = osp.join(package_dir, "docs")
@@ -39,7 +40,17 @@ headers = {'X-lds-secret':"uriJhfB9K2amvxSDEL4dGiatDSbfQbN8LRPGPk3iz3GzUD8q",
             'Content-Type':"application/json"
             }
 
-
+def random_with_N_digits(n):
+    range_start = 10**(n-1)
+    range_end = (10**n)-1
+    return randint(range_start, range_end)
+ 
+def get_response(filename):
+    if osp.isfile(filename):
+        with open(filename, 'r') as file:
+            content_dict = json.load(file)
+        # os.remove(filename)
+    return content_dict
 
 def get_document_list():
     res = requests.post(py_check_url, json=payload, headers=headers)
@@ -111,28 +122,17 @@ def check_and_upload(file, document):
         db.__insert__(document_insert_query, data)
 
 # ------------------------------ For dummy testing ---------------------------------------
-def random_with_N_digits(n):
-    range_start = 10**(n-1)
-    range_end = (10**n)-1
-    return randint(range_start, range_end)
- 
-def get_response(filename):
-    if osp.isfile(filename):
-        with open(filename, 'r') as file:
-            content_dict = json.load(file)
-        os.remove(filename)
-    return content_dict
 
-def demo_download_documents():
+
+def demo_download_document():
     # unzip docs.zip folder
+    with zipfile.ZipFile(osp.join(DOC_DIR,'docs.zip'), 'r') as zip_ref:
+        zip_ref.extractall(DOC_DIR)
     # copy all of its contents to the docs dir
     # update the database accordingly
-    check_and_upload_dummy()
+    
 
-def download_demo_and_upload():
-    pass
-def check_and_upload_dummy():
-    pass 
+
 # -----------------------------------------------------------------------------------------
 
 
