@@ -129,11 +129,11 @@ DEFAULT = odict((
             ("green_button",
                 ((38,209,118)),
                  "The color of the green button (list of tuples)",
-                 None, None),
+                 None, None)),
             ("purple_button",
                 ((128,78,229),
                  "The color of the purple button (list of tuples)",
-                 None, None),
+                 None, None)),
             ("red_button",
                 ((255,49,49)),
                  "The color of the red button (list of tuples)",
@@ -170,7 +170,7 @@ DEFAULT = odict((
                 ((8,8,8,8)),
                  "The radius of the program bbuttons (TL, TR, BL, BR - list of tuples)",
                  None, None),
-        ))
+        )
     ),
     ("PICTURE",
         odict((
@@ -308,7 +308,7 @@ DEFAULT = odict((
                  None, None)),
         ))
      ),
-)))
+))
 
 class PiConfigParser(RawConfigParser):
     
