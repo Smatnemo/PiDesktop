@@ -221,9 +221,10 @@ def state_wait_exit(cfg, app, win):
 # --- Login State --------------------------------------------------------------
 
 @hookspec
-def state_login_enter(app, win):
+def state_login_enter(app, cfg, win):
     """Actions performed when application enters the login state.
     :param win: graphical window 
+    :param cfg: application configuration
     """
 
 @hookspec

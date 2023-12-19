@@ -165,6 +165,7 @@ insert_questions_answer_query="""INSERT INTO `Questions_answers` (
                                             `answer`, 
                                             `object_id`) VALUES (?, ?, ?);"""
 
+delete_documents_records = """DELETE FROM Documents;"""
 # A list of standard queries for settings
 # 1. query for getting the number of enabled products. int 
 # 2. query for getting the photocount per product
@@ -260,8 +261,6 @@ class DataBase(object):
             # Log error
             return
          
-
-
     def get_object(self, object_id=None):
         # Get objects associated with templates and products or any other item
 
@@ -312,8 +311,6 @@ class DataBase(object):
         # :attr background: The default background for every entity
         # :type background: str 
 
-        # Ineffective method of building the dictionary but temporary fix for POC
-        # get all the keys of the self.enabled_product_templates
         enabled_products = self.enabled_product_templates.keys()
         self.settings['videopath'] = self.get_object(self.entity[2])
         self.settings['watermarkpath'] = self.get_object(self.entity[6])
@@ -384,7 +381,8 @@ class DataBase(object):
         
         self.close()
         return inmate_documents, number_of_documents
-
+    
+    # def reload_documents_table(self,)
     def create_tables(self):
         # create sql tables if the don't exists
         self.open()

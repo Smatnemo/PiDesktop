@@ -83,6 +83,7 @@ class ViewPlugin(object):
                 self.failure_message = 'download_orders'
                 return 'failsafe'
             elif self.failure_message == 'download_orders':
+                self.failed_view_timer = PoolingTimer(5)
                 return 'login'
             else:
                 return 'wait'
@@ -113,13 +114,13 @@ class ViewPlugin(object):
         win.show_image(None)  # Clear currently displayed image
 
     @LDS.hookimpl
-    def state_login_enter(self, app, win):
+    def state_login_enter(self, app, cfg, win):
         LOGGER.info("Attempting to Login")
-        self.login_view = win.show_login() 
+        
+        self.login_view = win.show_login(cfg) 
         
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         if app.database_updated or self.query_database_timer.is_timeout():
-            print("From login", self.query_database_timer.is_timeout())
             db = DataBase()
             app.documents, app.documents_number = db.get_inmate_documents()
             win.documents_foreground = {}

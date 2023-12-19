@@ -494,6 +494,7 @@ def main():
         plugin_manager.hook.lds_reset(cfg=config, hard=True)
     else:
         LOGGER.info("Starting the LDS application %s", GPIO_INFO)
+        print("Configuration ", config)
         app = PiApplication(config, plugin_manager)
         app.main_loop()
 

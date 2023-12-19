@@ -170,6 +170,10 @@ DEFAULT = odict((
                 ((8,8,8,8),
                  "The radius of the program bbuttons (TL, TR, BL, BR - list of tuples)",
                  None, None)),
+            ("inactive_color",
+                ('lightskyblue3',
+                 "The color of inactive input box",
+                 None, None)),
         ))
     ),
     ("PICTURE",

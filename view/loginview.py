@@ -5,11 +5,12 @@ import sys
 import os.path as osp
 
 from LDS import fonts, pictures
+from LDS.config import PiConfigParser
 from LDS.media import get_filename
 
 pygame.init()
-#vid_info = pygame.display.Info()
-#vid_size = vid_info.current_w, vid_info.current_h
+vid_info = pygame.display.Info()
+DEFAULT_SIZE = vid_info.current_w, vid_info.current_h
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 FONT = pygame.font.Font('freesansbold.ttf', 20)
@@ -33,15 +34,18 @@ button_events = [BUTTON_0,BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTT
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+
+
+
 class InputBox:
 
-    def __init__(self, rect:tuple, label='label',input_text='', input_text_length=10, hide_text=True, parent=None):
+    def __init__(self, rect:tuple, label='label',input_text='', input_text_length=10, hide_text=True, parent=None, color_inactive=COLOR_INACTIVE, font_size=32):
         self.input_rect_border = pygame.Rect(rect)
         self.rect = rect
-        self.border_color = COLOR_INACTIVE
-        self.color = COLOR_INACTIVE
+        self.border_color = pygame.Color(color_inactive)
+        self.color = pygame.Color(color_inactive)
         self.text_field_color = WHITE
-        self.font_size = 32
+        self.font_size = font_size
         self.text = input_text
         self.max_input_length = input_text_length
         self.label = label
@@ -359,12 +363,12 @@ class button(object):
         
 
 class LoginView(object):
-    def __init__(self, screen, label, dimensions):
-        
+    def __init__(self, screen, label, dimensions, config):
+        color_inactive = config.get("WINDOW","inactive_color")
         self.update_needed = None
         self._d = dimensions
         
-        self.passcode_box = InputBox((self._d['startrowgridx'], self._d['startrowgridy'], self._d['gridwidth'], self._d['inputheight']), parent=screen)
+        self.passcode_box = InputBox((self._d['startrowgridx'], self._d['startrowgridy'], self._d['gridwidth'], self._d['inputheight']), parent=screen, color_inactive=color_inactive, font_size=32)
         self.passcode_box.key_pad_rect = [pygame.Rect(self._d['startrowgridx'], self._d['startrowgridy'], self._d['gridwidth'], self._d['inputheight'])]
         
         # the numbers for the calcaltor
