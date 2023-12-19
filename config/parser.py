@@ -308,7 +308,7 @@ DEFAULT = odict((
                  None, None)),
         ))
      ),
-))
+)))
 
 class PiConfigParser(RawConfigParser):
     
