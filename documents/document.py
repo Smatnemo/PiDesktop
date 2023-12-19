@@ -110,7 +110,7 @@ def check_and_upload(file, document):
         db = DataBase()
         db.__insert__(document_insert_query, data)
 
-# For dummy testing 
+# ------------------------------ For dummy testing ---------------------------------------
 def random_with_N_digits(n):
     range_start = 10**(n-1)
     range_end = (10**n)-1
@@ -128,7 +128,7 @@ def demo_download_documents():
     # copy all of its contents to the docs dir
     # update the database accordingly
     check_and_upload_dummy()
-    
+
 def download_demo_and_upload():
     pass
 def check_and_upload_dummy():
