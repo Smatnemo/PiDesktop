@@ -126,8 +126,52 @@ DEFAULT = odict((
                 (74,
                  "The size of the footer in pixels",
                  None, None)),
+            ("green_button",
+                ((38,209,118)),
+                 "The color of the green button (list of tuples)",
+                 None, None),
+            ("purple_button",
+                ((128,78,229),
+                 "The color of the purple button (list of tuples)",
+                 None, None),
+            ("red_button",
+                ((255,49,49)),
+                 "The color of the red button (list of tuples)",
+                 None, None),
+            ("number_button",
+                ((104,104,104)),
+                 "The color of the number buttons (list of tuples)",
+                 None, None),
+            ("header_bg",
+                ((28,28,30)),
+                 "The color of the header background (list of tuples)",
+                 None, None),
+            ("program_bg",
+                ((33,33,35)),
+                 "The color of the program background (list of tuples)",
+                 None, None),
+            ("program_bg2",
+                ((36,36,38)),
+                 "The color of the program background (list of tuples)",
+                 None, None),
+            ("th_bg",
+                ((101,101,103)),
+                 "The color of the program background (list of tuples)",
+                 None, None),
+            ("th_radius",
+                ((16,16,16,16)),
+                 "The radius of the table header (TL, TR, BL, BR - list of tuples)",
+                 None, None),
+            ("primary_btn_radius",
+                ((24,24,24,24)),
+                 "The radius of the program bbuttons (TL, TR, BL, BR - list of tuples)",
+                 None, None),
+            ("number_btn_radius",
+                ((8,8,8,8)),
+                 "The radius of the program bbuttons (TL, TR, BL, BR - list of tuples)",
+                 None, None),
         ))
-     ),
+    ),
     ("PICTURE",
         odict((
             ("orientation",
@@ -179,7 +223,7 @@ DEFAULT = odict((
                  "Background RGB color or image path (list of tuples or quoted paths accepted)",
                  None, None)),
         ))
-     ),
+    ),
     ("CAMERA",
         odict((
             ("iso",
@@ -304,15 +348,12 @@ class PiConfigParser(RawConfigParser):
                         val = value[0]
                     else:
                         val = self.get(section, name)
-                    fp.write("# {}\n{} = {}\n\n".format(value[1], name, val))
-
-        self.handle_autostart()
+                    fp.write("# {}\n{} = {}\n\n".format(value[1], name, val))        
 
     def load(self):
         """Load configuration from file.
         """
-        self.read(self.filename, encoding="utf-8")
-        self.handle_autostart()
+        self.read(self.filename, encoding="utf-8")        
 
     def edit(self):
         """Open a text editor to edit the configuration.
@@ -321,40 +362,7 @@ class PiConfigParser(RawConfigParser):
             # Reload config to check if autostart has changed
             self.load()
 
-    def handle_autostart(self):
-        """Handle desktop file to start pibooth at the Raspberry Pi startup.
-        """
-        filename = osp.expanduser('~/.config/autostart/pibooth.desktop')
-        # filename = osp.expanduser('~/.config/autostart/lds.desktop')
-        dirname = osp.dirname(filename)
-        enable = self.getboolean('GENERAL', 'autostart')
-        delay = self.getint('GENERAL', 'autostart_delay')
-        if enable:
-            regenerate = True
-            if osp.isfile(filename):
-                with open(filename, 'r') as fp:
-                    txt = fp.read()
-                    if delay > 0 and f"sleep {delay}" in txt or delay <= 0 and "sleep" not in txt:
-                        regenerate = False
-
-            if regenerate:
-                if not osp.isdir(dirname):
-                    os.makedirs(dirname)
-
-                LOGGER.info("Generate the auto-startup file in '%s'", dirname)
-                with open(filename, 'w') as fp:
-                    fp.write("[Desktop Entry]\n")
-                    fp.write("Name=pibooth\n")
-                    if delay > 0:
-                        fp.write(f"Exec=bash -c \"sleep {delay} && pibooth\"\n")
-                    else:
-                        fp.write("Exec=pibooth\n")
-                    fp.write("Type=application\n")
-
-        elif not enable and osp.isfile(filename):
-            LOGGER.info("Remove the auto-startup file in '%s'", dirname)
-            os.remove(filename)
-
+    
     def join_path(self, *names):
         """Return the directory path of the configuration file
         and join it the given names.
