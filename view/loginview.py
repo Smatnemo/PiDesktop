@@ -39,14 +39,14 @@ BLACK = (0, 0, 0)
 
 class InputBox:
 
-    def __init__(self, rect:tuple, label='label',input_text='', input_text_length=10, hide_text=True, parent=None, color_inactive=COLOR_INACTIVE, font_size=32):
+    def __init__(self, rect:tuple, label="", input_text_length=10, hide_text=True, parent=None, colour_inactive=COLOR_INACTIVE, font_size=32, text_field_colour=WHITE):
         self.input_rect_border = pygame.Rect(rect)
         self.rect = rect
-        self.border_color = pygame.Color(color_inactive)
-        self.color = pygame.Color(color_inactive)
-        self.text_field_color = WHITE
+        self.border_color = pygame.Color(colour_inactive)
+        self.color = pygame.Color(colour_inactive)
+        self.text_field_color = text_field_colour
         self.font_size = font_size
-        self.text = input_text
+        self.text = label
         self.max_input_length = input_text_length
         self.label = label
         self.input_text = ''
@@ -83,6 +83,8 @@ class InputBox:
                     if len(self.text) >= self.max_input_length:
                         self.text = self.text
                     else:
+                        if self.text == self.label:
+                            self.text = ""
                         self.text = self.text + input_text
                         if self.hide_text:
                             self.hidden_input_text += '*'
@@ -164,7 +166,7 @@ class InputBox:
 
 
 class PushButton:
-    def __init__(self, rect:tuple, user_event, label:str='Button', parent=None, label_clicked=None):
+    def __init__(self, rect:tuple, user_event, label:str='Button', parent=None, label_clicked=None, font_colour=WHITE, font_size=32, button_colour=(128,128,128), border_radius=3):
         if label.endswith('.png') or label.endswith('.jpg'):
             self.icon, self.icon_clicked = self.use_icon(label, label_clicked)
             self.label = None
@@ -172,15 +174,16 @@ class PushButton:
             self.label = label
             self.icon = None
             self.icon_clicked = None
-        self.button_color = COLOR_INACTIVE 
-        self.text_color = WHITE
-        self.font_size = 32
+        self.button_colour = button_colour 
+        self.text_colour = font_colour
+        self.font_size = font_size
         self.button_rect = pygame.Rect(rect)
         self.coord = [self.button_rect.x+3, self.button_rect.y+3]
         self.button_enabled = True
         self.button_clicked = False 
         self.button_released = True
         self.event = user_event
+        self.border_radius = border_radius
         if not parent:
             self.iniScreen()
         else:
@@ -245,32 +248,32 @@ class PushButton:
     def draw(self, event):
         # Do this for text
         if self.label:
-            self.button_text = self.font.render(self.label, True, self.button_color)
+            self.button_text = self.font.render(self.label, True, self.text_colour)
             width, height = self.font.size(self.label)
             self.coord[0]=self.button_rect.centerx-width//2
             self.coord[1]=self.button_rect.centery-height//2
 
         if self.button_enabled:
-            pygame.draw.rect(self.screen, 'dark gray', self.button_rect, 0, 3)
+            pygame.draw.rect(self.screen, self.button_colour, self.button_rect, 0, self.border_radius)
             if self.icon:
                 self.screen.blit(self.icon, self.icon.get_rect(center=self.button_rect.center))
             else:
                 self.screen.blit(self.button_text, self.coord) 
             clicked = self.clicked(event)
             if clicked == 'BUTTONDOWN':
-                pygame.draw.rect(self.screen, 'black', self.button_rect, 0, 3)
+                pygame.draw.rect(self.screen, (0, 0, 0), self.button_rect, 0, self.border_radius)
                 if self.icon_clicked:
                     self.screen.blit(self.icon_clicked, self.icon_clicked.get_rect(center=self.button_rect.center))
                 else:
                     self.screen.blit(self.button_text, self.coord)
             elif clicked == 'BUTTONUP':
-                pygame.draw.rect(self.screen, 'dark gray', self.button_rect, 0, 3)
+                pygame.draw.rect(self.screen, self.button_colour, self.button_rect, 0, self.border_radius)
                 if self.icon:
                     self.screen.blit(self.icon, self.icon.get_rect(center=self.button_rect.center))
                 else:
                     self.screen.blit(self.button_text, self.coord)
         else:
-            pygame.draw.rect(self.screen, 'blue', self.button_rect, 0, 3)
+            pygame.draw.rect(self.screen, 'blue', self.button_rect, 0, self.border_radius)
             if self.icon:
                 self.screen.blit(self.icon, self.icon.get_rect(center=self.button_rect.center))
             else:
@@ -296,8 +299,8 @@ class PushButton:
 
 
 class button(object):
-    def __init__(self, color, x,y,width,height, text=''):
-        self.color = color
+    def __init__(self, button_color, x,y,width,height, text='', font_colour=WHITE, font_face='comicsans', font_size=60, border_radius=3):
+        self.color = button_color
         self.x = x
         self.y = y
         self.width = width
@@ -306,24 +309,27 @@ class button(object):
         self.over = False
         self.button_enabled = True
         self.button_rect = pygame.Rect(self.x, self.y, self.width,self.height)
-        self.text_color = WHITE
+        self.text_color = font_colour 
+        self.border_radius = border_radius
+        self.font_size = font_size
+        self.font_face = font_face
 
 
     def draw(self,window,event):
         #Call this method to draw the button on the screen
         if self.button_enabled:
-            pygame.draw.rect(window, 'light gray', self.button_rect,0, 3)
+            pygame.draw.rect(window, self.color, self.button_rect,0, self.border_radius)
             clicked = self.clicked(window, event)
             if clicked=='BUTTONDOWN':
-                pygame.draw.rect(window, 'black', self.button_rect, 0, 3)
+                pygame.draw.rect(window, (0, 0, 0), self.button_rect, 0, self.border_radius)
             elif clicked=='BUTTONUP':
-                pygame.draw.rect(window, 'light gray', self.button_rect, 0, 3)
+                pygame.draw.rect(window, self.color, self.button_rect, 0, self.border_radius)
         else:   
-            pygame.draw.rect(window, 'blue', self.button_rect,0, 3)  
+            pygame.draw.rect(window, (0,0,255), self.button_rect,0, self.border_radius)  
  
         if self.text != '':
-            font = pygame.font.SysFont('comicsans', 60)
-            text = font.render(self.text, 1, WHITE)
+            font = pygame.font.SysFont(self.font_face, self.font_size)
+            text = font.render(self.text, 1, self.text_color)
             window.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
 
 
@@ -364,48 +370,50 @@ class button(object):
 
 class LoginView(object):
     def __init__(self, screen, label, dimensions, config):
-        color_inactive = config.get("WINDOW","inactive_color")
+        color_inactive = config.gettyped("WINDOW","inactive_color")
+        number_button_colour = config.gettyped("WINDOW", "number_button")
+        unlock_button_colour = config.gettyped("WINDOW", "green_button")
         self.update_needed = None
         self._d = dimensions
         
-        self.passcode_box = InputBox((self._d['startrowgridx'], self._d['startrowgridy'], self._d['gridwidth'], self._d['inputheight']), parent=screen, color_inactive=color_inactive, font_size=32)
+        self.passcode_box = InputBox((self._d['startrowgridx'], self._d['startrowgridy'], self._d['gridwidth'], self._d['inputheight']), parent=screen, colour_inactive=color_inactive, font_size=32, label='CO Unlock')
         self.passcode_box.key_pad_rect = [pygame.Rect(self._d['startrowgridx'], self._d['startrowgridy'], self._d['gridwidth'], self._d['inputheight'])]
         
         # the numbers for the calcaltor
-        s_1s = button((0,255,0),self._d['firstcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey'], '1')
+        s_1s = button(number_button_colour,self._d['firstcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey'], '1')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['firstcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_2s = button((0,255,0),self._d['secondcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey'], '2')
+        s_2s = button(number_button_colour,self._d['secondcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey'], '2')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['secondcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_3s = button((0,255,0),self._d['thirdcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey'], '3')
+        s_3s = button(number_button_colour,self._d['thirdcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey'], '3')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['thirdcolumnx'],self._d['firstrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_4s = button((0,255,0),self._d['firstcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey'], '4')
+        s_4s = button(number_button_colour,self._d['firstcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey'], '4')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['firstcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_5s = button((0,255,0),self._d['secondcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey'], '5')
+        s_5s = button(number_button_colour,self._d['secondcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey'], '5')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['secondcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_6s = button((0,255,0),self._d['thirdcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey'], '6')
+        s_6s = button(number_button_colour,self._d['thirdcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey'], '6')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['thirdcolumnx'],self._d['secondrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_7s = button((0,255,0),self._d['firstcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey'], '7')
+        s_7s = button(number_button_colour,self._d['firstcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey'], '7')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['firstcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_8s = button((0,255,0),self._d['secondcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey'], '8')
+        s_8s = button(number_button_colour,self._d['secondcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey'], '8')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['secondcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_9s = button((0,255,0),self._d['thirdcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey'], '9')
+        s_9s = button(number_button_colour,self._d['thirdcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey'], '9')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['thirdcolumnx'],self._d['thirdrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_clears = button((0,255,0),self._d['firstcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey'], 'X')
+        s_clears = button(number_button_colour,self._d['firstcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey'], 'X')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['firstcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_0s = button((0,255,0),self._d['secondcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey'], '0')
+        s_0s = button(number_button_colour,self._d['secondcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey'], '0')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['secondcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey']))
 
-        s_back = button((0,255,0),self._d['thirdcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey'], '<')
+        s_back = button(number_button_colour,self._d['thirdcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey'], '<')
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['thirdcolumnx'],self._d['fourthrowy'],self._d['iconsizex'],self._d['iconsizey']))
         
 
@@ -413,7 +421,7 @@ class LoginView(object):
         
 
         # Set up the buttons
-        self.login_button = PushButton((self._d['firstcolumnx'], self._d['loginbuttony'], self._d['gridwidth'], self._d['iconsizey']),LOGINEVENT, label, screen)
+        self.login_button = PushButton((self._d['firstcolumnx'], self._d['loginbuttony'], self._d['gridwidth'], self._d['iconsizey']),LOGINEVENT, label, screen, font_colour=BLACK, button_colour=unlock_button_colour)
         self.login_button.enabled(True)
 
     def get_input_text(self):
