@@ -143,7 +143,7 @@ DEFAULT = odict((
                  "The color of the number buttons (list of tuples)",
                  None, None)),
             ("header_bg",
-                ((28,28,30),
+                ((28,28,31),
                  "The color of the header background (list of tuples)",
                  None, None)),
             ("program_bg",
