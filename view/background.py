@@ -484,13 +484,11 @@ class PrintBackground(Background):
 
         self.yesbutton_enabled = True
 
-        self.camera_button_enabled = False
-        self.camerabutton_y = None
-        self.camerabutton_x = None 
+        
         
         self.yesbutton_event = (BUTTONDOWN, {'question':question,'answer':True})
-        self.nobutton = None
 
+        self.nobutton = None
         self.nobutton_event = (BUTTONDOWN, {'question':question,'answer':False})
 
         self.update_needed = None
@@ -587,8 +585,6 @@ class PrintBackground(Background):
 
             self.yesbutton_enabled = False
         
-        if self.camera_button_enabled:
-            self.camera_button = PushButton(())
         
 
 
@@ -632,10 +628,10 @@ class FinishedBackground(Background):
 
     def paint(self, screen):
         Background.paint(self, screen)
-        if self.left_people:
-            screen.blit(self.left_people, self.left_people_pos)
-        if self.right_people:
-            screen.blit(self.right_people, self.right_people_pos)
+        # if self.left_people:
+        #     screen.blit(self.left_people, self.left_people_pos)
+        # if self.right_people:
+        #     screen.blit(self.right_people, self.right_people_pos)
 
 
 class FinishedWithImageBackground(FinishedBackground):
@@ -682,11 +678,35 @@ class FinishedWithImageBackground(FinishedBackground):
                 self._outlines.append((self._make_outlines(right_rect.size), right_rect.topleft))
 
 
-class OopsBackground(Background):
 
+class NoDocumentsBackground(Background):
+    def __init__(self, message, dimensions=None):
+        Background.__init__(self, message)
+        self.downloadbutton_y = None
+        self.downloadbutton_x = None 
+        self.downloadbutton_width = 200
+        self.downloadbutton_height = 200
+        self.downloadbutton_enabled = True
+        self.downloadbutton_event = (BUTTONDOWN, {'download':True})
+        self.update_needed = None
+        self.dimensions = dimensions
+
+    def resize(self, screen):
+        Background.resize(self, screen)
+        self.downloadbutton_y = self.dimensions['h']//2+0.25*self.dimensions['h'] - self.downloadbutton_height//2 
+        self.downloadbutton_x = self.dimensions['w']//2 - self.downloadbutton_width//2 
+        if self.downloadbutton_enabled:
+            self.downloadbutton = PushButton((self.downloadbutton_x, self.downloadbutton_y, self.downloadbutton_width, self.downloadbutton_height), self.downloadbutton_event, label='YES', parent=screen)
+            self.downloadbutton.enabled(True)
+            self.downloadbutton_enabled = False
+        
+    def paint(self, screen):
+        Background.paint(self, screen)
+        self.downloadbutton.draw(self.update_needed)
+
+class OopsBackground(Background):
     def __init__(self, message):
         Background.__init__(self, message)
-
 
 class WrongPasswordBackground(Background):
     def __init__(self):

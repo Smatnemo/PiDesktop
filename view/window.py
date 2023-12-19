@@ -73,8 +73,10 @@ class PiWindow(object):
         res_check = pygame.display.Info()
         self.surface = pygame.display.set_mode((self.display_size), pygame.NOFRAME)
         if res_check.current_w == 800:
-            SCREEN2 = pygame.display.set_mode((self.display_size), pygame.FULLSCREEN)
-            pygame.transform.scale(self.surface, (800,480))
+            self.surface = pygame.display.set_mode((800,480), pygame.FULLSCREEN)
+            pygame.transform.scale(self.surface, (int(800/1024),int(480/600)))
+            self.resize_height = res_check.current_h/600
+            self.resize_width = res_check.current_w/1024
 
         self._buffered_images = {}
         self._current_background = None
@@ -312,14 +314,18 @@ class PiWindow(object):
         self._d['thirdcolumnx'] = self._d['secondcolumnx']+self._d['iconsizex']+self._d['marginx']
         self._d["row_height"] = 64
         self._d['bottombuttony'] = self._d['h']+self._d['pad']-self._d['footer']
-
+        if self.display_size[0] == 800:
+            self._d['resize_height'] = self.resize_height
+            self._d['resize_width'] = self.resize_width 
 
     def show_oops(self, message):
         """Show failure view in case of exception.
         :param message: the exception message
         """
-        self._capture_number = (0, self._capture_number[1])
-        self._update_background(background.OopsBackground(message))
+        if message=='download_orders':
+            self._update_background(background.NoDocumentsBackground(message, self._d))
+        else:
+            self._update_background(background.OopsBackground(message))
 
     def show_intro(self, pil_image=None, with_print=True, state=None):
         """Show introduction view.
@@ -368,8 +374,7 @@ class PiWindow(object):
                 self._update_background(background.ChooseInmateDocumentBackground(self._d,"choose_document"))
                 self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, self._d, selected))
         else:
-            self._update_background(background.ChooseInmateDocumentBackground("No_Document"))
-            self._update_documents_foreground(foreground.NoDocumentForeground())
+            raise Exception("No Documents")
 
 
 # After selecting the inmate row

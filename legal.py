@@ -336,6 +336,14 @@ class PiApplication:
             else:
                 self.update_needed = None
 
+    def find_download_event(self, events):
+        """Return the first found event if found in the list.
+        """
+        # and event.capture
+        for event in events:
+            if event.type == BUTTONDOWN and event.download:
+                return event
+        return None
     def find_capture_event(self, events):
         """Return the first found event if found in the list.
         """

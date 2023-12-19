@@ -21,24 +21,22 @@ class InmateRow(object):
 
         self.row_num = row_number 
         self.row_num_coord = None
-
-        if documents:
-            self.num = len(documents)
-            self.row_num = row_number + 1
+            
         self.num_coord = None
-
-        self.inmate_number = inmate_number 
+        self.inmate_number = inmate_number
         self.inmate_num_coord = None
-
-        self.row_num_text = row_number + 1
-
         self.total_pages = 0
         if self.documents: 
             for document in self.documents:
                 self.total_pages += document[8]
+            self.num = len(documents)
+            self.row_num = row_number + 1
+            self.inmate_identifier = str(self.documents[0][19][0])+str(inmate_number)
+        self.row_num_text = row_number + 1
+
 
         if not self.inmate_number:
-            self.inmate_number = "Inmate Number"
+            self.inmate_identifier = "Inmate Identifier"
             self.num = "Document count"
             self.row_num_text = "S/N"
             self.total_pages = "Total Pages"
@@ -53,7 +51,7 @@ class InmateRow(object):
             self.row_num = offset 
         else:
             self.row_num = self.row_num % offset
-        # print("For this number {}, the offset is {} and the text number is {}".format(self.row_num, offset, self.row_num_text))
+
         self.inmate_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
         
         if self.documents:
@@ -67,7 +65,7 @@ class InmateRow(object):
         pygame.draw.rect(screen, 'black', self.inmate_rect, 2)
         
         screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
-        screen.blit(self.text_surface(self.inmate_number)[0], (foreground_rect.x+204, foreground_rect.y+60*(self.row_num)+14))
+        screen.blit(self.text_surface(self.inmate_identifier)[0], (foreground_rect.x+204, foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.num)[0], (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
         total_pages_count_x = foreground_rect.width-self.text_surface(self.total_pages)[1]-14
         InmateRow.set_total_pages_x(foreground_rect)
@@ -132,12 +130,12 @@ class DocumentRow(object):
         self.status = "Status"
         self.page_count = "Number of pages"
         if document:
-            self.document_name = "Document"+str(document[9])+str(self.row_num+1)
+            self.document_name = str(document[20][:13])
             self.status = document[11]
             self.row_num = row_number + 1
             self.row_num_text = self.row_num
             self.page_count = document[8]
-            
+
             
         self.document = document
 
@@ -148,7 +146,6 @@ class DocumentRow(object):
         
         self.chosen = False
         
-
     def draw(self, foreground_rect, screen, event, offset):
         if self.document and self.row_num % offset == 0:
             self.row_num = offset 
@@ -237,7 +234,7 @@ class DocumentsView(object):
     def draw(self, foreground_rect, screen):
         self.document_rows[0].draw(foreground_rect, screen, self.update_needed, self.offset)
         if self.change_view:
-            if self.change_view.change_view=='next' and self.end < len(self.inmate_rows):
+            if self.change_view.change_view=='next' and self.end < len(self.document_rows):
                 self.start = self.end
                 self.end = self.start + self._offset
                 self.change_view = None
@@ -246,7 +243,7 @@ class DocumentsView(object):
                 self.end = self.end - self._offset
                 self.change_view = None
         for document_row in self.document_rows[self.start:self.end]:
-            document_row.draw(foreground_rect, screen, self.update_needed, self.offset)
+            document_row.draw(foreground_rect, screen, self.update_needed, self._offset)
 
     def update(self):
         # When button is clicked, return the inmate number

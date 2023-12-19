@@ -44,17 +44,31 @@ CREATE TABLE IF NOT EXISTS `Entity` (
 """
 
 create_documents_table = """
-CREATE TABLE IF NOT EXISTS 'Documents' (
-  'order_id' INTEGER PRIMARY KEY NOT NULL,
-  'document_id' INTEGER,
-  'original_name' VARCHAR(255) NOT NULL,
-  'document_path' VARCHAR(255) NOT NULL,
-  'width' int NOT NULL,
-  'height' int NOT NULL,
-  'created_by' bigint NOT NULL,
-  'downloaded_on' datetime NOT NULL,
-  'deleted_on' datetime NOT NULL
-);"""
+CREATE TABLE IF NOT EXISTS "Documents" (
+	"id"	INTEGER PRIMARY KEY AUTOINCREMENT,
+	"document_path"	VARCHAR(128) NOT NULL,
+	"width"	int,
+	"height"	int,
+	"created_by"	bigint NOT NULL,
+	"downloaded_on"	datetime NOT NULL,
+	"deleted_on"	datetime NOT NULL,
+	"decrypt_key"	VARCHAR(20) NOT NULL,
+	"num_of_pages"	int,
+	"inmate_number"	int,
+	"signature"	BLOB,
+	"status"	VARCHAR(127),
+	"printed"	tinyint(1),
+	"decrypted"	tinyint(1),
+	"encrypted_file_checksum"	VARCHAR(128),
+	"original_file_checksum"	VARCHAR(128),
+	"inmate_photo"	BLOB,
+	"original_extension"	VARCHAR(10),
+	"printed_date"	datetime,
+	"inmate_name"	VARCHAR(128),
+	"title"	VARCHAR(128),
+	"document_id"	INTEGER NOT NULL
+);
+"""
 
 create_languages_table = """
 CREATE TABLE IF NOT EXISTS 'Languages' (
@@ -115,8 +129,9 @@ document_insert_query = """INSERT INTO 'Documents'
                                   encrypted_file_checksum,
                                   original_file_checksum,
                                   original_extension,
+                                  inmate_name,
                                   title,
-                                  document_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
+                                  document_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"""
 
 document_update_query = """UPDATE 'Documents'
                             SET printed = ?,

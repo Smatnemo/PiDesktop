@@ -59,17 +59,13 @@ def get_document_list():
     else:
         return res.status_code
 
-def main():
+def download_and_upload():
     document_list = get_document_list()
     if isinstance(document_list, list):
         # num_list = [] 
         try:
             for document in document_list:
                 file = download_document(document['object_id'])
-                # num = random_with_N_digits(2)    
-                   
-                # while num in num_list:
-                #     num = random_with_N_digits(2)
 
                 check_and_upload(file, document)
                 # num_list.append(num)
@@ -93,11 +89,16 @@ def download_document(object_id, doc_dir=DOC_DIR):
 def check_and_upload(file, document):
     if osp.isfile(file):
         file_checksum = sha_checksum(file)
+    else:
+        raise
 
-    if file_checksum == document['encrypted_file_checksum']:       
+    if file_checksum == document['encrypted_file_checksum']: 
+        payload.update({"checksum":"{}".format(file_checksum)})
+        res = requests.post(pi_confirm_download_url, json=payload, headers=headers)
+    if res.ok:    
         _, document_name = osp.split(file)
         document_path = "docs/"+document_name         
-        payload.update({"checksum":"{}".format(file_checksum)})
+        
         data = (document_path, 
                 210,
                 297,
@@ -112,7 +113,8 @@ def check_and_upload(file, document):
                 0, 
                 document['encrypted_file_checksum'], 
                 document['original_file_checksum'], 
-                document['original_extension'], 
+                document['original_extension'],
+                document['inmate_name'], 
                 document['original_name'], 
                 document['object_id'])
         db = DataBase()

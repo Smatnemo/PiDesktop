@@ -5,8 +5,9 @@ import pygame
 import time
 from LDS.utils import LOGGER, get_crash_message, PoolingTimer
 from LDS.accounts import LogIn, LogOut
-from LDS.documents.document import decrypt_content2, document_authentication
+from LDS.documents.document import decrypt_content2, document_authentication, download_and_upload
 from LDS.database.database import DataBase, document_update_query, insert_questions_answer_query
+
 
 BUTTONDOWN = pygame.USEREVENT + 1
 
@@ -54,16 +55,37 @@ class ViewPlugin(object):
     def state_failsafe_enter(self, win):
         win.show_oops(self.failure_message)
         self.failed_view_timer.start()
+        if self.failure_message == 'download_orders':
+            self.failed_view_timer = PoolingTimer(30)
         LOGGER.error(get_crash_message())
 
     @LDS.hookimpl
-    def state_failsafe_validate(self):
-        if self.failure_message == 'no_printer' and self.failed_view_timer.is_timeout():
-            return 'chosen'
-        elif self.failure_message == 'no_camera' and self.failed_view_timer.is_timeout():
-            return 'chosen'
-        elif self.failed_view_timer.is_timeout():
-            return 'wait'
+    def state_failsafe_do(self, app, win, events):
+        """Create option to download documents here either from backoffice or locally
+        """
+        app.find_touch_effects_event(events)
+        if self.failure_message == 'download_orders':
+            win._current_background.downloadbutton.draw(app.update_needed)
+        
+        event = app.find_download_event(events)
+        if event:
+            download_and_upload()
+            app.database_updated = True
+
+    @LDS.hookimpl
+    def state_failsafe_validate(self, app):
+        if self.failed_view_timer.is_timeout():
+            if (self.failure_message == 'no_printer' or self.failure_message == 'no_camera'\
+                 or self.failure_message == 'no_document'):
+                return 'chosen'
+            elif self.failure_message == 'no_orders':
+                app.database_updated = False
+                self.failure_message = 'download_orders'
+                return 'failsafe'
+            elif self.failure_message == 'download_orders':
+                return 'login'
+            else:
+                return 'wait'
         
         
     @LDS.hookimpl
@@ -75,6 +97,7 @@ class ViewPlugin(object):
     def state_wait_do(self, app, win, events):
         """Write logic to continuously query database for update
         """
+
 
     @LDS.hookimpl
     def state_wait_validate(self, cfg, app, events):
@@ -156,7 +179,12 @@ class ViewPlugin(object):
         LOGGER.info("Show document choice (nothing selected)")
         win.set_print_number(0, False)  # Hide printer status
         # Create logic to fetch documents from database
-        win.show_choices(app.documents)
+        try:
+            win.show_choices(app.documents)
+        except Exception as ex:
+            self.failure_message = 'no_orders'
+            raise ex
+        
         app.inmate_number = None
         self.choose_timer.start()
 
@@ -229,6 +257,10 @@ class ViewPlugin(object):
         if event:
             app.chosen_document = win._current_documents_foreground.document_view.chosendocumentrow
         
+        next_previous_foreground_event = app.find_next_previous_event(events)
+        if next_previous_foreground_event:
+            win._current_documents_foreground.document_view.change_view = next_previous_foreground_event
+   
 
     @LDS.hookimpl
     def state_chosen_validate(self, app, win, events):
