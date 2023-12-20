@@ -108,6 +108,6 @@ def get_pygame_font(text, font_name, max_width, max_height):
     return pygame.font.Font(get_filename(font_name), start)
 
 
-CURRENT = get_filename('Amatic-Bold')  # Dynamically set at startup
-MONOID = get_filename('times')
+CURRENT = get_filename('FiraSans-Regular')  # Dynamically set at startup
+MONOID = get_filename('FiraSans-Regular')
 # TIMES = get_filename('times')

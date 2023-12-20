@@ -8,12 +8,6 @@ from LDS import fonts, pictures
 from LDS.config import PiConfigParser
 from LDS.media import get_filename
 
-# pygame.init()
-# vid_info = pygame.display.Info()
-# DEFAULT_SIZE = vid_info.current_w, vid_info.current_h
-
-# FONT = pygame.font.Font('freesansbold.ttf', 20)
-
 LOGINEVENT = pygame.USEREVENT + 3
 CLEARBUTTON = pygame.USEREVENT + 4
 BUTTON_0 = pygame.USEREVENT + 5
@@ -30,7 +24,6 @@ BACKSPACEBUTTON = pygame.USEREVENT + 15
 
 
 button_events = [BUTTON_0,BUTTON_1, BUTTON_2, BUTTON_3, BUTTON_4, BUTTON_5, BUTTON_6, BUTTON_7, BUTTON_8, BUTTON_9]
-#WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 COLOR_INACTIVE = (255,255,255)
 COLOR_ACTIVE = (0,0,0)
@@ -243,7 +236,7 @@ class PushButton:
             pass
         
     def set_font(self):
-        self.font = pygame.font.Font('freesansbold.ttf', self.font_size)
+        self.font = pygame.font.Font(fonts.CURRENT, self.font_size)
 
     def draw(self, event):
         # Do this for text
@@ -378,8 +371,7 @@ class button(object):
     def use_icon(self, icon, icon_clicked=None):
         # Write code to resize image when given icon
         size = (64,64)
-        icon_path = get_filename(icon)
-        print("!!!!!!!!!!!!!!!!!!!!", icon_path)
+        icon_path = get_filename(icon)        
         icon = pictures.get_pygame_image(icon_path, size, vflip=False, color=None)
         icon_color = None
         if icon_clicked:
