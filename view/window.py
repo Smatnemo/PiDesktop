@@ -284,8 +284,8 @@ class PiWindow(object):
         _pad = 5
         _margin = 10
         _iconsize = 64
-        _button_num_x = 230
-        _button_num_y = 100
+        _button_num_x = 257
+        _button_num_y = 97
         _inputheight = 38
         _fontsize = 14
         _fontstyle = "normal"
@@ -311,8 +311,8 @@ class PiWindow(object):
               'header': (_handf),
               'footer': (_handf)}
         
-        self._d['btn_num_x'] = (230 * self.resize_width)
-        self._d['btn_num_y'] = (100 * self.resize_height)
+        self._d['btn_num_x'] = (_button_num_x * self.resize_width)
+        self._d['btn_num_y'] = (_button_num_y * self.resize_height)
         self._d['unlock_x'] = (self._d['gridwidth']+(self._d['marginx']*2))
         self._d['halfgridwidth'] = self._d['gridwidth']/2
         self._d['halfinputheight'] = self._d['inputheight']/2

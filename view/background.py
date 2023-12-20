@@ -280,22 +280,22 @@ class LoginBackground(Background):
     def resize_texts(self):
         """Update text surfaces.
         """
-        rect = pygame.Rect(self._text_border, self._text_border,
+        """rect = pygame.Rect(self._text_border, self._text_border,
                            self._rect.width - 2 * self._text_border, 54)
         align = 'top-left'
         Background.resize_texts(self, rect, align)
 
-        #text = get_translated_text("code_required")
-        #rect = pygame.Rect(self._text_border, self._text_border,
-        #                   self._rect.width - 2 * self._text_border, 54)
-        #align = 'top-right'
-        #self._write_custom_text(text, rect, align)
+        text = get_translated_text("code_required")
+        rect = pygame.Rect(self._text_border, self._text_border,
+                           self._rect.width - 2 * self._text_border, 54)
+        align = 'top-right'
+        self._write_custom_text(text, rect, align)
 
-        #text = get_translated_text("version")
-        #rect = pygame.Rect(self._text_border, self._rect.height-69,
-        #                   self._rect.width - 2 * self._text_border, 54)
-        #align = 'bottom-left'
-        #self._write_custom_text(text, rect, align)
+        text = get_translated_text("version")
+        rect = pygame.Rect(self._text_border, self._rect.height-69,
+                           self._rect.width - 2 * self._text_border, 54)
+        align = 'bottom-left'
+        self._write_custom_text(text, rect, align)"""
 
     def time_count(self):
         self.time_since_enter = pygame.time.get_ticks()
