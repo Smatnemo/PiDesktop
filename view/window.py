@@ -308,7 +308,7 @@ class PiWindow(object):
         self._d['halfgridwidth'] = self._d['gridwidth']/2
         self._d['halfinputheight'] = self._d['inputheight']/2
         self._d['startrowgridx'] = self._d['xcenter'] - self._d['halfgridwidth']
-        self._d['startrowgridy'] = self._d['ycenter'] - self._d['inputheight'] - (self._d['iconsizey']*2)
+        self._d['startrowgridy'] = self._d['ycenter'] - self._d['inputheight'] - (self._d['btn_num_y']*2)
         # Row height fine.
         self._d['firstrowy'] = self._d['startrowgridy'] + self._d['inputheight'] + (self._d['marginy']*2) 
         self._d['secondrowy'] = self._d['firstrowy']+self._d['btn_num_y']+self._d['marginy']
