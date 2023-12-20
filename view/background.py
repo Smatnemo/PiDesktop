@@ -680,7 +680,7 @@ class FinishedWithImageBackground(FinishedBackground):
 
 
 class NoDocumentsBackground(Background):
-    def __init__(self, message, dimensions=None):
+    def __init__(self, message, cfg, dimensions=None):
         Background.__init__(self, message)
         self.downloadbutton_y = None
         self.downloadbutton_x = None 
@@ -689,6 +689,7 @@ class NoDocumentsBackground(Background):
         self.downloadbutton_enabled = True
         self.downloadbutton_event = (BUTTONDOWN, {'download':True})
         self.update_needed = None
+        self.config = cfg
         self.dimensions = dimensions
 
     def resize(self, screen):
@@ -696,7 +697,7 @@ class NoDocumentsBackground(Background):
         self.downloadbutton_y = self.dimensions['h']//2+0.25*self.dimensions['h'] - self.downloadbutton_height//2 
         self.downloadbutton_x = self.dimensions['w']//2 - self.downloadbutton_width//2 
         if self.downloadbutton_enabled:
-            self.downloadbutton = PushButton((self.downloadbutton_x, self.downloadbutton_y, self.downloadbutton_width, self.downloadbutton_height), self.downloadbutton_event, label='YES', parent=screen)
+            self.downloadbutton = PushButton((self.downloadbutton_x, self.downloadbutton_y, self.downloadbutton_width, self.downloadbutton_height), self.downloadbutton_event, label='YES', parent=screen, button_hover_color=self.config.gettyped("WINDOW", "btn_bg_num_hover"))
             self.downloadbutton.enabled(True)
             self.downloadbutton_enabled = False
         

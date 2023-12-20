@@ -246,7 +246,8 @@ class RpiCamera(BaseCamera):
         """Close the camera driver, it's definitive.
         """
         # print("Thread is alive", self.preview_thread.is_alive())
-        if self.preview_thread.is_alive():
-            self.preview_thread = None
+        if self.preview_thread is not None:
+            if self.preview_thread.is_alive():
+                self.preview_thread = None
             # raise Exception("Thread is alive")
         self._cam.close()

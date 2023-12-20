@@ -52,8 +52,8 @@ class ViewPlugin(object):
         self.questions = ""
 
     @LDS.hookimpl
-    def state_failsafe_enter(self, win):
-        win.show_oops(self.failure_message)
+    def state_failsafe_enter(self, cfg, win):
+        win.show_oops(self.failure_message, cfg)
         self.failed_view_timer.start()
         if self.failure_message == 'download_orders':
             self.failed_view_timer = PoolingTimer(30)
@@ -85,6 +85,7 @@ class ViewPlugin(object):
                 return 'failsafe'
             elif self.failure_message == 'download_orders':
                 self.failed_view_timer = PoolingTimer(5)
+                self.failure_message = 'oops'
                 return 'login'
             else:
                 return 'wait'
@@ -184,7 +185,7 @@ class ViewPlugin(object):
         try:
             win.show_choices(app.documents)
         except Exception as ex:
-            self.failure_message = 'no_orders'
+            self.failure_message = 'no_orders' if not app.documents else 'oops'
             raise ex
         
         app.inmate_number = None

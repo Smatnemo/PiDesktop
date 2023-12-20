@@ -61,22 +61,31 @@ class PiWindow(object):
         if 'SDL_VIDEO_WINDOW_POS' not in os.environ:
             os.environ['SDL_VIDEO_CENTERED'] = '1'
         pygame.init()
-
+        # This gets the display size of the screen 
+        vid_display_info = pygame.display.Info()
         WIDTH = 1024
-        HEIGHT = 600        
+        HEIGHT = 600      
         self.display_size = (WIDTH, HEIGHT)
         # Save the desktop mode, shall be done before `setmode` (SDL 1.2.10, and pygame 1.8.0)
         
 
         pygame.display.set_caption(title)
         self.is_fullscreen = True
+        
+        
+        self.surface = pygame.display.set_mode((self.display_size), pygame.NOFRAME)
+        # Calling this after .set_mode() changes the resolution information
         res_check = pygame.display.Info()
         self.resize_height = res_check.current_h/600
         self.resize_width = res_check.current_w/1024
-        self.surface = pygame.display.set_mode((self.display_size), pygame.NOFRAME)
-        if res_check.current_w == 800:
+
+        if vid_display_info.current_w == 800:
             self.surface = pygame.display.set_mode((800,480), pygame.FULLSCREEN)
             pygame.transform.scale(self.surface, (int(800/1024),int(480/600)))           
+            self.resize_height = vid_display_info.current_h/600
+            self.resize_width = vid_display_info.current_w/1024
+            self.display_size = vid_display_info.current_w, vid_display_info.current_h
+        
 
         self._buffered_images = {}
         self._current_background = None
@@ -328,12 +337,12 @@ class PiWindow(object):
         self._d['resize_width'] = self.resize_width 
        
 
-    def show_oops(self, message):
+    def show_oops(self, message, cfg):
         """Show failure view in case of exception.
         :param message: the exception message
         """
         if message=='download_orders':
-            self._update_background(background.NoDocumentsBackground(message, self._d))
+            self._update_background(background.NoDocumentsBackground(message, cfg, self._d))
         else:
             self._update_background(background.OopsBackground(message))
 

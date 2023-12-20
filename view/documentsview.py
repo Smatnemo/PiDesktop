@@ -284,7 +284,7 @@ class InmateDocumentsView(object):
         self.inmate_rows.insert(0, self.titlerow)
 
         self.gap = dimension["h"]-dimension["footer"]-dimension["header"]
-        self.offset = self.gap//dimension["row_height"]
+        self.offset = int(self.gap//dimension["row_height"])
         
         self._offset = self.offset - 1
         self.start = 1
@@ -302,6 +302,7 @@ class InmateDocumentsView(object):
                 self.start = self.start - self._offset
                 self.end = self.end - self._offset
                 self.change_view = None
+        # print("This is the offset", self.offset)
         for inmate_row in self.inmate_rows[self.start:self.end]:
             inmate_row.draw(foreground_rect, screen, self.update_needed, self._offset)
 

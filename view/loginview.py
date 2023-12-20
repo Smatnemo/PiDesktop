@@ -8,11 +8,11 @@ from LDS import fonts, pictures
 from LDS.config import PiConfigParser
 from LDS.media import get_filename
 
-pygame.init()
-vid_info = pygame.display.Info()
-DEFAULT_SIZE = vid_info.current_w, vid_info.current_h
+# pygame.init()
+# vid_info = pygame.display.Info()
+# DEFAULT_SIZE = vid_info.current_w, vid_info.current_h
 
-FONT = pygame.font.Font('freesansbold.ttf', 20)
+# FONT = pygame.font.Font('freesansbold.ttf', 20)
 
 LOGINEVENT = pygame.USEREVENT + 3
 CLEARBUTTON = pygame.USEREVENT + 4
