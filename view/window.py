@@ -71,12 +71,12 @@ class PiWindow(object):
         pygame.display.set_caption(title)
         self.is_fullscreen = True
         res_check = pygame.display.Info()
+        self.resize_height = res_check.current_h/600
+        self.resize_width = res_check.current_w/1024
         self.surface = pygame.display.set_mode((self.display_size), pygame.NOFRAME)
         if res_check.current_w == 800:
             self.surface = pygame.display.set_mode((800,480), pygame.FULLSCREEN)
-            pygame.transform.scale(self.surface, (int(800/1024),int(480/600)))
-            self.resize_height = res_check.current_h/600
-            self.resize_width = res_check.current_w/1024
+            pygame.transform.scale(self.surface, (int(800/1024),int(480/600)))           
 
         self._buffered_images = {}
         self._current_background = None
@@ -275,48 +275,58 @@ class PiWindow(object):
         _pad = 5
         _margin = 10
         _iconsize = 64
+        _button_num_x = 230
+        _button_num_y = 100
         _inputheight = 38
         _fontsize = 14
         _fontstyle = "normal"
-        _handf = _iconsize+_margin
+        _handf = (_iconsize*self.resize_height)+(_margin*self.resize_height)
         self._d = {'screen': _ts, 
               'pad': _pad,
-              'padx': _pad,
-              'pady': _pad,
+              'padx': (_pad*self.resize_width),
+              'pady': (_pad*self.resize_height),
               'margin': _margin,
-              'marginx': _margin,
-              'marginy': _margin,
+              'marginx': (_margin*self.resize_width),
+              'marginy': (_margin*self.resize_height),
               'iconsize': _iconsize,
-              'iconsizex': _iconsize,
-              'iconsizey': _iconsize,
-              'w': _ts[2],
-              'h': _ts[3],
-              'xcenter': (_ts[2]/2),
-              'ycenter': (_ts[3]/2),
+              'iconsizex': (_iconsize*self.resize_width),
+              'iconsizey': (_iconsize*self.resize_height),
+              'w': (_ts[2]),
+              'h': (_ts[3]),
+              'xcenter': ((_ts[2]/2)),
+              'ycenter': ((_ts[3]/2)),
               'xpos': _ts[0],
               'ypos': _ts[1],
-              'gridwidth': (3*_iconsize)+(2*_margin),
-              'inputheight': _inputheight,
-              'header': _handf,
-              'footer': _handf}
+              'gridwidth': ((3*_button_num_x)*self.resize_width)+((2*_margin)*self.resize_width),
+              'inputheight': (_inputheight*self.resize_height),
+              'header': (_handf),
+              'footer': (_handf)}
         
+        self._d['btn_num_x'] = (230 * self.resize_width)
+        self._d['btn_num_y'] = (100 * self.resize_height)
+        self._d['unlock_x'] = (self._d['gridwidth']+(self._d['marginx']*2))
         self._d['halfgridwidth'] = self._d['gridwidth']/2
         self._d['halfinputheight'] = self._d['inputheight']/2
         self._d['startrowgridx'] = self._d['xcenter'] - self._d['halfgridwidth']
-        self._d['startrowgridy'] = self._d['ycenter'] - self._d['inputheight'] - (self._d['iconsizey']*2)
-        self._d['firstrowy'] = self._d['startrowgridy'] + self._d['inputheight'] + self._d['marginy'] 
-        self._d['secondrowy'] = self._d['firstrowy']+self._d['iconsizey']+self._d['marginy']
-        self._d['thirdrowy'] = self._d['secondrowy']+self._d['iconsizey']+self._d['marginy']
-        self._d['fourthrowy'] = self._d['thirdrowy']+self._d['iconsizey']+self._d['marginy']
-        self._d['loginbuttony'] = self._d['fourthrowy']+self._d['iconsizey']+self._d['marginy']
+        self._d['startrowgridy'] = self._d['ycenter'] - self._d['inputheight'] - (self._d['btn_num_y']*2)
+        # Row height fine.
+        self._d['firstrowy'] = self._d['startrowgridy'] + self._d['inputheight'] + (self._d['marginy']*2) 
+        self._d['secondrowy'] = self._d['firstrowy']+self._d['btn_num_y']+self._d['marginy']
+        self._d['thirdrowy'] = self._d['secondrowy']+self._d['btn_num_y']+self._d['marginy']
+        self._d['fourthrowy'] = self._d['thirdrowy']+self._d['btn_num_y']+self._d['marginy']
+        # This will change.
+        #self._d['loginbuttony'] = self._d['fourthrowy']+self._d['iconsizey']+self._d['marginy']
+        # These are broken.
         self._d['firstcolumnx'] = self._d['xcenter'] - self._d['halfgridwidth']
-        self._d['secondcolumnx'] = self._d['firstcolumnx']+self._d['iconsizex']+self._d['marginx']
-        self._d['thirdcolumnx'] = self._d['secondcolumnx']+self._d['iconsizex']+self._d['marginx']
+        self._d['secondcolumnx'] = self._d['firstcolumnx']+self._d['btn_num_x']+self._d['marginx']
+        self._d['thirdcolumnx'] = self._d['secondcolumnx']+self._d['btn_num_x']+self._d['marginx']
+        # Hmm
         self._d["row_height"] = 64
+
         self._d['bottombuttony'] = self._d['h']+self._d['pad']-self._d['footer']
-        if self.display_size[0] == 800:
-            self._d['resize_height'] = self.resize_height
-            self._d['resize_width'] = self.resize_width 
+        self._d['resize_height'] = self.resize_height
+        self._d['resize_width'] = self.resize_width 
+       
 
     def show_oops(self, message):
         """Show failure view in case of exception.

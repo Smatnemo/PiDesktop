@@ -80,14 +80,17 @@ class PiApplication:
         init_size = self._config.gettyped('WINDOW', 'size')
         init_debug = self._config.getboolean('GENERAL', 'debug')
         # init_color = self._config.gettyped('WINDOW', 'background')
+        
         init_color = osp.join(LDS.package_dir,self.settings['background'])
         init_text_color = self._config.gettyped('WINDOW', 'text_color')
-        if isinstance(init_color, str):
+        
+        init_color = self._config.gettyped('WINDOW', 'app_bg_primary')
+        """if isinstance(init_color, str):
             if not osp.isfile(init_color):
-                init_color = self._config.gettyped('WINDOW', 'background')
+                init_color = self._config.gettyped('WINDOW', 'app_bg_primary')
         elif not isinstance(init_color, (tuple, list)):
-            init_color = self._config.getpath('WINDOW', 'background')
-            # init_color = self.settings['backgroundpath']
+            init_color = self._config.getpath('WINDOW', 'app_bg_primary')
+            # init_color = self.settings['backgroundpath']"""
 
         title = 'Legal v{}'.format(LDS.__version__)
         

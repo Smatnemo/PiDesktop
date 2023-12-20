@@ -27,7 +27,7 @@ DEFAULT = {
         '2': "2 photos",
         '3': "3 photos",
         '4': "4 photos",
-        'capture': "",
+        'capture': "capture",
         'capture_photo':"Please take a photo",
         'smile': "Smile !",
         'processing': "Processing...",
@@ -58,12 +58,11 @@ DEFAULT = {
         'code_required':"CO Unlock Code Required",
         'version':"Legal Version {}".format(LDS.__version__),
         'intro_print': "Or you can\nstill print\nthis photo",
-        '':"",
     },
     'sp': {
         'Q1':"Did it print successfully?",
         'Q2':"Was your image captured?",
-        'Q3':"Was your signature captured?"
+        'Q3':"Was your signature captured?",
     },
 }
 
@@ -83,7 +82,7 @@ def init(filename, clear=False):
         if not osp.isdir(dirname):
             os.makedirs(dirname)
 
-        with io.open(PARSER.filename, 'w', encoding="utf-8") as fp:
+        with io.open(PARSER.filename, 'w+', encoding="utf-8") as fp:
             for section, options in DEFAULT.items():
                 fp.write("[{}]\n".format(section))
                 for name, value in options.items():
