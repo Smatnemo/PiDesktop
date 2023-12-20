@@ -224,7 +224,7 @@ class DocumentsView(object):
         self.document_rows.insert(0, self.titlerow)
 
         self.gap = dimension["h"]-dimension["footer"]-dimension["header"]
-        self.offset = self.gap//dimension["row_height"]
+        self.offset = int(self.gap//dimension["row_height"])
         
         self._offset = self.offset - 1
         self.start = 1
