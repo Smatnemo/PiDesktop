@@ -314,9 +314,10 @@ class PiWindow(object):
         self._d['thirdcolumnx'] = self._d['secondcolumnx']+self._d['iconsizex']+self._d['marginx']
         self._d["row_height"] = 64
         self._d['bottombuttony'] = self._d['h']+self._d['pad']-self._d['footer']
-        if self.display_size[0] == 800:
-            self._d['resize_height'] = self.resize_height
-            self._d['resize_width'] = self.resize_width 
+        self._d['resize_height'] = self.resize_height
+        self._d['resize_width'] = self.resize_width 
+        self._d['btn_num_x'] = (230 * self.resize_width)
+        self._d['btn_num_y'] = (100 * self.resize_height)
 
     def show_oops(self, message):
         """Show failure view in case of exception.
