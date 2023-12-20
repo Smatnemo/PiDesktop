@@ -12,7 +12,7 @@ class CameraPlugin(object):
     """Plugin to manage the camera captures.
     """
 
-    name = 'pibooth-core:camera'
+    name = 'LDS-core:camera'
 
     def __init__(self, plugin_manager):
         self._pm = plugin_manager
@@ -25,7 +25,7 @@ class CameraPlugin(object):
         cam = outcome.get_result()
 
         if not cam:
-            LOGGER.debug("Fallback to pibooth default camera management system")
+            LOGGER.debug("Fallback to LDS default camera management system")
             cam = camera.find_camera()
 
         cam.initialize(cfg.gettuple('CAMERA', 'iso', (int, str), 2),

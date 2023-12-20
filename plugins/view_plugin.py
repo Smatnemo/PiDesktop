@@ -5,7 +5,7 @@ import pygame
 import time
 from LDS.utils import LOGGER, get_crash_message, PoolingTimer
 from LDS.accounts import LogIn, LogOut
-from LDS.documents.document import decrypt_content2, document_authentication, download_and_upload
+from LDS.documents.document import decrypt_content2, document_authentication, download_and_upload, demo_download_document, delete_encrypted_file
 from LDS.database.database import DataBase, document_update_query, insert_questions_answer_query
 
 
@@ -69,7 +69,8 @@ class ViewPlugin(object):
         
         event = app.find_download_event(events)
         if event:
-            download_and_upload()
+            # download_and_upload()
+            demo_download_document()
             app.database_updated = True
 
     @LDS.hookimpl
@@ -299,9 +300,9 @@ class ViewPlugin(object):
 
 
     @LDS.hookimpl
-    def state_decrypt_enter(self, app, win):
+    def state_decrypt_enter(self, app, cfg, win):
         LOGGER.info("Entered the decrypt state")
-        self.decrypt_view = win.show_decrypt() # Create a function in window module to display login page
+        self.decrypt_view = win.show_decrypt(cfg) # Create a function in window module to display login page
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         # Find way to display it in the login window during login in activity
         self.choose_timer.start()
@@ -340,6 +341,7 @@ class ViewPlugin(object):
             LOGGER.info(app.validated)
             if app.validated:
                 app.validated = None
+                self.count_failed_attempts = 0
                 # Decrypt the document using the document file path and check if the documents pages match
                 try:
                     result = decrypt_content2(app.chosen_document.document[7], app.chosen_document.document[1])
@@ -594,17 +596,20 @@ class ViewPlugin(object):
                 db = DataBase()
                 db.__update__(document_update_query, (app.questions_answers[0], app.chosen_document.document[16], app.chosen_document.document[0]))
                 app.database_updated = True
+ 
                 
-                app.chosen_document = None
-                app.previous_picture = None
-                app.previous_state = 'finish'
-                app.inmate_number = None 
-                
-                # delete file
+                # delete decrypted file
                 app.print_job.close()
                 os.unlink(app.print_job.name)
                 app.print_job = None
-                
+
+                # delelte Encrypted file
+                delete_encrypted_file(app.chosen_document.document[1])
+
+                app.chosen_document = None
+                app.previous_picture = None
+                app.previous_state = 'finish'
+                app.inmate_number = None               
                 win.drop_cache()
                 return 'print'
             

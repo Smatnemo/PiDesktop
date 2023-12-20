@@ -61,6 +61,7 @@ class RpiCamera(BaseCamera):
         self.rotation = self.preview_rotation
         self._preview = None
         self.event = threading.Event()
+        self.preview_thread = None # variable to hold preview thread
 
     def _show_overlay(self, text, alpha):
         """Add an image as an overlay.
@@ -141,17 +142,19 @@ class RpiCamera(BaseCamera):
         self.pos_y = pos_y
         self.screen = screen
 
-        x = threading.Thread(target=self.preview_update, args=(self.event, preview_window, screen, pos_x, pos_y))
+        self.preview_thread = threading.Thread(target=self.preview_update, args=(self.event, preview_window, screen, pos_x, pos_y))
         # Chreck if thread is alive before starting it
-            
-        if not (x.is_alive()):
-            print("Thread is not alive")
-            x.start()
+        self.preview_thread.start()  
+        
+        # if not (x.is_alive()):
+        #     print("Thread is not alive")
+        #     x.start()
         
 
     def preview_update(self, event, res, screen, x, y):
         while True:
             if event.is_set():
+                print("Breaking thread because event is set")
                 break
             array = self._cam.capture_array()
             img = pygame.image.frombuffer(array.data, res, 'RGB')
@@ -173,7 +176,7 @@ class RpiCamera(BaseCamera):
 
         while timeout > 0:
             self._show_overlay(timeout, alpha)
-            print("timeout:", timeout)
+            # print("timeout:", timeout)
             time.sleep(1)
             timeout -= 1
             self._hide_overlay()
@@ -230,11 +233,7 @@ class RpiCamera(BaseCamera):
             # # img.save(stream, format='jpeg')
             stream2 = BytesIO()
             img.save(stream2, format='jpeg')
-            # # stream = np.array(img)[...,::-1]
-            # # Add the buffer with the image to a list of images
-            # print("Image type:", type(img))
-            # print("Image shape", img.size)
-            # print("Stream type:", type(stream2))
+            
             self._gray_captures.append(stream2)
             self._captures.append(stream)
         
@@ -246,4 +245,8 @@ class RpiCamera(BaseCamera):
     def quit(self):
         """Close the camera driver, it's definitive.
         """
+        # print("Thread is alive", self.preview_thread.is_alive())
+        if self.preview_thread.is_alive():
+            self.preview_thread = None
+            # raise Exception("Thread is alive")
         self._cam.close()

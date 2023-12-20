@@ -139,7 +139,7 @@ document_update_query = """UPDATE 'Documents'
                                 status = 'printed',
                                 inmate_photo= ?,
                                 printed_date= date('now')
-                            WHERE order_id= ? """
+                            WHERE id= ? """
 
 # Questions_Answers_insert_query = 
 insert_questions_query ="""INSERT INTO `Questions` (
@@ -241,8 +241,9 @@ class DataBase(object):
         self.open()
         self.close()
 
-    def __delete__(self):
+    def __delete__(self, query):
         self.open()
+        self.cursor.execute(query)
         self.close()
 
     def reverse(self, tuple_name):
@@ -382,7 +383,14 @@ class DataBase(object):
         self.close()
         return inmate_documents, number_of_documents
     
-    # def reload_documents_table(self,)
+    def reload_documents_table(self,sql_script):
+        self.open()
+        with open(sql_script, 'r') as f:
+            content = f.read()
+
+        self.cursor.executescript(content)
+        self.close()
+
     def create_tables(self):
         # create sql tables if the don't exists
         self.open()

@@ -429,7 +429,7 @@ def state_chosen_exit(cfg, app, win):
 # --- Decrypt State ------------------------------------------------------------
 
 @hookspec
-def state_decrypt_enter(app, win):
+def state_decrypt_enter(app, cfg, win):
     """Actions performed when application enters the login state.
     :param win: graphical window 
     """
