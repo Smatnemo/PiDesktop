@@ -36,17 +36,15 @@ class InmateRow(object):
             self.num = len(documents)
             self.row_num = row_number + 1
             self.inmate_identifier = str(self.documents[0][19][0])+str(inmate_number)
-        self.row_num_text = row_number + 1
-
+        #self.row_num_text = row_number + 1
 
         if not self.inmate_number:
             self.inmate_identifier = "Inmate Identifier"
             self.num = "Document count"
-            self.row_num_text = "S/N"
+            #self.row_num_text = "S/N"
             self.total_pages = "Total Pages"
 
         self.chosen = False
-
 
         self.font = pygame.font.Font('freesansbold.ttf', self.row_text_size)
 
@@ -68,7 +66,7 @@ class InmateRow(object):
             
         pygame.draw.rect(screen, 'black', self.inmate_rect, 2)
         
-        screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
+        #screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.inmate_identifier)[0], (foreground_rect.x+204, foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.num)[0], (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
         total_pages_count_x = foreground_rect.width-self.text_surface(self.total_pages)[1]-14
