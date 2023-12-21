@@ -116,7 +116,7 @@ class ViewPlugin(object):
         win.show_image(None)  # Clear currently displayed image
 
     @LDS.hookimpl
-    def state_login_enter(self, app, cfg, win):
+    def state_login_enter(self, cfg, app, win):
         LOGGER.info("Attempting to Login")
         
         self.login_view = win.show_login(cfg) 
@@ -178,12 +178,12 @@ class ViewPlugin(object):
             return 'wait'
 
     @LDS.hookimpl
-    def state_choose_enter(self, app, win):
+    def state_choose_enter(self, cfg, app, win):
         LOGGER.info("Show document choice (nothing selected)")
         win.set_print_number(0, False)  # Hide printer status
         # Create logic to fetch documents from database
         try:
-            win.show_choices(app.documents)
+            win.show_choices(cfg, app.documents)
         except Exception as ex:
             self.failure_message = 'no_orders' if not app.documents else 'oops'
             raise ex
@@ -192,7 +192,7 @@ class ViewPlugin(object):
         self.choose_timer.start()
 
     @LDS.hookimpl
-    def state_choose_do(self, app, win, events):
+    def state_choose_do(self, cfg, app, win, events):
         if events:
             self.choose_timer.start()
 

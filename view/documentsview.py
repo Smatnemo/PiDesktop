@@ -1,6 +1,10 @@
 # from tkinter.colorchooser import Chooser
 import pygame
 
+from LDS import fonts, pictures
+from LDS.config import PiConfigParser
+from LDS.media import get_filename
+
 # Custom events for documents 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -275,7 +279,7 @@ class DocumentsView(object):
 
 
 class InmateDocumentsView(object):
-    def __init__(self, inmate_documents, dimension):
+    def __init__(self, inmate_documents, dimension, config=None):
         self.inmate_numbers = list(inmate_documents.keys())
         self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number) for row_number, inmate_number in enumerate(self.inmate_numbers)]
         self.update_needed = None

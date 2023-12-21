@@ -380,7 +380,7 @@ class PiWindow(object):
         return lv
         
 # After log in
-    def show_choices(self, documents, selected=None):
+    def show_choices(self, cfg, documents, selected=None):
         """
         Show list of inmates with the number of documents each has
         """
