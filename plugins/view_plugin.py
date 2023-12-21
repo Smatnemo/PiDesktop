@@ -183,7 +183,7 @@ class ViewPlugin(object):
         win.set_print_number(0, False)  # Hide printer status
         # Create logic to fetch documents from database
         try:
-            win.show_choices(cfg, app.documents)
+            win.show_choices(app.documents, cfg)
         except Exception as ex:
             self.failure_message = 'no_orders' if not app.documents else 'oops'
             raise ex

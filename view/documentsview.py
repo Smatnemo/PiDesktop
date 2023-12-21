@@ -218,7 +218,7 @@ class DocumentRow(object):
 
 
 class DocumentsView(object):
-    def __init__(self, inmate_documents, dimension, selected):
+    def __init__(self, inmate_documents, selected, _d):
         self.inmate_documents = inmate_documents
         self.documents = inmate_documents[selected]
         self.document_rows = [DocumentRow(document, doc_num) for doc_num, document in enumerate(self.documents)]
@@ -227,8 +227,8 @@ class DocumentsView(object):
         self.titlerow = DocumentRow()
         self.document_rows.insert(0, self.titlerow)
 
-        self.gap = dimension["h"]-dimension["footer"]-dimension["header"]
-        self.offset = int(self.gap//dimension["row_height"])
+        self.gap = _d["h"]-_d["footer"]-_d["header"]
+        self.offset = int(self.gap//_d["row_height"])
         
         self._offset = self.offset - 1
         self.start = 1
@@ -273,22 +273,21 @@ class DocumentsView(object):
             if document[0] == self.chosendocumentrow.document[0]:
                 self.documents[i] = self.chosendocumentrow.document
 
-        self.inmate_documents[inmate_number] = self.documents
-             
-
+        self.inmate_documents[inmate_number] = self.documents            
 
 
 class InmateDocumentsView(object):
-    def __init__(self, inmate_documents, dimension, config=None):
+    def __init__(self, inmate_documents, _d, config=None):
         self.inmate_numbers = list(inmate_documents.keys())
-        self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number) for row_number, inmate_number in enumerate(self.inmate_numbers)]
+        self._d = _d
+        self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number, _d = self._d) for row_number, inmate_number in enumerate(self.inmate_numbers)]
         self.update_needed = None
         self.choseninmaterow = None
         self.titlerow = InmateRow()
-        self.inmate_rows.insert(0, self.titlerow)
-
-        self.gap = dimension["h"]-dimension["footer"]-dimension["header"]
-        self.offset = int(self.gap//dimension["row_height"])
+        self.inmate_rows.insert(0, self.titlerow)        
+        
+        self.gap = self._d["h"]-self._d["footer"]-self._d["header"]
+        self.offset = int(self.gap//self._d["row_height"])
         
         self._offset = self.offset - 1
         self.start = 1

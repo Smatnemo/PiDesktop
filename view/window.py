@@ -380,18 +380,18 @@ class PiWindow(object):
         return lv
         
 # After log in
-    def show_choices(self, cfg, documents, selected=None):
+    def show_choices(self, documents, cfg, selected=None):
         """
         Show list of inmates with the number of documents each has
         """
         if documents:
             if not selected:
                 self._update_background(background.ChooseInmateDocumentBackground(self._d,"choose_inmate"))
-                self._update_documents_foreground(foreground.ChooseInmateDocumentForeground(documents, self._d))
+                self._update_documents_foreground(foreground.ChooseInmateDocumentForeground(documents, self._d, cfg))
             else:
                 # This leads to the choices documents for the inmate
                 self._update_background(background.ChooseInmateDocumentBackground(self._d,"choose_document"))
-                self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, self._d, selected))
+                self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, selected, self._d, cfg))
         else:
             raise Exception("No Documents")
 
