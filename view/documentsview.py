@@ -14,10 +14,10 @@ CHOSEEVENT = pygame.USEREVENT + 16
 class InmateRow(object):
     total_pages_x = None
     row_y = None
-    def __init__(self, inmate_number=None, documents:list=None, row_number:int=0, _d=None):
-
+    def __init__(self, inmate_number=None, documents:list=None, row_number:int=0, config=None, _d=None):
+        self._d = _d
         self.documents = documents
-        self.row_height = 60
+        self.row_height = self._d['row_height']
         self.inmate_rect = None
         self.row_color = None 
         self.row_text_color = BLACK
@@ -36,15 +36,17 @@ class InmateRow(object):
             self.num = len(documents)
             self.row_num = row_number + 1
             self.inmate_identifier = str(self.documents[0][19][0])+str(inmate_number)
-        #self.row_num_text = row_number + 1
+        self.row_num_text = row_number + 1
+
 
         if not self.inmate_number:
             self.inmate_identifier = "Inmate Identifier"
             self.num = "Document count"
-            #self.row_num_text = "S/N"
+            self.row_num_text = "S/N"
             self.total_pages = "Total Pages"
 
         self.chosen = False
+
 
         self.font = pygame.font.Font('freesansbold.ttf', self.row_text_size)
 
@@ -66,7 +68,7 @@ class InmateRow(object):
             
         pygame.draw.rect(screen, 'black', self.inmate_rect, 2)
         
-        #screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
+        screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.inmate_identifier)[0], (foreground_rect.x+204, foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.num)[0], (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
         total_pages_count_x = foreground_rect.width-self.text_surface(self.total_pages)[1]-14
@@ -123,9 +125,10 @@ class InmateRow(object):
 class DocumentRow(object):
     page_count_x = None
 
-    def __init__(self, document:tuple=None, row_number:int=0):
+    def __init__(self, document:tuple=None, row_number:int=0, _d=None, config=None):
+        self._d=_d
         self.document_rect = None
-        self.row_height = 60
+        self.row_height = self.row_height = self._d['row_height']
         self.row_num = row_number
         self.row_num_text = "S/N"
         self.document_name = "Document Name"
@@ -216,13 +219,15 @@ class DocumentRow(object):
 
 
 class DocumentsView(object):
-    def __init__(self, inmate_documents, selected, _d):
+    def __init__(self, inmate_documents, selected, _d, config):
+        self._d = _d
+        self._c = config
         self.inmate_documents = inmate_documents
         self.documents = inmate_documents[selected]
-        self.document_rows = [DocumentRow(document, doc_num) for doc_num, document in enumerate(self.documents)]
+        self.document_rows = [DocumentRow(document, doc_num, _d, config) for doc_num, document in enumerate(self.documents)]
         self.update_needed = None
         self.chosendocumentrow = None 
-        self.titlerow = DocumentRow()
+        self.titlerow = DocumentRow(_d=self._d, config=self._c)
         self.document_rows.insert(0, self.titlerow)
 
         self.gap = _d["h"]-_d["footer"]-_d["header"]
@@ -278,10 +283,11 @@ class InmateDocumentsView(object):
     def __init__(self, inmate_documents, _d, config):
         self.inmate_numbers = list(inmate_documents.keys())
         self._d = _d
-        self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number, self._d) for row_number, inmate_number in enumerate(self.inmate_numbers)]
+        self._c = config
+        self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number, _d=self._d, config=config) for row_number, inmate_number in enumerate(self.inmate_numbers)]
         self.update_needed = None
         self.choseninmaterow = None
-        self.titlerow = InmateRow()
+        self.titlerow = InmateRow(_d=self._d, config=self._c)
         self.inmate_rows.insert(0, self.titlerow)        
         
         self.gap = self._d["h"]-self._d["footer"]-self._d["header"]
