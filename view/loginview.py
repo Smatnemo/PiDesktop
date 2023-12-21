@@ -447,12 +447,7 @@ class LoginView(object):
         self.passcode_box.key_pad_rect.append(pygame.Rect(self._d['thirdcolumnx'],self._d['fourthrowy'],self._d['btn_num_x'],self._d['btn_num_y']))
         
         self.numbers = [s_1s,s_2s,s_3s,s_4s,s_5s,s_6s,s_7s,s_8s,s_9s,s_0s,s_back]
-        #self.numbers = [s_1s,s_2s,s_3s,s_4s,s_5s,s_6s,s_7s,s_8s,s_9s,s_clears,s_0s,s_back]
-        
 
-        # Set up the buttons
-        #self.login_button = PushButton((self._d['firstcolumnx'], self._d['loginbuttony'], self._d['gridwidth'], self._d['btn_num_y']),LOGINEVENT, label, screen, font_color=BLACK, button_color=unlock_button_color)
-        #self.login_button.enabled(True)
 
     def get_input_text(self):
         if self.passcode_box.text:
