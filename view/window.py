@@ -285,7 +285,7 @@ class PiWindow(object):
         _margin = 10
         _iconsize = 64
         _button_num_x = 257
-        _button_num_y = 97
+        _button_num_y = 97        
         _inputheight = 38
         _fontsize = 14
         _fontstyle = "normal"
@@ -313,24 +313,24 @@ class PiWindow(object):
         
         self._d['btn_num_x'] = (_button_num_x * self.resize_width)
         self._d['btn_num_y'] = (_button_num_y * self.resize_height)
+        self._d['btn_handf_x'] = (257 * self.resize_width)
+        self._d['btn_handf_y'] = (73 * self.resize_height)
         self._d['unlock_x'] = (self._d['gridwidth']+(self._d['marginx']*2))
         self._d['halfgridwidth'] = self._d['gridwidth']/2
         self._d['halfinputheight'] = self._d['inputheight']/2
         self._d['startrowgridx'] = self._d['xcenter'] - self._d['halfgridwidth']
         self._d['startrowgridy'] = self._d['ycenter'] - self._d['inputheight'] - (self._d['btn_num_y']*2) - self._d['marginy']
         # Row height fine.
-        self._d['firstrowy'] = self._d['startrowgridy'] + self._d['inputheight'] + (self._d['marginy']*2) 
+        self._d['firstrowy'] = self._d['startrowgridy'] + self._d['inputheight'] + (self._d['marginy']*3) 
         self._d['secondrowy'] = self._d['firstrowy']+self._d['btn_num_y']+self._d['marginy']
         self._d['thirdrowy'] = self._d['secondrowy']+self._d['btn_num_y']+self._d['marginy']
         self._d['fourthrowy'] = self._d['thirdrowy']+self._d['btn_num_y']+self._d['marginy']
-        # This will change.
-        #self._d['loginbuttony'] = self._d['fourthrowy']+self._d['iconsizey']+self._d['marginy']
-        # These are broken.
+       
         self._d['firstcolumnx'] = self._d['xcenter'] - self._d['halfgridwidth']
         self._d['secondcolumnx'] = self._d['firstcolumnx']+self._d['btn_num_x']+self._d['marginx']
         self._d['thirdcolumnx'] = self._d['secondcolumnx']+self._d['btn_num_x']+self._d['marginx']
-        # Hmm
-        self._d["row_height"] = 64
+        
+        self._d["row_height"] = int(64 * self.resize_height)
 
         self._d['bottombuttony'] = self._d['h']+self._d['pad']-self._d['footer']
         self._d['resize_height'] = self.resize_height
@@ -386,11 +386,11 @@ class PiWindow(object):
         """
         if documents:
             if not selected:
-                self._update_background(background.ChooseInmateDocumentBackground(self._d,"choose_inmate"))
+                self._update_background(background.ChooseInmateDocumentBackground(self._d,cfg,"choose_inmate"))
                 self._update_documents_foreground(foreground.ChooseInmateDocumentForeground(documents, self._d, cfg))
             else:
                 # This leads to the choices documents for the inmate
-                self._update_background(background.ChooseInmateDocumentBackground(self._d,"choose_document"))
+                self._update_background(background.ChooseInmateDocumentBackground(self._d,cfg,"choose_document"))
                 self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, selected, self._d, cfg))
         else:
             raise Exception("No Documents")

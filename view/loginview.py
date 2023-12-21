@@ -384,26 +384,24 @@ class button(object):
         
 
 class LoginView(object):
-    def __init__(self, screen, label, dimensions, config):
-        font_primary_color = config.gettyped("WINDOW", "font_primary_color")
-        font_secondary_color = config.gettyped("WINDOW", "font_secondary_color")
-        app_bg_primary_color = config.gettyped("WINDOW", "app_bg_primary")
-        app_bg_secondary_color = config.gettyped("WINDOW", "app_bg_secondary")
-        th_bg_color = config.gettyped("WINDOW", "th_bg")
-        btn_primary_radius = config.gettyped("WINDOW", "btn_primary_radius")
-        btn_secondary_radius = config.gettyped("WINDOW", "btn_secondary_radius")
-        btn_num_radius = config.gettyped("WINDOW", "btn_num_radius")
+    def __init__(self, screen, label, _d, _c):
+        self._d = _d
+        self._c=_c
+        font_primary_color = self._c.gettyped("WINDOW", "font_primary_color")
+        font_secondary_color = self._c.gettyped("WINDOW", "font_secondary_color")
+        app_bg_primary_color = self._c.gettyped("WINDOW", "app_bg_primary")
+        app_bg_secondary_color = self._c.gettyped("WINDOW", "app_bg_secondary")
+        btn_primary_radius = self._c.gettyped("WINDOW", "btn_primary_radius")        
+        btn_num_radius = self._c.gettyped("WINDOW", "btn_num_radius")
+        number_button_color = self._c.gettyped("WINDOW", "btn_bg_num")
+        number_button_color_hover = self._c.gettyped("WINDOW", "btn_bg_num_hover")
+        unlock_button_color = self._c.gettyped("WINDOW", "btn_bg_green")
+        unlock_button_color_hover = self._c.gettyped("WINDOW", "btn_bg_green_hover")
+        input_login_bg = self._c.gettyped("WINDOW", "input_login_bg")
 
-        number_button_color = config.gettyped("WINDOW", "btn_bg_num")
-        number_button_color_hover = config.gettyped("WINDOW", "btn_bg_num_hover")
-        unlock_button_color = config.gettyped("WINDOW", "btn_bg_green")
-        unlock_button_color_hover = config.gettyped("WINDOW", "btn_bg_green_hover")
-        input_login_bg = config.gettyped("WINDOW", "input_login_bg")
-
-        self.update_needed = None
-        self._d = dimensions
+        self.update_needed = None        
         
-        self._r = pygame.Rect(int(self._d['startrowgridx']-self._d['marginx']), int(self._d['startrowgridy']), int(self._d['unlock_x']), (int(self._d['fourthrowy']+self._d['inputheight'])))
+        self._r = pygame.Rect(int(self._d['startrowgridx']-self._d['marginx']), int(self._d['startrowgridy']), int(self._d['unlock_x']), (int(self._d['fourthrowy']+self._d['inputheight']+self._d['marginy'])))
         self._rc = app_bg_secondary_color
 
         self.passcode_box = InputBox(((self._d['startrowgridx']-self._d['marginx']), self._d['startrowgridy'], self._d['unlock_x'], self._d['inputheight']), parent=screen, bg_color=input_login_bg, font_size=32, font_color=font_primary_color, label='Enter CO Unlock Code')
