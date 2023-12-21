@@ -169,6 +169,8 @@ class PushButton:
             self.icon = None
             self.icon_clicked = None
         self.button_color = button_color 
+        self.button_color_temp = button_color
+        print("within button class",self.button_color)
         self.button_hover_color = button_hover_color
         self.font_color = font_color
         self.font_size = font_size
@@ -192,9 +194,11 @@ class PushButton:
         self.screen.fill((255,255,255))
 
     def enabled(self, enabled:str or bool):
+    
         if isinstance(enabled,str):
             if enabled == 'True':                
                 self.button_enabled = True
+                self.button_color = self.button_color_temp
             elif enabled == 'False':
                 self.button_color = COLOR_INACTIVE 
                 self.button_enabled = False
@@ -202,6 +206,7 @@ class PushButton:
         if isinstance(enabled, bool):
             if enabled == True:                
                 self.button_enabled = True
+                self.button_color = self.button_color_temp
             else:
                 self.button_color = COLOR_INACTIVE
                 self.button_enabled = False
