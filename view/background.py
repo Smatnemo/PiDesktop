@@ -474,10 +474,10 @@ class PrintBackground(Background):
         self._rect = None
         self.yesbutton = None
         self.yesbutton_width = 200
-        self.yesbutton_height = 38
+        self.yesbutton_height = 200
 
         self.nobutton_width = 200
-        self.nobutton_height = 38
+        self.nobutton_height = 200
         self.yesbutton_y = None
         self.nobutton_x = None
 
