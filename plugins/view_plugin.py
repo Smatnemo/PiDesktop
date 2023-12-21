@@ -52,11 +52,14 @@ class ViewPlugin(object):
         self.questions = ""
 
     @LDS.hookimpl
-    def state_failsafe_enter(self, cfg, win):
+    def state_failsafe_enter(self, app, cfg, win):
         win.show_oops(self.failure_message, cfg)
-        self.failed_view_timer.start()
-        if self.failure_message == 'download_orders':
-            self.failed_view_timer = PoolingTimer(30)
+        self.failed_view_timer.start() 
+        if self.failure_message == 'downloading':
+            # # download_and_upload()
+            demo_download_document()
+            app.database_updated = True
+            self.failure_message = 'oops'
         LOGGER.error(get_crash_message())
 
     @LDS.hookimpl
@@ -69,12 +72,15 @@ class ViewPlugin(object):
         
         event = app.find_download_event(events)
         if event:
-            # download_and_upload()
-            demo_download_document()
-            app.database_updated = True
+            self.failure_message = 'downloading'
+            
+            # demo_download_document()
+            # app.database_updated = True
 
     @LDS.hookimpl
     def state_failsafe_validate(self, app):
+        if self.failure_message == 'downloading':
+            return 'failsafe'
         if self.failed_view_timer.is_timeout():
             if (self.failure_message == 'no_printer' or self.failure_message == 'no_camera'\
                  or self.failure_message == 'no_document'):
@@ -82,13 +88,19 @@ class ViewPlugin(object):
             elif self.failure_message == 'no_orders':
                 app.database_updated = False
                 self.failure_message = 'download_orders'
+                self.failed_view_timer = PoolingTimer(30)
                 return 'failsafe'
-            elif self.failure_message == 'download_orders':
+            # elif self.failure_message == 'download_orders':
+            #     self.failure_message = 'oops'
+            #     return 'wait'
+            elif self.failure_message == 'oops':
                 self.failed_view_timer = PoolingTimer(5)
-                self.failure_message = 'oops'
                 return 'login'
             else:
+                self.failed_view_timer = PoolingTimer(5)
+                self.failure_message = 'oops'
                 return 'wait'
+        
         
         
     @LDS.hookimpl
@@ -112,7 +124,7 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_wait_exit(self, win):
         self.count = 0
-        pygame.event.clear()
+        # pygame.event.clear()
         win.show_image(None)  # Clear currently displayed image
 
     @LDS.hookimpl

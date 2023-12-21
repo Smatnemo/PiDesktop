@@ -126,14 +126,17 @@ def check_and_upload(file, document):
 
 def demo_download_document():
     # unzip docs.zip folder
+    LOGGER.info("Unzipping the docs.zip directory")
     with zipfile.ZipFile(osp.join(DOC_DIR,'docs.zip'), 'r') as zip_ref:
         zip_ref.extractall(osp.abspath(osp.dirname(DOC_DIR)))
     # copy all of its contents to the docs dir
     # update the database accordingly
+    LOGGER.info("Deleting records from Documents")
     query = "DELETE FROM Documents;"
     db = DataBase()
     db.__delete__(query)
     reload_document_script = osp.join(DOC_DIR,"Documents.sql")
+    LOGGER.info("Reloading the records for Documents table")
     db.reload_documents_table(reload_document_script)
 
 
@@ -141,7 +144,9 @@ def demo_download_document():
 
 def delete_encrypted_file(filename):
     filepath = osp.join(osp.abspath(osp.dirname(DOC_DIR)),filename)
-    os.remove(filepath)
+    if osp.isfile(filepath):
+        LOGGER.info("Deleting the file")
+        os.remove(filepath)
 
 def decrypt(enc, password):        
     password = hashlib.sha256(password.encode()).hexdigest()[:32].encode()      
