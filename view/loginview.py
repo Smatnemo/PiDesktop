@@ -67,7 +67,7 @@ class InputBox:
         self.screen = pygame.display.set_mode(DEFAULT_SIZE, pygame.RESIZABLE)
 
     def set_font(self):
-        self.font = pygame.font.Font('freesansbold.ttf', self.font_size)
+        self.font = pygame.font.Font(fonts.CURRENT, self.font_size)
 
     def handle_event(self, events):
         for event in events:
@@ -80,7 +80,7 @@ class InputBox:
                     self.text += input_text  
                     if self.hide_text:
                         self.hidden_input_text += '*'
-                    if len(self.text) >= self.max_input_length:
+                    if len(self.text) > self.max_input_length:
                         self.text = self.text[:-1]
                         self.hidden_input_text = self.hidden_input_text[:-1]
                 elif event.type==BACKSPACEBUTTON:
@@ -291,7 +291,7 @@ class PushButton:
 
 
 class button(object):
-    def __init__(self, button_color, x,y,width,height, label='', label_clicked='', font_color=FONTPRIMARY, font_face='comicsans', font_size=60, button_hover_color=(128,128,128), border_radius=3):
+    def __init__(self, button_color, x,y,width,height, label='', label_clicked='', font_color=FONTPRIMARY, font_face=fonts.CURRENT, font_size=60, button_hover_color=(128,128,128), border_radius=3):
         if label.endswith('.png') or label.endswith('.jpg'):
             self.icon, self.icon_clicked = self.use_icon(label, label_clicked)
             self.label = None
@@ -384,25 +384,26 @@ class button(object):
         
 
 class LoginView(object):
-    def __init__(self, screen, label, dimensions, config):
-        font_primary_color = config.gettyped("WINDOW", "font_primary_color")
-        font_secondary_color = config.gettyped("WINDOW", "font_secondary_color")
-        app_bg_primary_color = config.gettyped("WINDOW", "app_bg_primary")
-        app_bg_secondary_color = config.gettyped("WINDOW", "app_bg_secondary")
-        th_bg_color = config.gettyped("WINDOW", "th_bg")
-        btn_primary_radius = config.gettyped("WINDOW", "btn_primary_radius")
-        btn_secondary_radius = config.gettyped("WINDOW", "btn_secondary_radius")
-        btn_num_radius = config.gettyped("WINDOW", "btn_num_radius")
+    def __init__(self, screen, label, _d, _c):
+        self._d = _d
+        self._c=_c
+        font_primary_color = self._c.gettyped("WINDOW", "font_primary_color")
+        font_secondary_color = self._c.gettyped("WINDOW", "font_secondary_color")
+        app_bg_primary_color = self._c.gettyped("WINDOW", "app_bg_primary")
+        app_bg_secondary_color = self._c.gettyped("WINDOW", "app_bg_secondary")
+        btn_primary_radius = self._c.gettyped("WINDOW", "btn_primary_radius")        
+        btn_num_radius = self._c.gettyped("WINDOW", "btn_num_radius")
+        number_button_color = self._c.gettyped("WINDOW", "btn_bg_num")
+        number_button_color_hover = self._c.gettyped("WINDOW", "btn_bg_num_hover")
+        unlock_button_color = self._c.gettyped("WINDOW", "btn_bg_green")
+        unlock_button_color_hover = self._c.gettyped("WINDOW", "btn_bg_green_hover")
+        input_login_bg = self._c.gettyped("WINDOW", "input_login_bg")
 
-        number_button_color = config.gettyped("WINDOW", "btn_bg_num")
-        number_button_color_hover = config.gettyped("WINDOW", "btn_bg_num_hover")
-        unlock_button_color = config.gettyped("WINDOW", "btn_bg_green")
-        unlock_button_color_hover = config.gettyped("WINDOW", "btn_bg_green_hover")
-        input_login_bg = config.gettyped("WINDOW", "input_login_bg")
-
-        self.update_needed = None
-        self._d = dimensions
+        self.update_needed = None        
         
+        self._r = pygame.Rect(int(self._d['startrowgridx']-self._d['marginx']), int(self._d['startrowgridy']), int(self._d['unlock_x']), (int(self._d['fourthrowy']+self._d['inputheight']+self._d['marginy'])))
+        self._rc = app_bg_secondary_color
+
         self.passcode_box = InputBox(((self._d['startrowgridx']-self._d['marginx']), self._d['startrowgridy'], self._d['unlock_x'], self._d['inputheight']), parent=screen, bg_color=input_login_bg, font_size=32, font_color=font_primary_color, label='Enter CO Unlock Code')
         self.passcode_box.key_pad_rect = [pygame.Rect(self._d['startrowgridx'], self._d['startrowgridy'], self._d['gridwidth'], self._d['inputheight'])]
         
@@ -453,7 +454,8 @@ class LoginView(object):
         if self.passcode_box.text:
             return self.passcode_box.text
 
-    def draw(self, screen):
+    def draw(self, screen):   
+        pygame.draw.rect(screen, self._rc, self._r)
         self.passcode_box.update()
         self.passcode_box.draw(screen)
         for button in self.numbers:

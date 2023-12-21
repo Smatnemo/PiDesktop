@@ -36,19 +36,18 @@ class InmateRow(object):
             self.num = len(documents)
             self.row_num = row_number + 1
             self.inmate_identifier = str(self.documents[0][19][0])+str(inmate_number)
-        self.row_num_text = row_number + 1
-
+        #self.row_num_text = row_number + 1
 
         if not self.inmate_number:
             self.inmate_identifier = "Inmate Identifier"
             self.num = "Document count"
-            self.row_num_text = "S/N"
+            #self.row_num_text = "S/N"
             self.total_pages = "Total Pages"
 
         self.chosen = False
 
 
-        self.font = pygame.font.Font('freesansbold.ttf', self.row_text_size)
+        self.font = pygame.font.Font(fonts.CURRENT, self.row_text_size)
 
     def draw(self, foreground_rect, screen, event, offset):
         if self.documents and self.row_num % offset == 0:
@@ -68,7 +67,7 @@ class InmateRow(object):
             
         pygame.draw.rect(screen, 'black', self.inmate_rect, 2)
         
-        screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
+        #screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.inmate_identifier)[0], (foreground_rect.x+204, foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.num)[0], (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
         total_pages_count_x = foreground_rect.width-self.text_surface(self.total_pages)[1]-14
@@ -147,7 +146,7 @@ class DocumentRow(object):
         # Change logic to write out the statement relating in the third column
         self.row_text_size = 32
         self.row_text_color = BLACK
-        self.font = pygame.font.Font('freesansbold.ttf', self.row_text_size)
+        self.font = pygame.font.Font(fonts.CURRENT, self.row_text_size)
         
         self.chosen = False
         
@@ -289,8 +288,8 @@ class InmateDocumentsView(object):
         self.choseninmaterow = None
         self.titlerow = InmateRow(_d=self._d, config=self._c)
         self.inmate_rows.insert(0, self.titlerow)        
-        
-        self.gap = self._d["h"]-self._d["footer"]-self._d["header"]
+                
+        self.gap = self._d['h']-(int(self._d["row_height"]*2)) - (int(self._d["btn_handf_y"]*2))
         self.offset = int(self.gap//self._d["row_height"])
         
         self._offset = self.offset - 1
