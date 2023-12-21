@@ -467,17 +467,19 @@ class ProcessingBackground(Background):
 
 class PrintBackground(Background):
 
-    def __init__(self, arrow_location=ARROW_BOTTOM, arrow_offset=0, print_status="print", question="", document_name="", number_of_pages=""):
+    def __init__(self, config, _d, print_status="print", question="", document_name="", number_of_pages=""):
         Background.__init__(self, print_status, document_name)
+        self.config = config
+        self._d = _d
         self.question = question
 
         self._rect = None
         self.yesbutton = None
-        self.yesbutton_width = 200
-        self.yesbutton_height = 200
-
-        self.nobutton_width = 200
-        self.nobutton_height = 200
+        self.yesbutton_width = self._d['question_button_width']
+        self.yesbutton_height = self._d['question_button_height']
+        
+        self.nobutton_width = self._d['question_button_width']
+        self.nobutton_height = self._d['question_button_height']
         self.yesbutton_y = None
         self.nobutton_x = None
 
@@ -537,7 +539,9 @@ class PrintBackground(Background):
                 rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
                                 self._rect.width/2 - 2 * self._text_border, 64)
                 self._write_text(question_text, rect)
+        
         elif isinstance(self.question, tuple):
+            
             rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
                                self._rect.width/2 - 2 * self._text_border, 64)
             self._write_text(self.question[3], rect)           
@@ -548,41 +552,47 @@ class PrintBackground(Background):
             if align == 'center':     
                 for text_surface in self._texts:
                     text_surface[1].x=(self._rect.width//2-text_surface[1].width//2)
-                    text_surface[1].y=(self._rect.height//2-text_surface[1].height//2)+height
+                    text_surface[1].y=(self._rect.height//2-text_surface[1].height//2)+height-self._d['question_button_height']
                     text_surface = list(text_surface)
                     height = text_surface[1].height + height
                     if self._texts[-1]:
                         self.nobutton_y = text_surface[1].y+height
                         self.yesbutton_y = text_surface[1].y+height 
 
-            self.yesbutton_x = self._rect.width//2 - self.yesbutton_width - 5
-            self.nobutton_x = self._rect.width//2 + 5
+            self.yesbutton_x = self._rect.width//2 - self.yesbutton_width - self._text_border
+            self.nobutton_x = self._rect.width//2 + self._text_border
         else:
             rect = pygame.Rect(self._rect.width / 2 + self._text_border, self._text_border,
                             self._rect.width / 2 - 2 * self._text_border,
                             self._rect.height * 0.6 - self._text_border)
             align = 'bottom-center'
             Background.resize_texts(self, rect, align)
+            for text_surface, pos in self._texts:
+                pos.y = self._d['header'] + self._d['header']
+
 
             self.yesbutton_x = self._rect.width*0.75 - self.yesbutton_width
             self.nobutton_x = self._rect.width*0.75 + 5
         
         if self.yesbutton_y is None:
-            self.yesbutton_y = self._rect.height * 0.75
-            self.nobutton_y = self._rect.height * 0.75
-        
+            self.yesbutton_y = self._d['header']+self._d['header']+self._d['header']
+            self.nobutton_y = self.yesbutton_y
+            
+        button_hover_color=self.config.gettyped("WINDOW","btn_bg_num_hover")
+        button_color=self.config.gettyped("WINDOW","btn_bg_num")
+        if self.yesbutton_enabled:
+            self.yesbutton = PushButton((self.yesbutton_x, self.yesbutton_y, self.yesbutton_width, self.yesbutton_height), self.yesbutton_event, label='YES', parent=screen, button_color=button_color, button_hover_color=button_hover_color)
+            self.yesbutton.enabled(False)
+
+            self.nobutton = PushButton((self.nobutton_x, self.nobutton_y, self.nobutton_width, self.nobutton_height), self.nobutton_event, label='NO', parent=screen, button_color=button_color,button_hover_color=button_hover_color)
+            self.nobutton.enabled(False)
+
+            self.yesbutton_enabled = False
 
     def paint(self, screen):
         Background.paint(self, screen)
 
-        if self.yesbutton_enabled:
-            self.yesbutton = PushButton((self.yesbutton_x, self.yesbutton_y, self.yesbutton_width, self.yesbutton_height), self.yesbutton_event, label='YES', parent=screen)
-            self.yesbutton.enabled(False)
-
-            self.nobutton = PushButton((self.nobutton_x, self.nobutton_y, self.nobutton_width, self.nobutton_height), self.nobutton_event, label='NO', parent=screen)
-            self.nobutton.enabled(False)
-
-            self.yesbutton_enabled = False
+        
         
         
 
@@ -664,13 +674,13 @@ class FinishedWithImageBackground(FinishedBackground):
             left_rect.bottom = self._rect.bottom
             right_rect.right = self._rect.right
 
-            self.left_people = pictures.get_pygame_image("finished_left.png", size=left_rect.size,
-                                                         color=self._text_color)
-            self.right_people = pictures.get_pygame_image("finished_right.png", size=right_rect.size,
-                                                          color=self._text_color)
+            # self.left_people = pictures.get_pygame_image("finished_left.png", size=left_rect.size,
+            #                                              color=self._text_color)
+            # self.right_people = pictures.get_pygame_image("finished_right.png", size=right_rect.size,
+            #                                               color=self._text_color)
 
-            self.left_people_pos = self.left_people.get_rect(center=left_rect.center).topleft
-            self.right_people_pos = self.right_people.get_rect(center=right_rect.center).topleft
+            # self.left_people_pos = self.left_people.get_rect(center=left_rect.center).topleft
+            # self.right_people_pos = self.right_people.get_rect(center=right_rect.center).topleft
 
             if self._show_outlines and left_rect and right_rect:
                 self._outlines.append((self._make_outlines(left_rect.size), left_rect.topleft))

@@ -335,6 +335,8 @@ class PiWindow(object):
         self._d['bottombuttony'] = self._d['h']+self._d['pad']-self._d['footer']
         self._d['resize_height'] = self.resize_height
         self._d['resize_width'] = self.resize_width 
+        self._d['question_button_width'] = int(200 * self._d['resize_height'])
+        self._d['question_button_height'] = int(200 * self._d['resize_width'])
        
 
     def show_oops(self, message, cfg):
@@ -417,11 +419,11 @@ class PiWindow(object):
         self._capture_number = (0, self._capture_number[1])
         self._update_background(background.ProcessingBackground())
 
-    def show_print(self, pil_image=None, print_status="", question="", document_name="", number_of_pages=""):
+    def show_print(self, cfg, pil_image=None, print_status="", question="", document_name="", number_of_pages=""):
         """Show print view (image resized on the left).
         """
-        self._update_background(background.PrintBackground(self.arrow_location,
-                                                           self.arrow_offset, 
+        self._update_background(background.PrintBackground(cfg, 
+                                                           self._d,
                                                            print_status,
                                                            question,
                                                            document_name,

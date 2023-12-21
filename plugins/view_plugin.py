@@ -391,7 +391,7 @@ class ViewPlugin(object):
             # Write code to return to previous state if the last state was not choose
         elif app.find_back_event(events):
             app.chosen_document = None
-            return 'chosen'
+            return 'chosen' if app.documents else 'wait'
         elif app.find_lockscreen_event(events):
             app.previous_state = 'decrypt'
             return 'wait'
@@ -477,7 +477,7 @@ class ViewPlugin(object):
             app.questions_answers = ['' for _ in range(1)]
             self.document_name = app.chosen_document.document_name
             self.enable_button = False
-            win.show_print(app.previous_picture, self.print_status, self.question, self.document_name, app.chosen_document.page_count)     
+            win.show_print(cfg, app.previous_picture, self.print_status, self.question, self.document_name, app.chosen_document.page_count)     
         elif not app.printer.is_ready():
             LOGGER.info("Printer status is not available")
         elif app.database_updated:
@@ -521,7 +521,7 @@ class ViewPlugin(object):
                 
             
         # Draw screen with the new question
-        win.show_print(app.previous_picture, self.print_status, self.question, self.document_name)
+        win.show_print(cfg, app.previous_picture, self.print_status, self.question, self.document_name)
 
         # Enable the buttons of the page
         win._current_background.yesbutton.enabled(self.enable_button)
@@ -578,7 +578,7 @@ class ViewPlugin(object):
     def state_finish_enter(self, cfg, app, win):
         self.print_status = 'capture_again'
         self.question = 'capture_photo'
-        win.show_print(app.previous_picture, self.print_status, self.question)
+        win.show_print(cfg, app.previous_picture, self.print_status, self.question)
 
     @LDS.hookimpl
     def state_finish_do(self, cfg, app, win, events):
