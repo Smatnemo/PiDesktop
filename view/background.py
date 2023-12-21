@@ -169,7 +169,7 @@ class Background(object):
             overlay_name = "{}.png".format(self._name)
             if osp.isfile(pictures.get_filename(overlay_name)):
                 self._overlay = pictures.get_pygame_image(
-                    pictures.get_filename(overlay_name), (self._rect.width, self._rect.height), color=self._text_color, bg_color=self._background_color)
+                    pictures.get_filename(overlay_name), (int(self._rect.width*0.8), int(self._rect.height*0.68)), color=self._text_color, bg_color=self._background_color)
 
             self.resize_texts()
             self._need_update = True
@@ -188,7 +188,7 @@ class Background(object):
         """Paint and animate the surfaces on the screen.
         """
         if self._background:
-            screen.blit(self._background, (0, 0))
+            screen.blit(self._background, self._background.get_rect(center=self.button_rect.center))
         else:
             screen.fill(self._background_color)
         if self._overlay:
@@ -202,15 +202,14 @@ class Background(object):
 
 
 class IntroBackground(Background):
-    def __init__(self, arrow_location=ARROW_BOTTOM, arrow_offset=0, state="intro", count=3):
+    def __init__(self, arrow_location=ARROW_BOTTOM, arrow_offset=0, state="intro", count=3, config=None):
         Background.__init__(self, state)
         self.arrow_location = arrow_location
         self.arrow_offset = arrow_offset
         self.left_arrow = None
         self.left_arrow_pos = None
 
-
-        self.font = pygame.font.SysFont("Sans", 50)
+        self.font = pygame.font.SysFont(fonts.MONOID, 50)
         self.timeout = pygame.time.get_ticks() 
         self.time_since_enter = 0
         self.count = count
@@ -280,22 +279,22 @@ class LoginBackground(Background):
     def resize_texts(self):
         """Update text surfaces.
         """
-        rect = pygame.Rect(self._text_border, self._text_border,
+        """rect = pygame.Rect(self._text_border, self._text_border,
                            self._rect.width - 2 * self._text_border, 54)
         align = 'top-left'
         Background.resize_texts(self, rect, align)
 
-        #text = get_translated_text("code_required")
-        #rect = pygame.Rect(self._text_border, self._text_border,
-        #                   self._rect.width - 2 * self._text_border, 54)
-        #align = 'top-right'
-        #self._write_custom_text(text, rect, align)
+        text = get_translated_text("code_required")
+        rect = pygame.Rect(self._text_border, self._text_border,
+                           self._rect.width - 2 * self._text_border, 54)
+        align = 'top-right'
+        self._write_custom_text(text, rect, align)
 
-        #text = get_translated_text("version")
-        #rect = pygame.Rect(self._text_border, self._rect.height-69,
-        #                   self._rect.width - 2 * self._text_border, 54)
-        #align = 'bottom-left'
-        #self._write_custom_text(text, rect, align)
+        text = get_translated_text("version")
+        rect = pygame.Rect(self._text_border, self._rect.height-69,
+                           self._rect.width - 2 * self._text_border, 54)
+        align = 'bottom-left'
+        self._write_custom_text(text, rect, align)"""
 
     def time_count(self):
         self.time_since_enter = pygame.time.get_ticks()

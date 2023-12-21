@@ -14,8 +14,7 @@ PARSER = ConfigParser()
 CURRENT = 'en'  # Dynamically set at startup
 
 DEFAULT = {
-    'en': {
-        'intro': "Legal",
+    'en': {        
         'login': "Unlock Screen",
         'choose_document': "Choose Document",
         'choose_inmate': "Choose Inmate",

@@ -284,8 +284,8 @@ class PiWindow(object):
         _pad = 5
         _margin = 10
         _iconsize = 64
-        _button_num_x = 230
-        _button_num_y = 100
+        _button_num_x = 257
+        _button_num_y = 97
         _inputheight = 38
         _fontsize = 14
         _fontstyle = "normal"
@@ -311,8 +311,8 @@ class PiWindow(object):
               'header': (_handf),
               'footer': (_handf)}
         
-        self._d['btn_num_x'] = (230 * self.resize_width)
-        self._d['btn_num_y'] = (100 * self.resize_height)
+        self._d['btn_num_x'] = (_button_num_x * self.resize_width)
+        self._d['btn_num_y'] = (_button_num_y * self.resize_height)
         self._d['unlock_x'] = (self._d['gridwidth']+(self._d['marginx']*2))
         self._d['halfgridwidth'] = self._d['gridwidth']/2
         self._d['halfinputheight'] = self._d['inputheight']/2
@@ -380,18 +380,18 @@ class PiWindow(object):
         return lv
         
 # After log in
-    def show_choices(self, documents, selected=None):
+    def show_choices(self, documents, cfg, selected=None):
         """
         Show list of inmates with the number of documents each has
         """
         if documents:
             if not selected:
                 self._update_background(background.ChooseInmateDocumentBackground(self._d,"choose_inmate"))
-                self._update_documents_foreground(foreground.ChooseInmateDocumentForeground(documents, self._d))
+                self._update_documents_foreground(foreground.ChooseInmateDocumentForeground(documents, self._d, cfg))
             else:
                 # This leads to the choices documents for the inmate
                 self._update_background(background.ChooseInmateDocumentBackground(self._d,"choose_document"))
-                self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, self._d, selected))
+                self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, selected, self._d, cfg))
         else:
             raise Exception("No Documents")
 

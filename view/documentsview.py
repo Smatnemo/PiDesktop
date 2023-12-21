@@ -1,6 +1,10 @@
 # from tkinter.colorchooser import Chooser
 import pygame
 
+from LDS import fonts, pictures
+from LDS.config import PiConfigParser
+from LDS.media import get_filename
+
 # Custom events for documents 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -10,7 +14,7 @@ CHOSEEVENT = pygame.USEREVENT + 16
 class InmateRow(object):
     total_pages_x = None
     row_y = None
-    def __init__(self, inmate_number=None, documents:list=None, row_number:int=0):
+    def __init__(self, inmate_number=None, documents:list=None, row_number:int=0, _d=None):
 
         self.documents = documents
         self.row_height = 60
@@ -32,17 +36,15 @@ class InmateRow(object):
             self.num = len(documents)
             self.row_num = row_number + 1
             self.inmate_identifier = str(self.documents[0][19][0])+str(inmate_number)
-        self.row_num_text = row_number + 1
-
+        #self.row_num_text = row_number + 1
 
         if not self.inmate_number:
             self.inmate_identifier = "Inmate Identifier"
             self.num = "Document count"
-            self.row_num_text = "S/N"
+            #self.row_num_text = "S/N"
             self.total_pages = "Total Pages"
 
         self.chosen = False
-
 
         self.font = pygame.font.Font('freesansbold.ttf', self.row_text_size)
 
@@ -64,7 +66,7 @@ class InmateRow(object):
             
         pygame.draw.rect(screen, 'black', self.inmate_rect, 2)
         
-        screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
+        #screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.inmate_identifier)[0], (foreground_rect.x+204, foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.num)[0], (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
         total_pages_count_x = foreground_rect.width-self.text_surface(self.total_pages)[1]-14
@@ -214,7 +216,7 @@ class DocumentRow(object):
 
 
 class DocumentsView(object):
-    def __init__(self, inmate_documents, dimension, selected):
+    def __init__(self, inmate_documents, selected, _d):
         self.inmate_documents = inmate_documents
         self.documents = inmate_documents[selected]
         self.document_rows = [DocumentRow(document, doc_num) for doc_num, document in enumerate(self.documents)]
@@ -223,8 +225,8 @@ class DocumentsView(object):
         self.titlerow = DocumentRow()
         self.document_rows.insert(0, self.titlerow)
 
-        self.gap = dimension["h"]-dimension["footer"]-dimension["header"]
-        self.offset = self.gap//dimension["row_height"]
+        self.gap = _d["h"]-_d["footer"]-_d["header"]
+        self.offset = int(self.gap//_d["row_height"])
         
         self._offset = self.offset - 1
         self.start = 1
@@ -269,22 +271,21 @@ class DocumentsView(object):
             if document[0] == self.chosendocumentrow.document[0]:
                 self.documents[i] = self.chosendocumentrow.document
 
-        self.inmate_documents[inmate_number] = self.documents
-             
-
+        self.inmate_documents[inmate_number] = self.documents            
 
 
 class InmateDocumentsView(object):
-    def __init__(self, inmate_documents, dimension):
+    def __init__(self, inmate_documents, _d, config):
         self.inmate_numbers = list(inmate_documents.keys())
-        self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number) for row_number, inmate_number in enumerate(self.inmate_numbers)]
+        self._d = _d
+        self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number, self._d) for row_number, inmate_number in enumerate(self.inmate_numbers)]
         self.update_needed = None
         self.choseninmaterow = None
         self.titlerow = InmateRow()
-        self.inmate_rows.insert(0, self.titlerow)
-
-        self.gap = dimension["h"]-dimension["footer"]-dimension["header"]
-        self.offset = int(self.gap//dimension["row_height"])
+        self.inmate_rows.insert(0, self.titlerow)        
+        
+        self.gap = self._d["h"]-self._d["footer"]-self._d["header"]
+        self.offset = int(self.gap//self._d["row_height"])
         
         self._offset = self.offset - 1
         self.start = 1

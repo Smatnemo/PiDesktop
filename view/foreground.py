@@ -54,10 +54,10 @@ class ChooseInmateDocumentForeground(Foreground):
     attr inmate_documents: a dictionary with inmate number and their associated documents
     type inmate_documents: dictionary
     """
-    def __init__(self, inmate_documents, dimensions):
+    def __init__(self, inmate_documents, _d, config=None):
         Foreground.__init__(self, "choose_inmate")
         # inmate_documents argument is a tuple
-        self.inmate_documents_view = InmateDocumentsView(inmate_documents, dimensions) 
+        self.inmate_documents_view = InmateDocumentsView(inmate_documents, _d, config) 
         # Make sure that drawn inmates documents view should stop at 10 pixels before the button 
 
         self.previousbutton = None
@@ -75,7 +75,7 @@ class ChooseInmateDocumentForeground(Foreground):
 
         self.nextbutton_event = pygame.USEREVENT+1, {'change_view':"next"}
 
-        self.dimensions = dimensions
+        self._d = _d
 
     def resize(self, screen):
         Foreground.resize(self, screen)
@@ -83,7 +83,7 @@ class ChooseInmateDocumentForeground(Foreground):
         #  Create parameters for button
         self._rect = screen.get_rect() 
         self.nextbutton_x =  self.foreground_rect.width - 210
-        self.nextbutton_y = self.dimensions['bottombuttony']
+        self.nextbutton_y = self._d['bottombuttony']
 
         self.previousbutton_x = self.foreground_rect.x+10
         self.previousbutton_y = self.nextbutton_y
@@ -107,10 +107,10 @@ class ChooseInmateDocumentForeground(Foreground):
 
 
 class ChosenInmateDocumentForeground(Foreground):
-    def __init__(self, inmate_documents, dimensions, selected_inmate):
+    def __init__(self, inmate_documents, selected_inmate, _d, config):
         Foreground.__init__(self, "chosen_inmate")
        
-        self.document_view = DocumentsView(inmate_documents, dimensions, selected_inmate)
+        self.document_view = DocumentsView(inmate_documents, selected_inmate, _d, config)
 
         self.previousbutton = None
         self.previousbutton_width = 200
@@ -127,7 +127,7 @@ class ChosenInmateDocumentForeground(Foreground):
 
         self.nextbutton_event = pygame.USEREVENT + 1, {'change_view':'next'}
 
-        self.dimensions = dimensions
+        self._d = _d
 
     def resize(self, screen):
         Foreground.resize(self, screen)
@@ -135,7 +135,7 @@ class ChosenInmateDocumentForeground(Foreground):
         #  Create parameters for button
         self._rect = screen.get_rect() 
         self.nextbutton_x = self.foreground_rect.width - 210
-        self.nextbutton_y = self.dimensions['bottombuttony']
+        self.nextbutton_y = self._d['bottombuttony']
 
         self.previousbutton_x = self.foreground_rect.x+10
         self.previousbutton_y = self.nextbutton_y
