@@ -199,7 +199,7 @@ class ViewPlugin(object):
         app.find_touch_effects_event(events)
 
         win._current_documents_foreground.inmate_documents_view.update_needed = app.update_needed
-        win.show_choices(app.documents)
+        win.show_choices(app.documents, cfg)
 
         # update for buttons
         win._current_background.backbutton.draw(app.update_needed)
@@ -234,12 +234,12 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_chosen_enter(self, cfg, app, win):
         LOGGER.info("Show chosen inmate document choice (inmate %s selected)", app.inmate_number)
-        win.show_choices(app.documents, selected=app.inmate_number)
+        win.show_choices(app.documents, cfg, selected=app.inmate_number)
         # Reset timeout in case of settings changed
         self.choose_timer.start()
 
     @LDS.hookimpl
-    def state_chosen_do(self, app, win, events):
+    def state_chosen_do(self, cfg, app, win, events):
         if events:
             # If there is any event restart timer
             self.choose_timer.start()
@@ -247,7 +247,7 @@ class ViewPlugin(object):
         app.find_touch_effects_event(events)
 
         win._current_documents_foreground.document_view.update_needed = app.update_needed
-        win.show_choices(app.documents, selected=app.inmate_number)
+        win.show_choices(app.documents, cfg, selected=app.inmate_number)
 
         # update for backbutton
         win._current_background.backbutton.draw(app.update_needed)

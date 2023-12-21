@@ -14,7 +14,7 @@ CHOSEEVENT = pygame.USEREVENT + 16
 class InmateRow(object):
     total_pages_x = None
     row_y = None
-    def __init__(self, inmate_number=None, documents:list=None, row_number:int=0):
+    def __init__(self, inmate_number=None, documents:list=None, row_number:int=0, _d=None):
 
         self.documents = documents
         self.row_height = 60
@@ -277,10 +277,10 @@ class DocumentsView(object):
 
 
 class InmateDocumentsView(object):
-    def __init__(self, inmate_documents, _d, config=None):
+    def __init__(self, inmate_documents, _d, config):
         self.inmate_numbers = list(inmate_documents.keys())
         self._d = _d
-        self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number, _d = self._d) for row_number, inmate_number in enumerate(self.inmate_numbers)]
+        self.inmate_rows = [InmateRow(inmate_number, inmate_documents[inmate_number], row_number, self._d) for row_number, inmate_number in enumerate(self.inmate_numbers)]
         self.update_needed = None
         self.choseninmaterow = None
         self.titlerow = InmateRow()

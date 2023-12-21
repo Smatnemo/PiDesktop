@@ -169,7 +169,7 @@ class Background(object):
             overlay_name = "{}.png".format(self._name)
             if osp.isfile(pictures.get_filename(overlay_name)):
                 self._overlay = pictures.get_pygame_image(
-                    pictures.get_filename(overlay_name), (int(self._rect.width//0.8), int(self._rect.height//0.68)), color=self._text_color, bg_color=self._background_color)
+                    pictures.get_filename(overlay_name), (int(self._rect.width*0.8), int(self._rect.height*0.68)), color=self._text_color, bg_color=self._background_color)
 
             self.resize_texts()
             self._need_update = True

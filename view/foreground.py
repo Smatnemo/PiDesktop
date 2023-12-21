@@ -57,7 +57,7 @@ class ChooseInmateDocumentForeground(Foreground):
     def __init__(self, inmate_documents, _d, config=None):
         Foreground.__init__(self, "choose_inmate")
         # inmate_documents argument is a tuple
-        self.inmate_documents_view = InmateDocumentsView(inmate_documents, _d, config=config) 
+        self.inmate_documents_view = InmateDocumentsView(inmate_documents, _d, config) 
         # Make sure that drawn inmates documents view should stop at 10 pixels before the button 
 
         self.previousbutton = None
@@ -135,7 +135,7 @@ class ChosenInmateDocumentForeground(Foreground):
         #  Create parameters for button
         self._rect = screen.get_rect() 
         self.nextbutton_x = self.foreground_rect.width - 210
-        self.nextbutton_y = self.dimensions['bottombuttony']
+        self.nextbutton_y = self._d['bottombuttony']
 
         self.previousbutton_x = self.foreground_rect.x+10
         self.previousbutton_y = self.nextbutton_y
