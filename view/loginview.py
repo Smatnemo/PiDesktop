@@ -80,9 +80,9 @@ class InputBox:
                     self.text += input_text  
                     if self.hide_text:
                         self.hidden_input_text += '*'
-                    if len(self.text) > self.max_input_length:
+                    if len(self.text) >= self.max_input_length:
                         self.text = self.text[:-1]
-                        self.hidden_input_text[:-1]
+                        self.hidden_input_text = self.hidden_input_text[:-1]
                 elif event.type==BACKSPACEBUTTON:
                     self.text = self.text[:-1]
                     if self.hide_text:
