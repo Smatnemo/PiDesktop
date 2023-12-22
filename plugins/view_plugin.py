@@ -175,7 +175,8 @@ class ViewPlugin(object):
             if app.validated:
                 app.validated = None
                 self.count_failed_attempts = 0
-                return app.previous_state if (app.previous_state=='chosen' and app.inmate_number) or app.previous_state != 'wait' and app.previous_state != 'finish'\
+                return app.previous_state if (app.previous_state=='chosen' and app.inmate_number)\
+                      or app.previous_state != 'wait' and app.previous_state != 'finish'\
                       and app.previous_state != 'login' and app.previous_state is not None else 'choose'
             else:
                 self.count_failed_attempts += 1
@@ -323,11 +324,13 @@ class ViewPlugin(object):
         self.decrypt_view = win.show_decrypt(cfg) # Create a function in window module to display login page
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         # Find way to display it in the login window during login in activity
+        win._current_background.reset_timer = True
         self.choose_timer.start()
 
     @LDS.hookimpl
     def state_decrypt_do(self, app, win, events):
         if events:
+            win._current_background.reset_timer = True
             self.choose_timer.start()
         
         app.find_touch_effects_event(events)
@@ -402,11 +405,11 @@ class ViewPlugin(object):
             app.chosen_document = None
             return 'chosen' if app.documents else 'wait'
         elif app.find_lockscreen_event(events):
-            app.previous_state = 'decrypt'
+            app.previous_state = 'decrypt' if app.documents else 'choose'
             return 'wait'
         elif self.choose_timer.is_timeout(): 
-            app.previous_state = 'decrypt'   
-            return 'wait'
+            app.previous_state = 'decrypt' if app.documents else 'choose' 
+            return 'wait' 
         
    
 

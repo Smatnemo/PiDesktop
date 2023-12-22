@@ -1,11 +1,12 @@
 from tempfile import NamedTemporaryFile
 from LDS import package_dir
-from PyPDF2 import PdfReader, PdfWriter
+from PyPDF2 import PdfReader, PdfWriter, PdfMerger
 from Crypto.Hash import SHA256
 from Crypto.Util.Padding import unpad
 from Crypto.Cipher import AES
 from LDS.utils import LOGGER
 from LDS.database.database import DataBase, document_insert_query
+from LDS.media import get_filename
 from random import randint
 
 from hashlib import md5
@@ -212,7 +213,8 @@ def document_authentication(decrypted, document):
     # check if the decrypted checksum matches the original document checksum
     page_count_match = False 
     checksum_match = False
-    
+    cover_page_name = get_filename('dec.pdf')
+    back_page_name = get_filename('dec.pdf')
     try:
         page_count = count_pdf_pages(decrypted)
         if page_count == document[8]:
@@ -224,6 +226,9 @@ def document_authentication(decrypted, document):
             checksum_match = True 
         else:
             LOGGER.error("Database checksum: {} Checksum did not match:{}".format(document[15], file_checksum))
+        modified_document = append_pages(cover_page_name, back_page_name, decrypted)
+        new_page_count = count_pdf_pages(modified_document)  
+        page_count_match = True if new_page_count == document[8]+2 else False
     except Exception as ex:
         LOGGER.error("Error {} occured while documenting".format(ex))
     
@@ -263,3 +268,18 @@ def decrypt_content2(password, filename):
         decrypt2(password, in_file, out_file)
 
     return temp_file
+
+# --------- Create pages with inmate details ----
+def create_pages():
+    pass
+# -------- Append pages to pdf ------------------
+def append_pages(coverpagename, backpagename, dec_tmp_name):
+    merger = PdfMerger()
+    cover_page = PdfReader(coverpagename, 'rb')
+    back_page = PdfReader(backpagename, 'rb')
+    main_file = PdfReader(dec_tmp_name, 'rb')
+    merger.append(cover_page)
+    merger.append(main_file)
+    merger.append(back_page)
+    merger.write(dec_tmp_name)
+    return dec_tmp_name
