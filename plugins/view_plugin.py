@@ -201,11 +201,13 @@ class ViewPlugin(object):
             raise ex
         
         app.inmate_number = None
+        win._current_background.reset_timer = True
         self.choose_timer.start()
 
     @LDS.hookimpl
     def state_choose_do(self, cfg, app, win, events):
         if events:
+            win._current_background.reset_timer = events
             self.choose_timer.start()
 
         app.find_touch_effects_event(events)
@@ -248,12 +250,14 @@ class ViewPlugin(object):
         LOGGER.info("Show chosen inmate document choice (inmate %s selected)", app.inmate_number)
         win.show_choices(app.documents, cfg, selected=app.inmate_number)
         # Reset timeout in case of settings changed
+        win._current_background.reset_timer = True
         self.choose_timer.start()
 
     @LDS.hookimpl
     def state_chosen_do(self, cfg, app, win, events):
         if events:
             # If there is any event restart timer
+            win._current_background.reset_timer = events
             self.choose_timer.start()
 
         app.find_touch_effects_event(events)

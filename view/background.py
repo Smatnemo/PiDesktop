@@ -298,14 +298,14 @@ class LoginBackground(Background):
         align = 'bottom-left'
         self._write_custom_text(text, rect, align)"""
 
-    def time_count(self):
-        self.time_since_enter = pygame.time.get_ticks()
-        self.timebox = 'Locked for {} seconds'.format(str(30-self.time_since_enter//1000))
-        # self._write_text(self.message, self.text_rect, align='top-center')
-        rect = pygame.Rect(self._text_border, self._rect.height-69,
-                           self._rect.width - 2 * self._text_border, 64)
-        align = 'bottom-right'
-        self._write_custom_text(self.timebox, rect, align)
+    # def time_count(self):
+    #     self.time_since_enter = pygame.time.get_ticks()
+    #     self.timebox = 'Locked for {} seconds'.format(str(30-self.time_since_enter//1000))
+    #     # self._write_text(self.message, self.text_rect, align='top-center')
+    #     rect = pygame.Rect(self._text_border, self._rect.height-69,
+    #                        self._rect.width - 2 * self._text_border, 64)
+    #     align = 'bottom-right'
+    #     self._write_custom_text(self.timebox, rect, align)
 
     def paint(self, screen):
         Background.paint(self, screen)
@@ -345,6 +345,14 @@ class ChooseInmateDocumentBackground(Background):
 
         self.lockbutton_event = pygame.USEREVENT + 19
 
+        # For timer
+        self.reset_timer = None
+        font_size = self._c.gettyped("WINDOW","timer_font_size")
+        self.font = pygame.font.SysFont(fonts.MONOID, font_size)
+        self.timeout = pygame.time.get_ticks() 
+        self.time_since_enter = 0
+    
+
     def resize(self, screen):
         Background.resize(self, screen) 
 
@@ -382,12 +390,30 @@ class ChooseInmateDocumentBackground(Background):
         rect = pygame.Rect(self._text_border, self._d['pad'],
                            self._rect.width - 2 * self._text_border, self._d['row_height'])
         Background.resize_texts(self, rect)
-    
+
+        self.text_rect = pygame.Rect(self._text_border, self._text_border,
+                            self._rect.width / 2 - 2 * self._text_border,
+                            64)
+
+    def countdown(self):
+        if (30-self.time_since_enter//1000) < 0 or self.reset_timer:
+            self.timeout = pygame.time.get_ticks()
+            self.reset_timer = False
+        self.time_since_enter = pygame.time.get_ticks() - self.timeout
+        self.message = 'App will self lock in {} seconds'.format(str(30-self.time_since_enter//1000))
+        # self._write_text(self.message, self.text_rect, align='top-center')
+        self.message_box = self.font.render(self.message, True, self._text_color)
+
+        box_width, box_height = self.font.size(self.message)
+        self.text_rect.x = self._rect.width - box_width-self._text_border
+        self.text_rect.y = self._d['pad']
+
     def paint(self, screen):
         Background.paint(self, screen)
         self.backbutton.draw(self.update_needed)
         self.lockbutton.draw(self.update_needed)
-
+        self.countdown()
+        screen.blit(self.message_box, (self.text_rect.x, self.text_rect.y))
         
 
 

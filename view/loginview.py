@@ -5,7 +5,6 @@ import sys
 import os.path as osp
 
 from LDS import fonts, pictures
-from LDS.config import PiConfigParser
 from LDS.media import get_filename
 
 LOGINEVENT = pygame.USEREVENT + 3
@@ -170,7 +169,6 @@ class PushButton:
             self.icon_clicked = None
         self.button_color = button_color 
         self.button_color_temp = button_color
-        print("within button class",self.button_color)
         self.button_hover_color = button_hover_color
         self.font_color = font_color
         self.font_size = font_size
