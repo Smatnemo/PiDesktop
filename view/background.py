@@ -398,7 +398,7 @@ class ChooseInmateDocumentBackground(Background):
 
 class DecryptBackground(Background):
     def __init__(self, _d, _c):
-        Background.__init__(self, "decrypt")
+        Background.__init__(self, "")
         self._d=_d
         self._c=_c       
 
@@ -415,6 +415,7 @@ class DecryptBackground(Background):
         self.lockbutton_event = pygame.USEREVENT + 19
         
     def resize(self, screen):
+        Background.resize(self, screen)
         #  Create parameters for button 
         self._rect = screen.get_rect()
         self.backbutton_x = self._d['pad'] + int(self._d['row_height']//2) + self._rect.x

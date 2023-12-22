@@ -174,6 +174,7 @@ class ViewPlugin(object):
             LOGGER.info(app.validated)
             if app.validated:
                 app.validated = None
+                self.count_failed_attempts = 0
                 return app.previous_state if (app.previous_state=='chosen' and app.inmate_number) or app.previous_state != 'wait' and app.previous_state != 'finish'\
                       and app.previous_state != 'login' and app.previous_state is not None else 'choose'
             else:
@@ -344,6 +345,10 @@ class ViewPlugin(object):
         # update for backbutton and lockbutton
         win._current_background.backbutton.draw(app.update_needed)
         win._current_background.lockbutton.draw(app.update_needed)
+
+        # update timer by calling current background - change during refactoring to the window module
+        win._current_background.resize(win.surface)
+        win._current_background.paint(win.surface)
 
         self.decrypt_view.passcode_box.handle_event(events)
         self.decrypt_view.draw(win.surface)
