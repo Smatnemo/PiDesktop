@@ -57,42 +57,47 @@ class ChooseInmateDocumentForeground(Foreground):
     def __init__(self, inmate_documents, _d, config=None):
         Foreground.__init__(self, "choose_inmate")
         # inmate_documents argument is a tuple
-        self.inmate_documents_view = InmateDocumentsView(inmate_documents, _d, config) 
-        # Make sure that drawn inmates documents view should stop at 10 pixels before the button 
-
-        self.previousbutton = None
-        self.previousbutton_width = 200
-        self.previousbutton_height = 38
- 
-        self.button_enabled = True
+        self._d = _d
+        self._c = config
+        self.inmate_documents_view = InmateDocumentsView(inmate_documents, self._d, config) 
+        
+        self.previousbutton = self.nextbutton = None
+        self.previousbutton_width = self.nextbutton_width = self._d['btn_handf_x']
+        self.previousbutton_height = self.nextbutton_height = self._d['btn_handf_y']
         self.previousbutton_event = pygame.USEREVENT+1, {'change_view':"previous"}
-
-        self.update_needed = None
-
-        self.nextbutton = None
-        self.nextbutton_width = 200
-        self.nextbutton_height = 38
-
         self.nextbutton_event = pygame.USEREVENT+1, {'change_view':"next"}
 
-        self._d = _d
+        self.button_enabled = True
+        self.update_needed = None
 
     def resize(self, screen):
         Foreground.resize(self, screen)
 
         #  Create parameters for button
         self._rect = screen.get_rect() 
-        self.nextbutton_x =  self.foreground_rect.width - 210
-        self.nextbutton_y = self._d['bottombuttony']
-
-        self.previousbutton_x = self.foreground_rect.x+10
-        self.previousbutton_y = self.nextbutton_y
+        # X Positions
+        self.nextbutton_x = self._rect.width - self._d['pad'] - int(self._d['row_height']//2) - self._d['btn_handf_x']
+        self.previousbutton_x = self._rect.x + self._d['pad'] + int(self._d['row_height']//2)
+        # Y Positions
+        self.nextbutton_y = self.previousbutton_y = self._rect.height - self._d['pad'] - int(self._d['row_height']//4) - self._d['btn_handf_y']    
 
         if self.button_enabled:
-            self.previousbutton = PushButton((self.previousbutton_x, self.previousbutton_y, self.previousbutton_width, self.previousbutton_height), self.previousbutton_event, label='PREVIOUS', parent=screen)
+            self.previousbutton = PushButton((self.previousbutton_x, self.previousbutton_y, self.previousbutton_width, self.previousbutton_height),
+                                             self.previousbutton_event, label='PREVIOUS',
+                                             font_color=self._c.gettyped("WINDOW", "font_secondary_color"),
+                                             button_color=self._c.gettyped("WINDOW", "btn_bg_green"),
+                                             button_hover_color=self._c.gettyped("WINDOW", "btn_bg_green_hover"),
+                                             border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0],
+                                             parent=screen)
             self.previousbutton.enabled(True)
 
-            self.nextbutton = PushButton((self.nextbutton_x, self.nextbutton_y, self.nextbutton_width, self.nextbutton_height), self.nextbutton_event, label='NEXT', parent=screen)
+            self.nextbutton = PushButton((self.nextbutton_x, self.nextbutton_y, self.nextbutton_width, self.nextbutton_height), self.nextbutton_event,
+                                          label='NEXT',
+                                          font_color=self._c.gettyped("WINDOW", "font_secondary_color"),
+                                          button_color=self._c.gettyped("WINDOW", "btn_bg_green"),
+                                          button_hover_color=self._c.gettyped("WINDOW", "btn_bg_green_hover"),
+                                          border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0],
+                                          parent=screen)
             self.nextbutton.enabled(True)
             self.button_enabled = False
 
@@ -109,8 +114,10 @@ class ChooseInmateDocumentForeground(Foreground):
 class ChosenInmateDocumentForeground(Foreground):
     def __init__(self, inmate_documents, selected_inmate, _d, config):
         Foreground.__init__(self, "chosen_inmate")
-       
-        self.document_view = DocumentsView(inmate_documents, selected_inmate, _d, config)
+        self._d = _d
+        self._c = config
+
+        self.document_view = DocumentsView(inmate_documents, selected_inmate, self._d, config)
 
         self.previousbutton = None
         self.previousbutton_width = 200
@@ -127,7 +134,7 @@ class ChosenInmateDocumentForeground(Foreground):
 
         self.nextbutton_event = pygame.USEREVENT + 1, {'change_view':'next'}
 
-        self._d = _d
+        
 
     def resize(self, screen):
         Foreground.resize(self, screen)

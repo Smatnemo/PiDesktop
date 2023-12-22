@@ -66,8 +66,8 @@ class Background(object):
 
     def __init__(self, image_name, document_name="", color=(0, 0, 0), text_color=(255, 255, 255)):
         self._rect = None
-        self._name = image_name
-        
+        self._name = image_name        
+
         self._document_name = document_name
         self._need_update = False
 
@@ -81,9 +81,18 @@ class Background(object):
         self._text_border = 20  # Distance to other elements
         self._text_color = text_color
 
-        # Build rectangles around some areas for debuging purpose
+        # Build rectangles around some areas for debugging purpose
         self._show_outlines = True
         self._outlines = []
+
+        self.font_size = 18        
+        self.reset_timer = None
+        #self.font_size = self._c.gettyped("WINDOW","timer_font_size")
+        self.font = pygame.font.SysFont(fonts.MONOID, self.font_size)
+        self.timerlength = 30
+        self.timeout = pygame.time.get_ticks() 
+        self.time_since_enter = 0        
+
 
     def __str__(self):
         """Return background final name.
@@ -185,6 +194,21 @@ class Background(object):
             text = text + ": " + str(self._document_name)
         if text:
             self._write_text(text, rect, align)
+        self.text_rect = pygame.Rect(self._text_border, self._text_border,
+                        self._rect.width / 2 - 2 * self._text_border,
+                        64)
+
+    def countdown(self):
+        if (self.timerlength-self.time_since_enter//1000) < 0 or self.reset_timer:
+            self.timeout = pygame.time.get_ticks()
+            self.reset_timer = False
+        self.time_since_enter = pygame.time.get_ticks() - self.timeout
+        self.message = 'App will self lock in {} seconds'.format(str(self.timerlength-self.time_since_enter//1000))
+        self.message_box = self.font.render(self.message, True, self._text_color)
+
+        box_width, box_height = self.font.size(self.message)
+        self.text_rect.x = self._rect.width - box_width-self._text_border
+        self.text_rect.y = int(self._text_border//2)    
 
     def paint(self, screen):
         """Paint and animate the surfaces on the screen.
@@ -314,9 +338,6 @@ class LoginBackground(Background):
             if pos.x + pos.width > screen.get_rect().width:
                pos.x = screen.get_rect().width - (pos.width + self._text_border)
             screen.blit(text_surface, pos)
-        
-        
-
 
 class ChooseInmateDocumentBackground(Background):
     def __init__(self, _d, _c, bkg_string=""):
@@ -324,45 +345,26 @@ class ChooseInmateDocumentBackground(Background):
         self._d=_d
         self._c=_c       
 
-        self.layout0 = None 
-        self.layout0_pos = None 
-        self.layout1 = None
-        self.layout1_pos = None 
-
-        self.backbutton = None
-        self.backbutton_width = self._d['btn_handf_x']
-        self.backbutton_height = self._d['btn_handf_y']
+        self.layout0 = self.layout0_pos = self.layout1 = self.layout1_pos = None 
+        
+        self.backbutton = self.lockbutton = None
+        self.backbutton_width = self.lockbutton_width = self._d['btn_handf_x']
+        self.backbutton_height = self.lockbutton_height = self._d['btn_handf_y']
         
         self.button_enabled = True
         self.backbutton_event = BUTTONDOWN, {'back':True}
 
         self.update_needed = None
-
-        
-        self.lockbutton = None
-        self.lockbutton_width = self._d['btn_handf_x']
-        self.lockbutton_height = self._d['btn_handf_y']
-
         self.lockbutton_event = pygame.USEREVENT + 19
-
-        # For timer
-        self.reset_timer = None
-        font_size = self._c.gettyped("WINDOW","timer_font_size")
-        self.font = pygame.font.SysFont(fonts.MONOID, font_size)
-        self.timeout = pygame.time.get_ticks() 
-        self.time_since_enter = 0
-    
-
+        
     def resize(self, screen):
         Background.resize(self, screen) 
-
         #  Create parameters for button 
         self._rect = screen.get_rect()
-        self.backbutton_x = self._rect.x+self._d['pad']+int(self._d['row_height']//2)
-        self.backbutton_y = self._rect.y+self._d['pad']+int(self._d['row_height']//2)
-        self.lockbutton_x = self._rect.width - self._d['pad'] - self.lockbutton_width - int(self._d['row_height']//2)
-        self.lockbutton_y = self._rect.y+self._d['pad']+int(self._d['row_height']//2)
-
+        self.backbutton_x = self._d['pad'] + int(self._d['row_height']//2) + self._rect.x
+        self.lockbutton_x = self._rect.width - self._d['pad'] - int(self._d['row_height']//2) - self._d['btn_handf_x']        
+        self.lockbutton_y = self.backbutton_y = self._d['pad'] + int(self._d['row_height']//2) + self._rect.y
+ 
         if self.button_enabled:
             self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event,
                                          label='BACK', parent=screen, 
@@ -383,98 +385,71 @@ class ChooseInmateDocumentBackground(Background):
 
     def resize_texts(self):
         """Update text Surfaces
-        """
-        # rect = pygame.Rect(self._text_border, self._text_border,
-        #                    self._rect.width - 2 * self._text_border, self._rect.height * 0.15)
+        """        
+        Background.resize_texts(self)
+ 
+    def paint(self, screen):       
+        Background.paint(self, screen)
+        self.backbutton.draw(self.update_needed)
+        self.lockbutton.draw(self.update_needed)
+        Background.countdown(self)
+        screen.blit(self.message_box, (self.text_rect.x, self.text_rect.y))        
 
-        rect = pygame.Rect(self._text_border, self._d['pad'],
-                           self._rect.width - 2 * self._text_border, self._d['row_height'])
-        Background.resize_texts(self, rect)
 
-        self.text_rect = pygame.Rect(self._text_border, self._text_border,
-                            self._rect.width / 2 - 2 * self._text_border,
-                            64)
+class DecryptBackground(Background):
+    def __init__(self, _d, _c):
+        Background.__init__(self, "decrypt")
+        self._d=_d
+        self._c=_c       
 
-    def countdown(self):
-        if (30-self.time_since_enter//1000) < 0 or self.reset_timer:
-            self.timeout = pygame.time.get_ticks()
-            self.reset_timer = False
-        self.time_since_enter = pygame.time.get_ticks() - self.timeout
-        self.message = 'App will self lock in {} seconds'.format(str(30-self.time_since_enter//1000))
-        # self._write_text(self.message, self.text_rect, align='top-center')
-        self.message_box = self.font.render(self.message, True, self._text_color)
+        self.layout0 = self.layout0_pos = self.layout1 = self.layout1_pos = None 
+        
+        self.backbutton = self.lockbutton = None
+        self.backbutton_width = self.lockbutton_width = self._d['btn_handf_x']
+        self.backbutton_height = self.lockbutton_height = self._d['btn_handf_y']
+        
+        self.button_enabled = True
+        self.backbutton_event = BUTTONDOWN, {'back':True}
 
-        box_width, box_height = self.font.size(self.message)
-        self.text_rect.x = self._rect.width - box_width-self._text_border
-        self.text_rect.y = self._d['pad']
+        self.update_needed = None
+        self.lockbutton_event = pygame.USEREVENT + 19
+        
+    def resize(self, screen):
+        #  Create parameters for button 
+        self._rect = screen.get_rect()
+        self.backbutton_x = self._d['pad'] + int(self._d['row_height']//2) + self._rect.x
+        self.lockbutton_x = self._rect.width - self._d['pad'] - int(self._d['row_height']//2) - self._d['btn_handf_x']        
+        self.lockbutton_y = self.backbutton_y = self._d['pad'] + int(self._d['row_height']//2) + self._rect.y
+ 
+        if self.button_enabled:
+            self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event,
+                                         label='BACK', parent=screen, 
+                                         font_color=self._c.gettyped("WINDOW", "font_secondary_color"),
+                                         font_size=24,
+                                         button_color=self._c.gettyped("WINDOW", "btn_bg_green"),
+                                         button_hover_color=self._c.gettyped("WINDOW", "btn_bg_green_hover"),
+                                         border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
+            self.backbutton.enabled(True)
+
+            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.lockbutton_width, self.lockbutton_height), self.lockbutton_event,
+                                          label='LOCK SCREEN', parent=screen, 
+                                          font_size=24,
+                                          button_color=self._c.gettyped("WINDOW", "btn_bg_red"), 
+                                          button_hover_color=self._c.gettyped("WINDOW", "btn_bg_red_hover"), 
+                                          border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
+            self.lockbutton.enabled(True)            
+
+    def resize_texts(self):
+        """Update text Surfaces
+        """        
+        Background.resize_texts(self)
 
     def paint(self, screen):
         Background.paint(self, screen)
         self.backbutton.draw(self.update_needed)
         self.lockbutton.draw(self.update_needed)
-        self.countdown()
+        Background.countdown(self)
         screen.blit(self.message_box, (self.text_rect.x, self.text_rect.y))
-        
-
-
-class DecryptBackground(Background):
-    def __init__(self, dimensions):
-        Background.__init__(self, "decrypt")
-        self.layout0 = None
-        self.layout0_pos = None
-        self.layout1 = None
-        self.layout1_pos = None
-
-        self._rect = None
-        self.backbutton = None
-        self.backbutton_width = 200
-        self.backbutton_height = 38
-
-        
-        self.backbutton_enabled = True
-        self.backbutton_event = BUTTONDOWN, {'back':True}
-
-        self.lockbutton = None
-        
-
-        self.lockbutton_event = pygame.USEREVENT + 19
-
-        self.update_needed = None
-
-        self.dimensions = dimensions
-        
-    def resize(self, screen):
-        Background.resize(self, screen)
-
-        #  Create parameters for button 
-        self._rect = screen.get_rect()
-        self.backbutton_x = self._rect.x+60
-        self.backbutton_y = self._rect.height-120  
-
-        self.lockbutton_x = self._rect.width - self.dimensions['iconsize'] - self.dimensions['pad']
-        self.lockbutton_y = self._rect.y+self.dimensions['pad']
-
-        if self.backbutton_enabled:
-            self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event, label='<BACK', parent=screen)
-            self.backbutton.enabled(True)
-
-            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.dimensions['iconsize'], self.dimensions['iconsize']), self.lockbutton_event, label='padlock_icon.jpg', parent=screen, label_clicked='padlock.jpg')
-            self.lockbutton.enabled(True)
-
-            self.backbutton_enabled = False
-        
-
-    def resize_texts(self):
-        """Update text surfaces.
-        """
-        rect = pygame.Rect(self._text_border, self._text_border,
-                           self._rect.width - 2 * self._text_border, self._rect.height * 0.15)
-        Background.resize_texts(self, rect)
-
-    def paint(self, screen):
-        Background.paint(self, screen)
-        
-
 
 class CaptureBackground(Background):
 
@@ -508,29 +483,28 @@ class PrintBackground(Background):
         Background.__init__(self, print_status, document_name)
         self.config = config
         self._d = _d
+        self._c = config
         self.question = question
 
         self._rect = None
         self.yesbutton = None
-        self.yesbutton_width = self._d['question_button_width']
-        self.yesbutton_height = self._d['question_button_height']
+        self.yesbutton_width = self.nobutton_width = self._d['question_button_width']
+        self.yesbutton_height = self.nobutton_height = self._d['question_button_height']
         
-        self.nobutton_width = self._d['question_button_width']
-        self.nobutton_height = self._d['question_button_height']
-        self.yesbutton_y = None
-        self.nobutton_x = None
-
-        self.yesbutton_enabled = True
-
-        
+        self.yesbutton_enabled = True        
         
         self.yesbutton_event = (BUTTONDOWN, {'question':question,'answer':True})
 
         self.nobutton = None
         self.nobutton_event = (BUTTONDOWN, {'question':question,'answer':False})
 
-        self.update_needed = None
+        self.lockbutton = None
+        self.lockbutton_width = self._d['btn_handf_x']
+        self.lockbutton_height = self._d['btn_handf_y']
+        
+        self.lockbutton_event = pygame.USEREVENT + 19
 
+        self.update_needed = None
         self.document_name = document_name 
         self.num_of_pages = number_of_pages
 
@@ -551,8 +525,10 @@ class PrintBackground(Background):
 
         self.nobutton_y = self._rect.height*0.50
         self.yesbutton_y = self._rect.height*0.50
-        # print("button hover color", button_hover_color)
-        # print("Button color", button_color)
+
+        self.lockbutton_x = self._rect.width - self._d['pad'] - int(self._d['row_height']//2) - self._d['btn_handf_x']        
+        self.lockbutton_y = self._d['pad'] + int(self._d['row_height']//2) + self._rect.y
+        
         if self.update_needed:
             self.resize_texts()
         if self.yesbutton_enabled:
@@ -560,11 +536,13 @@ class PrintBackground(Background):
                                          self.yesbutton_y, 
                                          self.yesbutton_width, 
                                          self.yesbutton_height), 
-                                         self.yesbutton_event, 
+                                         self.yesbutton_event,                                          
                                          label='YES', 
                                          parent=screen, 
-                                         button_color=button_color, 
-                                         button_hover_color=button_hover_color)
+                                         font_color=self._c.gettyped("WINDOW", "font_secondary_color"),
+                                         button_color=self._c.gettyped("WINDOW", "btn_bg_green"), 
+                                         button_hover_color=self._c.gettyped("WINDOW", "btn_bg_green_hover"), 
+                                         border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
             self.yesbutton.enabled(False)
 
             self.nobutton = PushButton((self.nobutton_x, 
@@ -574,10 +552,17 @@ class PrintBackground(Background):
                                         self.nobutton_event, 
                                         label='NO', 
                                         parent=screen, 
-                                        button_color=button_color,
-                                        button_hover_color=button_hover_color)
+                                        button_color=self._c.gettyped("WINDOW", "btn_bg_red"), 
+                                        button_hover_color=self._c.gettyped("WINDOW", "btn_bg_red_hover"), 
+                                        border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
             self.nobutton.enabled(False)
-
+            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.lockbutton_width, self.lockbutton_height), self.lockbutton_event,
+                                          label='LOCK SCREEN', parent=screen, 
+                                          font_size=24,
+                                          button_color=self._c.gettyped("WINDOW", "btn_bg_red"), 
+                                          button_hover_color=self._c.gettyped("WINDOW", "btn_bg_red_hover"), 
+                                          border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
+            self.lockbutton.enabled(True)    
             self.yesbutton_enabled = False
         
 
@@ -655,8 +640,7 @@ class PrintBackground(Background):
         # if self.yesbutton:
         #     self.yesbutton.draw()
         # if self.nobutton:
-        #     self.nobutton.draw()
-        
+        #     self.nobutton.draw()       
         
 
 
@@ -678,14 +662,6 @@ class FinishedBackground(Background):
             right_rect.top = self._rect.centery - right_rect.centery
             right_rect.right = self._rect.right - 10
 
-            # self.left_people = pictures.get_pygame_image("finished_left.png", size=left_rect.size,
-            #                                              color=self._text_color)
-            # self.right_people = pictures.get_pygame_image("finished_right.png", size=right_rect.size,
-            #                                               color=self._text_color)
-
-            # self.left_people_pos = self.left_people.get_rect(center=left_rect.center).topleft
-            # self.right_people_pos = self.right_people.get_rect(center=right_rect.center).topleft
-
             if self._show_outlines:
                 self._outlines.append((self._make_outlines(left_rect.size), left_rect.topleft))
                 self._outlines.append((self._make_outlines(right_rect.size), right_rect.topleft))
@@ -700,11 +676,6 @@ class FinishedBackground(Background):
 
     def paint(self, screen):
         Background.paint(self, screen)
-        # if self.left_people:
-        #     screen.blit(self.left_people, self.left_people_pos)
-        # if self.right_people:
-        #     screen.blit(self.right_people, self.right_people_pos)
-
 
 class FinishedWithImageBackground(FinishedBackground):
 
@@ -737,14 +708,6 @@ class FinishedWithImageBackground(FinishedBackground):
             left_rect.bottom = self._rect.bottom
             right_rect.right = self._rect.right
 
-            # self.left_people = pictures.get_pygame_image("finished_left.png", size=left_rect.size,
-            #                                              color=self._text_color)
-            # self.right_people = pictures.get_pygame_image("finished_right.png", size=right_rect.size,
-            #                                               color=self._text_color)
-
-            # self.left_people_pos = self.left_people.get_rect(center=left_rect.center).topleft
-            # self.right_people_pos = self.right_people.get_rect(center=right_rect.center).topleft
-
             if self._show_outlines and left_rect and right_rect:
                 self._outlines.append((self._make_outlines(left_rect.size), left_rect.topleft))
                 self._outlines.append((self._make_outlines(right_rect.size), right_rect.topleft))
@@ -752,8 +715,10 @@ class FinishedWithImageBackground(FinishedBackground):
 
 
 class NoDocumentsBackground(Background):
-    def __init__(self, message, cfg, dimensions=None):
+    def __init__(self, message, _c, _d=None):        
         Background.__init__(self, message)
+        self._c = _c
+        self._d = _d
         self.downloadbutton_y = None
         self.downloadbutton_x = None 
         self.downloadbutton_width = 200
@@ -761,15 +726,14 @@ class NoDocumentsBackground(Background):
         self.downloadbutton_enabled = True
         self.downloadbutton_event = (BUTTONDOWN, {'download':True})
         self.update_needed = None
-        self.config = cfg
-        self.dimensions = dimensions
+        
 
     def resize(self, screen):
         Background.resize(self, screen)
-        self.downloadbutton_y = self.dimensions['h']//2+0.25*self.dimensions['h'] - self.downloadbutton_height//2 
-        self.downloadbutton_x = self.dimensions['w']//2 - self.downloadbutton_width//2 
+        self.downloadbutton_y = self._d['h']//2+0.25*self._d['h'] - self.downloadbutton_height//2 
+        self.downloadbutton_x = self._d['w']//2 - self.downloadbutton_width//2 
         if self.downloadbutton_enabled:
-            self.downloadbutton = PushButton((self.downloadbutton_x, self.downloadbutton_y, self.downloadbutton_width, self.downloadbutton_height), self.downloadbutton_event, label='YES', parent=screen, button_hover_color=self.config.gettyped("WINDOW", "btn_bg_num_hover"))
+            self.downloadbutton = PushButton((self.downloadbutton_x, self.downloadbutton_y, self.downloadbutton_width, self.downloadbutton_height), self.downloadbutton_event, label='YES', parent=screen, button_hover_color=self._c.gettyped("WINDOW", "btn_bg_num_hover"))
             self.downloadbutton.enabled(True)
             self.downloadbutton_enabled = False
         
