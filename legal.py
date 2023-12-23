@@ -149,6 +149,7 @@ class PiApplication:
         self.picture_name = None
         self.database_updated = None
         self.questions_answers = []
+        self.staff_list = self.settings['staff']
         # Get count from data base
         if self.settings['attempt_count']:
             self.attempt_count = self.settings['attempt_count']
