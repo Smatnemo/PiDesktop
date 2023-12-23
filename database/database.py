@@ -386,9 +386,12 @@ class DataBase(object):
     
     def get_staff_list(self, staff):
         self.open()
-        staff = self.get_table(staff)
+        staff_dict = {}
+        staff_list = self.get_table(staff)
+        for staff in staff_list:
+            staff_dict[staff[0]] = staff
         self.close()
-        return staff
+        return staff_dict
     def reload_documents_table(self,sql_script):
         self.open()
         with open(sql_script, 'r') as f:
