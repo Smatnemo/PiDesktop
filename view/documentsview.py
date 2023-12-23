@@ -325,20 +325,16 @@ class InmateDocumentsView(object):
         # Divide the list based on the available height of the screen
         
 
+# Create view for staff
+class StaffView(DocumentsView):
+    def __init__(self, staff_dict, selected_staff, _d, config):
+        DocumentsView.__init__(self, staff_dict, selected_staff, _d, config)
+    
+    def draw(self, foreground_rect, screen):
+        DocumentsView.draw(self, foreground_rect, screen)
+    
+    def update(self):
+        DocumentsView.update(self)
 
-
-
-def main():
-    clock = pygame.time.Clock()
-    done = False 
-
-    while not done:
-        events = list(pygame.event.get())
-        
-        pygame.display.update()
-        clock(60)
-    pygame.quit()
-
-
-if __name__ == "__main__":
-    main()
+    def update_view(self):
+        DocumentsView.update_view
