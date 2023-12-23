@@ -325,16 +325,3 @@ class InmateDocumentsView(object):
         # Divide the list based on the available height of the screen
         
 
-# Create view for staff
-class StaffView(DocumentsView):
-    def __init__(self, staff_dict, selected_staff, _d, config):
-        DocumentsView.__init__(self, staff_dict, selected_staff, _d, config)
-    
-    def draw(self, foreground_rect, screen):
-        DocumentsView.draw(self, foreground_rect, screen)
-    
-    def update(self):
-        DocumentsView.update(self)
-
-    def update_view(self):
-        DocumentsView.update_view
