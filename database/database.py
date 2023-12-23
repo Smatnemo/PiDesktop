@@ -320,6 +320,7 @@ class DataBase(object):
         self.settings['inmate_documents'], self.settings['documents_number'] = self.get_inmate_documents()
         self.settings['attempt_count'] = None
         self.settings['use_camera'] = True
+        self.settings['staff'] = self.get_staff_list('staff')
 
     def get_passcode(self, passcode:str):
         self.cursor.execute("SELECT passcode FROM entity WHERE passcode=(?)",(passcode,))
@@ -383,6 +384,11 @@ class DataBase(object):
         self.close()
         return inmate_documents, number_of_documents
     
+    def get_staff_list(self, staff):
+        self.open()
+        staff = self.get_table(staff)
+        self.close()
+        return staff
     def reload_documents_table(self,sql_script):
         self.open()
         with open(sql_script, 'r') as f:
