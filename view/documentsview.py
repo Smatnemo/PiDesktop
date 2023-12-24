@@ -55,21 +55,27 @@ class InmateRow(object):
         else:
             self.row_num = self.row_num % offset
 
-        self.inmate_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
+        # Move to dict
+        gap=24
+        pad=5
+        r_radius=20
+        r_border=15
+
+        self.inmate_rect = pygame.Rect(foreground_rect.x+gap, foreground_rect.y+60*(self.row_num), foreground_rect.width-(gap*2), self.row_height)
         
         if self.documents:
-            pygame.draw.rect(screen, 'dark gray', self.inmate_rect)
+            pygame.draw.rect(screen, 'white', self.inmate_rect)
             clicked = self.clicked(screen, event)
             if clicked == 'BUTTONDOWN':
-                pygame.draw.rect(screen, 'black', self.inmate_rect)
+                pygame.draw.rect(screen, 'dark grey', self.inmate_rect)
             elif clicked == 'BUTTONUP':
-                pygame.draw.rect(screen, 'dark gray', self.inmate_rect)
+                pygame.draw.rect(screen, 'light gray', self.inmate_rect)
             
-        pygame.draw.rect(screen, 'black', self.inmate_rect, 2)
+        pygame.draw.rect(screen, 'black', self.inmate_rect, r_border, border_radius=r_radius)
         
         #screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
-        screen.blit(self.text_surface(self.inmate_identifier)[0], (foreground_rect.x+204, foreground_rect.y+60*(self.row_num)+14))
-        screen.blit(self.text_surface(self.num)[0], (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
+        screen.blit(self.text_surface(self.inmate_identifier)[0], (foreground_rect.x+gap+pad, foreground_rect.y+60*(self.row_num)))
+        screen.blit(self.text_surface(self.num)[0], ((foreground_rect.width//100)*40+gap+pad, foreground_rect.y+60*(self.row_num)))
         total_pages_count_x = foreground_rect.width-self.text_surface(self.total_pages)[1]-14
         InmateRow.set_total_pages_x(foreground_rect)
         if InmateRow.total_pages_x is not None and total_pages_count_x < InmateRow.total_pages_x:
@@ -161,17 +167,18 @@ class DocumentRow(object):
             pygame.draw.rect(screen, 'light gray', self.document_rect)
             clicked = self.clicked(screen, event)
             if clicked == 'BUTTONDOWN':
-                pygame.draw.rect(screen, 'black', self.document_rect)
-            elif clicked == 'BUTTONUP':
                 pygame.draw.rect(screen, 'light gray', self.document_rect)
+            elif clicked == 'BUTTONUP':
+                pygame.draw.rect(screen, 'white', self.document_rect)
         
 
         pygame.draw.rect(screen, 'black', self.document_rect, 2) 
         
-        screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
-        screen.blit(self.text_surface(self.document_name)[0], (foreground_rect.x+204, foreground_rect.y+60*(self.row_num)+14))
+        #screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
+        screen.blit(self.text_surface(self.document_name)[0], (foreground_rect.x+14, foreground_rect.y+60*(self.row_num)+14))
         screen.blit(self.text_surface(self.status)[0], (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
         page_count_title_x = foreground_rect.width-self.text_surface(self.page_count)[1]-10
+
         DocumentRow.set_page_count_x(foreground_rect)
         if DocumentRow.page_count_x is not None and page_count_title_x < DocumentRow.page_count_x:
             DocumentRow.page_count_x = page_count_title_x
@@ -302,7 +309,7 @@ class InmateDocumentsView(object):
         if self.change_view:
             if self.change_view.change_view=='next' and self.end < len(self.inmate_rows):
                 self.start = self.end
-                self.end = self.start + self._offset
+                self.end = self.start + self._offset                 
                 self.change_view = None
             elif self.change_view.change_view=='previous' and (self.start - self._offset) > 0:
                 self.start = self.start - self._offset

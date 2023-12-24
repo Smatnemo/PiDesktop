@@ -30,8 +30,8 @@ class Foreground(object):
         self.foreground_rect = screen.get_rect()
         # Reduce the height by 20 percent and make self._rect have 20 percent less height than screen
         height = self.foreground_rect.height
-        self.foreground_rect.height = height - 74 
-        self.foreground_rect.y = self.foreground_rect.y + 74
+        self.foreground_rect.height = height - 94
+        self.foreground_rect.y = self.foreground_rect.y + 94
         # Write code to determine the height of each row based on screen size
 
     def resize_texts(self, rect=None, align='center'):
