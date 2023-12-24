@@ -219,9 +219,50 @@ class DocumentRow(object):
         else:
             return None
 
+
+class StaffRow(DocumentRow):
+    def __init__(self, document:tuple=None, row_number:int=0, _d=None, config=None, row_num_text="",document_name="", status="", num_of_pages=""):
+        self._d=_d
+        self.document_rect = None
+        self.row_height = self.row_height = self._d['row_height']
+        self.row_num = row_number
+        self.row_num_text = row_num_text
+        self.document_name = document_name
+        self.status = status
+        self.page_count = num_of_pages
+        
+        if document:
+            self.document_name = str(document[0])
+            self.row_num = row_number + 1
+            self.row_num_text = self.row_num
+            self.staff = document
+        self.document = document
+        # Change logic to write out the statement relating in the third column
+        self.row_text_size = 32
+
+        self.row_text_color = BLACK
+        self.font = pygame.font.Font(fonts.CURRENT, self.row_text_size)
+
+        self.chosen = False
+    def draw(self, foreground_rect, screen, event, offset):
+        DocumentRow.draw(self, foreground_rect, screen, event, offset)
+
+
 # View to be inherited by other Views
 class View(object):
-    pass 
+    def __init__(self):
+
+        self.gap = self._d['h']-(int(self._d["row_height"]*2)) - (int(self._d["btn_handf_y"]*2))
+        self.offset = int(self.gap//self._d["row_height"])
+      
+        self._offset = self.offset - 1
+        self.start = 1
+        self.end = self.start + self._offset
+        self.change_view = None
+    
+    def draw(self, foreground_rect, screen):
+        pass
+
 
 class DocumentsView(object):
     def __init__(self, inmate_documents, selected, _d, config):
@@ -337,8 +378,26 @@ class StaffView(DocumentsView):
         self._c = _c
         self.inmate_documents = staff_dict
         self.documents = staff_dict[selected]
-        self.document_rows = [DocumentRow(document, doc_num, self._d, self._c) for doc_num, document in enumerate(self.documents)]
+        self.document_rows = [StaffRow(document, doc_num, self._d, self._c) for doc_num, document in enumerate(self.documents)]
         self.update_needed = None
-        self.chosendocumentrow = None 
-        self.titlerow = DocumentRow(_d=self._d, config=self._c, row_num_text="S/N", document_name="Staff Number")
-        print("This is the staff list", staff_dict)
+        self.chosenStaffRow = None 
+        self.titlerow = StaffRow(_d=self._d, config=self._c, row_num_text="S/N", document_name="Staff Number")
+        self.document_rows.insert(0, self.titlerow)
+        
+        self.gap = self._d['h']-(int(self._d["row_height"]*2)) - (int(self._d["btn_handf_y"]*2))
+        self.offset = int(self.gap//self._d["row_height"])
+        
+        self._offset = self.offset - 1
+        self.start = 1
+        self.end = self.start + self._offset
+        self.change_view = None
+
+    def draw(self, foreground_rect, screen):
+        DocumentsView.draw(self, foreground_rect, screen)
+
+    # When button is clicked, return the inmate number
+    def update(self):
+        for row in self.document_rows:
+            if row.chosen == True:
+                self.chosenStaffRow = row
+                row.chosen = False

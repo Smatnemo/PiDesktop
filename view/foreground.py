@@ -63,7 +63,7 @@ class ChooseInmateDocumentForeground(Foreground):
         # inmate_documents argument is a tuple
         self._d = _d
         self._c = config
-        self.inmate_documents_view = InmateDocumentsView(inmate_documents, self._d, config) 
+        self.view = InmateDocumentsView(inmate_documents, self._d, config) 
         
         self.previousbutton = self.nextbutton = None
         self.previousbutton_width = self.nextbutton_width = self._d['btn_handf_x']
@@ -107,8 +107,8 @@ class ChooseInmateDocumentForeground(Foreground):
 
     def paint(self, screen):
         Foreground.paint(self, screen)
-        self.inmate_documents_view.draw(self.foreground_rect, screen)
-        self.inmate_documents_view.update()
+        self.view.draw(self.foreground_rect, screen)
+        self.view.update()
         # Draw buttons
         self.nextbutton.draw(self.update_needed)
         self.previousbutton.draw(self.update_needed)
@@ -121,7 +121,7 @@ class ChosenInmateDocumentForeground(Foreground):
         self._d = _d
         self._c = config
 
-        self.document_view = DocumentsView(inmate_documents, selected_inmate, self._d, config)
+        self.view = DocumentsView(inmate_documents, selected_inmate, self._d, config)
 
         self.previousbutton = None
         self.previousbutton_width = 200
@@ -161,8 +161,8 @@ class ChosenInmateDocumentForeground(Foreground):
 
     def paint(self, screen):
         Foreground.paint(self, screen)
-        self.document_view.draw(self.foreground_rect, screen)
-        self.document_view.update()
+        self.view.draw(self.foreground_rect, screen)
+        self.view.update()
 
         # Draw buttons
         self.nextbutton.draw(self.update_needed)
@@ -172,13 +172,46 @@ class ChosenInmateDocumentForeground(Foreground):
 class ChooseStaffForeground(ChosenInmateDocumentForeground):
     def __init__(self, staff_dict, selected, _d, config, header="choose_staff"):
         Foreground.__init__(self, header)
-        self.view = StaffView(staff_dict, selected, _d, config)
+        self._d = _d
+        self.view = StaffView(staff_dict, selected, self._d, config)
+
+        self.previousbutton = None
+        self.previousbutton_width = 200
+        self.previousbutton_height = 38
+ 
+        self.button_enabled = True
+        self.previousbutton_event = pygame.USEREVENT + 1, {'change_view':'previous'}
+
+        self.update_needed = None
+
+        self.nextbutton = None
+        self.nextbutton_width = 200
+        self.nextbutton_height = 38
+
+        self.nextbutton_event = pygame.USEREVENT + 1, {'change_view':'next'}
     
     def resize(self, screen):
-        Foreground.resize(screen)
+        Foreground.resize(self, screen)
+        #  Create parameters for button
+        self._rect = screen.get_rect() 
+        self.nextbutton_x = self.foreground_rect.width - 210
+        self.nextbutton_y = self._d['bottombuttony']
+
+        self.previousbutton_x = self.foreground_rect.x+10
+        self.previousbutton_y = self.nextbutton_y
+
+        if self.button_enabled:
+            self.previousbutton = PushButton((self.previousbutton_x, self.previousbutton_y, self.previousbutton_width, self.previousbutton_height), self.previousbutton_event, label='PREVIOUS', parent=screen)
+            self.previousbutton.enabled(True)
+
+            self.nextbutton = PushButton((self.nextbutton_x, self.nextbutton_y, self.nextbutton_width, self.nextbutton_height), self.nextbutton_event, label='NEXT', parent=screen)
+            self.nextbutton.enabled(True)
+            self.button_enabled = False
 
     def paint(self, screen):
-        Foreground.paint(screen)
+        Foreground.paint(self, screen)
+        self.view.draw(self.foreground_rect, screen)
+        self.view.update()
 
 
 class NoDocumentForeground(Foreground):

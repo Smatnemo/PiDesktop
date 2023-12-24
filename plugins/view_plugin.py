@@ -168,13 +168,23 @@ class ViewPlugin(object):
     def state_login_validate(self, cfg, app, win, events):
         # Create a way to validate username and password
         if app.find_login_event(events):
-            LOGGER.info("Attempting to validate password")
-            login = LogIn()
-            app.validated = login.authenticate(app.password)
-            LOGGER.info(app.validated)
+            if app.previous_state == "choose" and app.staff:
+                app.validated = app.password==app.staff[1]
+                print("App Validated", app.validated)
+            else:
+                LOGGER.info("Attempting to validate password")
+                login = LogIn()
+                app.validated = login.authenticate(app.password)
+                LOGGER.info(app.validated)
+
             if app.validated:
                 app.validated = None
                 self.count_failed_attempts = 0
+                if app.staff and app.previous_state == 'choose':
+                    # Log staff session before making it empty
+                    app.staff = []
+                    return 'choose'
+                app.previous_state = "login"
                 return app.previous_state if (app.previous_state=='chosen' and app.inmate_number)\
                       or app.previous_state != 'wait' and app.previous_state != 'finish'\
                       and app.previous_state != 'login' and app.previous_state is not None else 'choose'
@@ -191,9 +201,9 @@ class ViewPlugin(object):
         elif self.choose_timer.is_timeout():    
             return 'wait'
     
-    @LDS.hookimpl
-    def state_login_exit(self, app):
-        app.previous_state = 'login'
+    # @LDS.hookimpl
+    # def state_login_exit(self, app):
+    #     app.previous_state = 'login'
 
     @LDS.hookimpl
     def state_choose_enter(self, cfg, app, win):
@@ -206,14 +216,13 @@ class ViewPlugin(object):
             except Exception as ex:
                 self.failure_message = 'no_staff'
                 raise ex
-
-        if app.documents and app.previous_state=='unlock':
+        if app.documents and app.previous_state=='choose':
             try:
                 win.show_choices(app.documents, cfg)
             except Exception as ex:
                 self.failure_message = 'no_orders' if not app.documents else 'oops'
                 raise ex
-        
+            
         app.inmate_number = None
         win._current_background.reset_timer = True
         self.choose_timer.start()
@@ -228,8 +237,11 @@ class ViewPlugin(object):
         # For CO
 
         # For documents
-        win._current_documents_foreground.inmate_documents_view.update_needed = app.update_needed
-        win.show_choices(app.documents, cfg)
+        win._current_documents_foreground.view.update_needed = app.update_needed
+        if app.previous_state == 'login':
+            win.show_co_choices(app.staff_list, cfg)
+        if app.previous_state == 'choose':
+            win.show_choices(app.documents, cfg)
 
         # update for buttons
         win._current_background.backbutton.draw(app.update_needed)
@@ -240,11 +252,14 @@ class ViewPlugin(object):
 
         event = app.find_choose_event(events)
         if event:
-            app.inmate_number = win._current_documents_foreground.inmate_documents_view.choseninmaterow.inmate_number
-
+            if app.previous_state=='choose':
+                app.inmate_number = win._current_documents_foreground.view.choseninmaterow.inmate_number
+            elif app.previous_state=='login':
+                app.staff = win._current_documents_foreground.view.chosenStaffRow.staff
+                print("Staff", app.staff)
         next_previous_foreground_event = app.find_next_previous_event(events)
         if next_previous_foreground_event:
-            win._current_documents_foreground.inmate_documents_view.change_view = next_previous_foreground_event
+            win._current_documents_foreground.view.change_view = next_previous_foreground_event
    
     @LDS.hookimpl
     def state_choose_validate(self, cfg, app, events):
@@ -256,6 +271,9 @@ class ViewPlugin(object):
             return 'wait'
         elif app.inmate_number:
             return 'chosen'
+        elif app.staff:
+            app.previous_state = 'choose'
+            return 'login'
         elif self.choose_timer.is_timeout():
             return 'wait'
         
@@ -278,7 +296,7 @@ class ViewPlugin(object):
 
         app.find_touch_effects_event(events)
 
-        win._current_documents_foreground.document_view.update_needed = app.update_needed
+        win._current_documents_foreground.view.update_needed = app.update_needed
         win.show_choices(app.documents, cfg, selected=app.inmate_number)
 
         # update for backbutton
@@ -290,11 +308,11 @@ class ViewPlugin(object):
 
         event = app.find_choose_event(events)
         if event:
-            app.chosen_document = win._current_documents_foreground.document_view.chosendocumentrow
+            app.chosen_document = win._current_documents_foreground.view.chosendocumentrow
         
         next_previous_foreground_event = app.find_next_previous_event(events)
         if next_previous_foreground_event:
-            win._current_documents_foreground.document_view.change_view = next_previous_foreground_event
+            win._current_documents_foreground.view.change_view = next_previous_foreground_event
    
 
     @LDS.hookimpl
