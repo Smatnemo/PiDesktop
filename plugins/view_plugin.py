@@ -190,17 +190,29 @@ class ViewPlugin(object):
             # Write code to return to previous state if the last state was not choose
         elif self.choose_timer.is_timeout():    
             return 'wait'
+    
+    @LDS.hookimpl
+    def state_login_exit(self, app):
+        app.previous_state = 'login'
 
     @LDS.hookimpl
     def state_choose_enter(self, cfg, app, win):
         LOGGER.info("Show document choice (nothing selected)")
         win.set_print_number(0, False)  # Hide printer status
-        # Create logic to fetch documents from database
-        try:
-            win.show_choices(app.documents, cfg)
-        except Exception as ex:
-            self.failure_message = 'no_orders' if not app.documents else 'oops'
-            raise ex
+        print("This is the previous state", app.previous_state)
+        if app.staff_list and app.previous_state=='login':
+            try:
+                win.show_co_choices(app.staff_list, cfg)
+            except Exception as ex:
+                self.failure_message = 'no_staff'
+                raise ex
+
+        if app.documents and app.previous_state=='unlock':
+            try:
+                win.show_choices(app.documents, cfg)
+            except Exception as ex:
+                self.failure_message = 'no_orders' if not app.documents else 'oops'
+                raise ex
         
         app.inmate_number = None
         win._current_background.reset_timer = True
@@ -213,7 +225,9 @@ class ViewPlugin(object):
             self.choose_timer.start()
 
         app.find_touch_effects_event(events)
+        # For CO
 
+        # For documents
         win._current_documents_foreground.inmate_documents_view.update_needed = app.update_needed
         win.show_choices(app.documents, cfg)
 

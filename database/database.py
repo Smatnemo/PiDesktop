@@ -388,8 +388,7 @@ class DataBase(object):
         self.open()
         staff_dict = {}
         staff_list = self.get_table(staff)
-        for staff in staff_list:
-            staff_dict[staff[0]] = staff
+        staff_dict['staff'] = staff_list
         self.close()
         return staff_dict
     def reload_documents_table(self,sql_script):

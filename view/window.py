@@ -396,7 +396,16 @@ class PiWindow(object):
                 self._update_documents_foreground(foreground.ChosenInmateDocumentForeground(documents, selected, self._d, cfg))
         else:
             raise Exception("No Documents")
-
+    
+    def show_co_choices(self, staff_dict, cfg, selected="staff"):
+        """
+        Show list of co
+        """
+        if staff_dict:
+            self._update_background(background.ChooseInmateDocumentBackground(self._d,cfg,"choose_staff"))
+            self._update_documents_foreground(foreground.ChooseStaffForeground(staff_dict, selected, self._d, cfg))
+        else:
+            raise Exception("No Staff")
 
 # After selecting the inmate row
     def show_image(self, pil_image=None, pos=CENTER):

@@ -257,7 +257,24 @@ def state_login_exit(app):
  
     :param app: application instance
     """
+# --- unlock state -------------------------------------------------------------
+@hookspec 
+def state_unlock_enter(app, win):
+    """
+    """
+@hookspec 
+def state_unlock_do(cfg, app, win, events):
+    """
+    """ 
+@hookspec 
+def state_unlock_validate(cfg, app, win, events):
+    """
+    """ 
 
+@hookspec 
+def state_unlock_exit(app, win):
+    """
+    """
 # --- logout state -------------------------------------------------------------
 
 @hookspec 

@@ -110,6 +110,7 @@ class PiApplication:
         self._machine = StatesMachine(self._pm, self._config, self, self._window)
         self._machine.add_state('wait')
         self._machine.add_state('login')
+        self._machine.add_state('unlock') # this state is used by co to access
         self._machine.add_state('choose') # This state should be used to choose documents
         self._machine.add_state('chosen') # This state should be used after document has been chosen
         self._machine.add_state('decrypt') # State similar to login for decrypting documents
@@ -150,7 +151,6 @@ class PiApplication:
         self.database_updated = None
         self.questions_answers = []
         self.staff_list = self.settings['staff']
-        print("Staff list", self.staff_list)
         # Get count from data base
         if self.settings['attempt_count']:
             self.attempt_count = self.settings['attempt_count']

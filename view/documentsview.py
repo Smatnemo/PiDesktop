@@ -11,6 +11,9 @@ BLACK = (0, 0, 0)
 
 CHOSEEVENT = pygame.USEREVENT + 16
 
+# Row to be inherited by every other row
+class Row(object):
+    pass
 class InmateRow(object):
     total_pages_x = None
     row_y = None
@@ -30,6 +33,7 @@ class InmateRow(object):
         self.inmate_number = inmate_number
         self.inmate_num_coord = None
         self.total_pages = 0
+        
         if self.documents: 
             for document in self.documents:
                 self.total_pages += document[8]
@@ -124,15 +128,15 @@ class InmateRow(object):
 class DocumentRow(object):
     page_count_x = None
 
-    def __init__(self, document:tuple=None, row_number:int=0, _d=None, config=None):
+    def __init__(self,  document:tuple=None, row_number:int=0, _d=None, config=None, row_num_text="",document_name="", status="", num_of_pages=""):
         self._d=_d
         self.document_rect = None
         self.row_height = self.row_height = self._d['row_height']
         self.row_num = row_number
-        self.row_num_text = "S/N"
-        self.document_name = "Document Name"
-        self.status = "Status"
-        self.page_count = "Number of pages"
+        self.row_num_text = row_num_text
+        self.document_name = document_name
+        self.status = status
+        self.page_count = num_of_pages
         if document:
             self.document_name = str(document[20][:13])
             self.status = document[11]
@@ -140,7 +144,7 @@ class DocumentRow(object):
             self.row_num_text = self.row_num
             self.page_count = document[8]
 
-            
+        
         self.document = document
 
         # Change logic to write out the statement relating in the third column
@@ -215,7 +219,9 @@ class DocumentRow(object):
         else:
             return None
 
-
+# View to be inherited by other Views
+class View(object):
+    pass 
 
 class DocumentsView(object):
     def __init__(self, inmate_documents, selected, _d, config):
@@ -226,7 +232,7 @@ class DocumentsView(object):
         self.document_rows = [DocumentRow(document, doc_num, _d, config) for doc_num, document in enumerate(self.documents)]
         self.update_needed = None
         self.chosendocumentrow = None 
-        self.titlerow = DocumentRow(_d=self._d, config=self._c)
+        self.titlerow = DocumentRow(_d=self._d, config=self._c, row_num_text="S/N", document_name="Document", status="Status", num_of_pages="Number of Pages")
         self.document_rows.insert(0, self.titlerow)
 
         self.gap = _d["h"]-_d["footer"]-_d["header"]
@@ -325,3 +331,14 @@ class InmateDocumentsView(object):
         # Divide the list based on the available height of the screen
         
 
+class StaffView(DocumentsView):
+    def __init__(self, staff_dict, selected, _d, _c):
+        self._d = _d
+        self._c = _c
+        self.inmate_documents = staff_dict
+        self.documents = staff_dict[selected]
+        self.document_rows = [DocumentRow(document, doc_num, self._d, self._c) for doc_num, document in enumerate(self.documents)]
+        self.update_needed = None
+        self.chosendocumentrow = None 
+        self.titlerow = DocumentRow(_d=self._d, config=self._c, row_num_text="S/N", document_name="Staff Number")
+        print("This is the staff list", staff_dict)

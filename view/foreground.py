@@ -3,7 +3,7 @@ import pygame
 
 from LDS.language import get_translated_text
 from LDS.view.background import multiline_text_to_surfaces
-from LDS.view.documentsview import InmateDocumentsView, DocumentsView
+from LDS.view.documentsview import InmateDocumentsView, DocumentsView, StaffView
 from LDS.view.loginview import PushButton
 
 WHITE = (255, 255, 255)
@@ -14,6 +14,9 @@ class Foreground(object):
         self.foreground_color = color
         self.foreground_rect = None
         self._name = name
+        self.view = None
+        self.previousbutton = None
+        self.nextbutton = None
 
     def __str__(self):
         """Return foreground final name.
@@ -33,6 +36,7 @@ class Foreground(object):
         self.foreground_rect.height = height - 74 
         self.foreground_rect.y = self.foreground_rect.y + 74
         # Write code to determine the height of each row based on screen size
+        
 
     def resize_texts(self, rect=None, align='center'):
         """Update text surfaces.
@@ -54,8 +58,8 @@ class ChooseInmateDocumentForeground(Foreground):
     attr inmate_documents: a dictionary with inmate number and their associated documents
     type inmate_documents: dictionary
     """
-    def __init__(self, inmate_documents, _d, config=None):
-        Foreground.__init__(self, "choose_inmate")
+    def __init__(self, inmate_documents, _d, config=None, header="choose_inmate"):
+        Foreground.__init__(self, header)
         # inmate_documents argument is a tuple
         self._d = _d
         self._c = config
@@ -112,8 +116,8 @@ class ChooseInmateDocumentForeground(Foreground):
 
 
 class ChosenInmateDocumentForeground(Foreground):
-    def __init__(self, inmate_documents, selected_inmate, _d, config):
-        Foreground.__init__(self, "chosen_inmate")
+    def __init__(self, inmate_documents, selected_inmate, _d, config, header="chosen_inmate"):
+        Foreground.__init__(self, header)
         self._d = _d
         self._c = config
 
@@ -163,6 +167,18 @@ class ChosenInmateDocumentForeground(Foreground):
         # Draw buttons
         self.nextbutton.draw(self.update_needed)
         self.previousbutton.draw(self.update_needed)
+
+
+class ChooseStaffForeground(ChosenInmateDocumentForeground):
+    def __init__(self, staff_dict, selected, _d, config, header="choose_staff"):
+        Foreground.__init__(self, header)
+        self.view = StaffView(staff_dict, selected, _d, config)
+    
+    def resize(self, screen):
+        Foreground.resize(screen)
+
+    def paint(self, screen):
+        Foreground.paint(screen)
 
 
 class NoDocumentForeground(Foreground):

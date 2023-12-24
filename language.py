@@ -18,6 +18,8 @@ DEFAULT = {
         'login': "Unlock Screen",
         'choose_document': "Choose Document",
         'choose_inmate': "Choose Inmate",
+        'choose_staff': "Choose Staff",
+        'no_staff': "No Staff",
         'No_documents': "No Documents",
         'decrypt': "Enter Decryption Key",
         'wrong_decrypt': "Wrong Decryption Key",
