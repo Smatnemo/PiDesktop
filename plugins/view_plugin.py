@@ -132,7 +132,6 @@ class ViewPlugin(object):
         LOGGER.info("Attempting to Login")
         
         self.login_view = win.show_login(cfg) 
-        print("This is the timeout", self.query_database_timer.is_timeout())
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         if app.database_updated or self.query_database_timer.is_timeout():
             db = DataBase()
@@ -648,9 +647,9 @@ class ViewPlugin(object):
                 # read image into blob
                 blob=app.convertToBinaryData(app.previous_picture_file)
                 os.remove(app.previous_picture_file)
-                # win._current_documents_foreground.document_view.inmate_documents
-                win._current_documents_foreground.document_view.update_view(app.inmate_number, blob, decrypted=True, printed=True)
-                app.documents = win._current_documents_foreground.document_view.inmate_documents  
+                # win._current_documents_foreground.view.inmate_documents
+                win._current_documents_foreground.view.update_view(app.inmate_number, blob, decrypted=True, printed=True)
+                app.documents = win._current_documents_foreground.view.inmate_documents  
 
                 db = DataBase()
                 db.__update__(document_update_query, (app.questions_answers[0], app.chosen_document.document[16], app.chosen_document.document[0]))
