@@ -132,7 +132,7 @@ class ViewPlugin(object):
         LOGGER.info("Attempting to Login")
         
         self.login_view = win.show_login(cfg) 
-        
+        print("This is the timeout", self.query_database_timer.is_timeout())
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         if app.database_updated or self.query_database_timer.is_timeout():
             db = DataBase()
@@ -183,6 +183,7 @@ class ViewPlugin(object):
                 if app.staff and app.previous_state == 'choose':
                     # Log staff session before making it empty
                     app.staff = []
+                    app.previous_state = 'choose'
                     return 'choose'
                 app.previous_state = "login"
                 return app.previous_state if (app.previous_state=='chosen' and app.inmate_number)\
@@ -209,17 +210,18 @@ class ViewPlugin(object):
     def state_choose_enter(self, cfg, app, win):
         LOGGER.info("Show document choice (nothing selected)")
         win.set_print_number(0, False)  # Hide printer status
-        print("This is the previous state", app.previous_state)
+    
         if app.staff_list and app.previous_state=='login':
             try:
                 win.show_co_choices(app.staff_list, cfg)
             except Exception as ex:
                 self.failure_message = 'no_staff'
                 raise ex
-        if app.documents and app.previous_state=='choose':
+        if app.previous_state=='choose':
             try:
                 win.show_choices(app.documents, cfg)
             except Exception as ex:
+                print("Document list: ", app.documents)
                 self.failure_message = 'no_orders' if not app.documents else 'oops'
                 raise ex
             
