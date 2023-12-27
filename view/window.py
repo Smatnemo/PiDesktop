@@ -13,7 +13,7 @@ from LDS import pictures, fonts
 from LDS.view import background, foreground
 from LDS.utils import LOGGER
 from LDS.pictures import sizing
-from LDS.view.loginview import LoginView
+from LDS.view.loginview import LoginView, DecryptView
 
 
 class PiWindow(object):
@@ -63,8 +63,8 @@ class PiWindow(object):
         pygame.init()
         # This gets the display size of the screen 
         vid_display_info = pygame.display.Info()
-        WIDTH = 1024
-        HEIGHT = 600      
+        WIDTH = 800
+        HEIGHT = 480      
         self.display_size = (WIDTH, HEIGHT)
         # Save the desktop mode, shall be done before `setmode` (SDL 1.2.10, and pygame 1.8.0)
         
@@ -377,7 +377,7 @@ class PiWindow(object):
     
     def show_decrypt(self, config, previous_state="DECRYPT"):
         self._update_background(background.DecryptBackground(self._d, config))
-        lv = LoginView(self.surface, previous_state, self._d, config)
+        lv = DecryptView(self.surface, previous_state, self._d, config)
         # Write logic to paint button on on screen surface
         return lv
         

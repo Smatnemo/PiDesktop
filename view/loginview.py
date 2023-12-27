@@ -388,6 +388,7 @@ class button(object):
 
 class LoginView(object):
     def __init__(self, screen, label, _d, _c):
+      
         self._d = _d
         self._c=_c
         font_primary_color = self._c.gettyped("WINDOW", "font_primary_color")
@@ -465,39 +466,37 @@ class LoginView(object):
             button.draw(screen, self.update_needed)
         self.login_button.draw(self.update_needed)
 
-
-def main_loop():
-    clock = pygame.time.Clock()
-    lv = LoginView(screen)
-    done = False
+class DecryptView(LoginView):
+    def __init__(self, screen, label, _d, _c):
+        LoginView.__init__(self, screen, label, _d, _c)
+# def main_loop():
+#     clock = pygame.time.Clock()
+#     lv = LoginView(screen)
+#     done = False
 
     
-    while not done:
-        events = list(pygame.event.get())
+    # while not done:
+    #     events = list(pygame.event.get())
         
-        for event in events:
-            if event.type == pygame.QUIT:
-                done = True        
-            if event.type == LOGINEVENT:
-                pass_code = lv.get_input_text() 
-                lv.passcode_box.text=''
-                lv.passcode_box.txt_surface = lv.passcode_box.font.render(lv.passcode_box.text, True, lv.passcode_box.color)
-                #print(pass_code) 
-            if event.type == pygame.MOUSEBUTTONDOWN or event.type==pygame.MOUSEMOTION\
-                or event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP or event.type==pygame.FINGERDOWN:
-                lv.update_needed=event
-            else:
-                lv.update_needed=None
+    #     for event in events:
+    #         if event.type == pygame.QUIT:
+    #             done = True        
+    #         if event.type == LOGINEVENT:
+    #             pass_code = lv.get_input_text() 
+    #             lv.passcode_box.text=''
+    #             lv.passcode_box.txt_surface = lv.passcode_box.font.render(lv.passcode_box.text, True, lv.passcode_box.color)
+    #             #print(pass_code) 
+    #         if event.type == pygame.MOUSEBUTTONDOWN or event.type==pygame.MOUSEMOTION\
+    #             or event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP or event.type==pygame.FINGERDOWN:
+    #             lv.update_needed=event
+    #         else:
+    #             lv.update_needed=None
             
-        lv.passcode_box.handle_event(events)  
+    #     lv.passcode_box.handle_event(events)  
 
-        lv.draw(screen)
+    #     lv.draw(screen)
         
-        pygame.display.flip()
-        clock.tick(60)
+    #     pygame.display.flip()
+    #     clock.tick(60)
 
 
-
-
-if __name__ == "__main__":
-    main_loop()
