@@ -10,7 +10,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 class Foreground(object):
-    def __init__(self, name, color=(33,33,35))):
+    def __init__(self, name, color=(33,33,35)):
         self.foreground_color = color
         self.foreground_rect = None
         self._name = name
