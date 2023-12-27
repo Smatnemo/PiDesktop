@@ -262,7 +262,7 @@ class StaffRow(DocumentRow):
             self.staff = document
         self.document = document
         # Change logic to write out the statement relating in the third column
-        self.row_text_size = 32
+        self.row_text_size = 22
 
         self.row_text_color = BLACK
         self.font = pygame.font.Font(fonts.CURRENT, self.row_text_size)

@@ -387,7 +387,7 @@ class button(object):
         
 
 class LoginView(object):
-    def __init__(self, screen, label, _d, _c):
+    def __init__(self, screen, label, _d, _c, input_label='Enter CO Unlock Code'):
       
         self._d = _d
         self._c=_c
@@ -408,7 +408,7 @@ class LoginView(object):
         self._r = pygame.Rect(int(self._d['startrowgridx']-self._d['marginx']), int(self._d['startrowgridy']), int(self._d['unlock_x']), (int(self._d['fourthrowy']+self._d['inputheight']+self._d['marginy'])))
         self._rc = app_bg_secondary_color
 
-        self.passcode_box = InputBox(((self._d['startrowgridx']-self._d['marginx']), self._d['startrowgridy'], self._d['unlock_x'], self._d['inputheight']), parent=screen, bg_color=input_login_bg, font_size=32, font_color=font_primary_color, label='Enter CO Unlock Code')
+        self.passcode_box = InputBox(((self._d['startrowgridx']-self._d['marginx']), self._d['startrowgridy'], self._d['unlock_x'], self._d['inputheight']), parent=screen, bg_color=input_login_bg, font_size=32, font_color=font_primary_color, label=input_label)
         self.passcode_box.key_pad_rect = [pygame.Rect(self._d['startrowgridx'], self._d['startrowgridy'], self._d['gridwidth'], self._d['inputheight'])]
         
         # the numbers for the calcaltor self._d['btn_num_x'] self._d['btn_num_y']
@@ -467,8 +467,8 @@ class LoginView(object):
         self.login_button.draw(self.update_needed)
 
 class DecryptView(LoginView):
-    def __init__(self, screen, label, _d, _c):
-        LoginView.__init__(self, screen, label, _d, _c)
+    def __init__(self, screen, label, _d, _c, input_label="Enter Decryption Code"):
+        LoginView.__init__(self, screen, label, _d, _c, input_label)
 # def main_loop():
 #     clock = pygame.time.Clock()
 #     lv = LoginView(screen)
