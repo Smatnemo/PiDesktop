@@ -174,41 +174,48 @@ class ChosenInmateDocumentForeground(Foreground):
 
 
 class ChooseStaffForeground(ChosenInmateDocumentForeground):
-    def __init__(self, staff_dict, selected, _d, config, header="choose_staff"):
+    def __init__(self, staff_dict, selected, _d, _c, header="choose_staff"):
         Foreground.__init__(self, header)
         self._d = _d
-        self.view = StaffView(staff_dict, selected, self._d, config)
+        self._c = _c
+        self.view = StaffView(staff_dict, selected, self._d, self._c)
 
-        self.previousbutton = None
-        self.previousbutton_width = 200
-        self.previousbutton_height = 38
- 
+        self.previousbutton = self.nextbutton = None
+        self.previousbutton_width = self.nextbutton_width = self._d['btn_handf_x']
+        self.previousbutton_height = self.nextbutton_height = self._d['btn_handf_y']
+        self.previousbutton_event = pygame.USEREVENT+1, {'change_view':"previous"}
+        self.nextbutton_event = pygame.USEREVENT+1, {'change_view':"next"}              
         self.button_enabled = True
-        self.previousbutton_event = pygame.USEREVENT + 1, {'change_view':'previous'}
-
         self.update_needed = None
 
-        self.nextbutton = None
-        self.nextbutton_width = 200
-        self.nextbutton_height = 38
-
-        self.nextbutton_event = pygame.USEREVENT + 1, {'change_view':'next'}
-    
     def resize(self, screen):
         Foreground.resize(self, screen)
         #  Create parameters for button
         self._rect = screen.get_rect() 
-        self.nextbutton_x = self.foreground_rect.width - 210
-        self.nextbutton_y = self._d['bottombuttony']
+        # X Positions
+        self.nextbutton_x = self._rect.width - self._d['pad'] - int(self._d['row_height']//2) - self._d['btn_handf_x']
+        self.previousbutton_x = self._rect.x + self._d['pad'] + int(self._d['row_height']//2)
+        # Y Positions
+        self.nextbutton_y = self.previousbutton_y = self._rect.height - self._d['pad'] - int(self._d['row_height']//4) - self._d['btn_handf_y']   
 
-        self.previousbutton_x = self.foreground_rect.x+10
-        self.previousbutton_y = self.nextbutton_y
 
         if self.button_enabled:
-            self.previousbutton = PushButton((self.previousbutton_x, self.previousbutton_y, self.previousbutton_width, self.previousbutton_height), self.previousbutton_event, label='PREVIOUS', parent=screen)
+            self.previousbutton = PushButton((self.previousbutton_x, self.previousbutton_y, self.previousbutton_width, self.previousbutton_height),
+                                             self.previousbutton_event, label='PREVIOUS',
+                                             font_color=self._c.gettyped("WINDOW", "font_secondary_color"),
+                                             button_color=self._c.gettyped("WINDOW", "btn_bg_green"),
+                                             button_hover_color=self._c.gettyped("WINDOW", "btn_bg_green_hover"),
+                                             border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0],
+                                             parent=screen)
             self.previousbutton.enabled(True)
 
-            self.nextbutton = PushButton((self.nextbutton_x, self.nextbutton_y, self.nextbutton_width, self.nextbutton_height), self.nextbutton_event, label='NEXT', parent=screen)
+            self.nextbutton = PushButton((self.nextbutton_x, self.nextbutton_y, self.nextbutton_width, self.nextbutton_height), self.nextbutton_event,
+                                          label='NEXT',
+                                          font_color=self._c.gettyped("WINDOW", "font_secondary_color"),
+                                          button_color=self._c.gettyped("WINDOW", "btn_bg_green"),
+                                          button_hover_color=self._c.gettyped("WINDOW", "btn_bg_green_hover"),
+                                          border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0],
+                                          parent=screen)
             self.nextbutton.enabled(True)
             self.button_enabled = False
 
