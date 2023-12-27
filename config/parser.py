@@ -243,7 +243,7 @@ DEFAULT = odict((
                  "Secondary text displayed",
                  "Sub-title", "")),
             ("text_colors",
-                ((0, 0, 0),
+                ((255, 255, 255),
                  "RGB colors used for footer texts (list of tuples accepted)",
                  None, None)),
             ("text_fonts",
@@ -259,7 +259,7 @@ DEFAULT = odict((
                  "Overlay path (PNG file) with same aspect ratio than final picture (list of quoted paths accepted)",
                  None, None)),
             ("backgrounds",
-                ((255, 255, 255),
+                ((33, 33, 35),
                  "Background RGB color or image path (list of tuples or quoted paths accepted)",
                  None, None)),
         ))

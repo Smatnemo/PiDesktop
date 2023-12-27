@@ -312,14 +312,14 @@ class PiWindow(object):
               'footer': (_handf)}
         
         self._d['btn_num_x'] = (_button_num_x * self.resize_width)
-        self._d['btn_num_y'] = (_button_num_y * self.resize_height)
+        self._d['btn_num_y'] = (_button_num_y * self.resize_height) - 6
         self._d['btn_handf_x'] = (257 * self.resize_width)
         self._d['btn_handf_y'] = (73 * self.resize_height)
         self._d['unlock_x'] = (self._d['gridwidth']+(self._d['marginx']*2))
         self._d['halfgridwidth'] = self._d['gridwidth']/2
         self._d['halfinputheight'] = self._d['inputheight']/2
         self._d['startrowgridx'] = self._d['xcenter'] - self._d['halfgridwidth']
-        self._d['startrowgridy'] = self._d['ycenter'] - self._d['inputheight'] - (self._d['btn_num_y']*2) - self._d['marginy']
+        self._d['startrowgridy'] = self._d['ycenter'] - self._d['inputheight'] - (self._d['btn_num_y']*2) - self._d['marginy'] + 38
         # Row height fine.
         self._d['firstrowy'] = self._d['startrowgridy'] + self._d['inputheight'] + (self._d['marginy']*3) 
         self._d['secondrowy'] = self._d['firstrowy']+self._d['btn_num_y']+self._d['marginy']
@@ -369,10 +369,10 @@ class PiWindow(object):
         if state:
             self._update_background(background.IntroBackground(self.arrow_location, self.arrow_offset, state, count))
 
-    def show_login(self, config, previous_state="UNLOCK"):
+    def show_login(self, input_label, config, previous_state="UNLOCK"):
         self._update_background(background.LoginBackground())
         # Find logic to display login
-        lv = LoginView(self.surface, previous_state, self._d, config)
+        lv = LoginView(self.surface, previous_state, self._d, config, input_label)
         return lv
     
     def show_decrypt(self, config, previous_state="DECRYPT"):

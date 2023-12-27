@@ -191,9 +191,9 @@ class DocumentRow(object):
             pygame.draw.rect(screen, 'black', self.document_rect, r_border, border_radius=r_radius)            
             clicked = self.clicked(screen, event)
             if clicked == 'BUTTONDOWN':
-                pygame.draw.rect(screen, 'white', self.document_rect)
+                pygame.draw.rect(screen, 'white', self.document_rect, border_radius=r_radius)
             elif clicked == 'BUTTONUP':
-                pygame.draw.rect(screen, 'light grey', self.document_rect)
+                pygame.draw.rect(screen, 'light grey', self.document_rect, border_radius=r_radius)
                         
         screen.blit(self.text_surface(self.document_name)[0], (foreground_rect.x+(gap*2), foreground_rect.y+r_border+pad+2+((60)*(self.row_num))))
         screen.blit(self.text_surface(self.status)[0], ((foreground_rect.width//100)*30+gap+pad, foreground_rect.y+r_border+pad+2+((60)*(self.row_num))))

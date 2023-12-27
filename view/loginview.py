@@ -469,34 +469,6 @@ class LoginView(object):
 class DecryptView(LoginView):
     def __init__(self, screen, label, _d, _c, input_label="Enter Decryption Code"):
         LoginView.__init__(self, screen, label, _d, _c, input_label)
-# def main_loop():
-#     clock = pygame.time.Clock()
-#     lv = LoginView(screen)
-#     done = False
 
-    
-    # while not done:
-    #     events = list(pygame.event.get())
-        
-    #     for event in events:
-    #         if event.type == pygame.QUIT:
-    #             done = True        
-    #         if event.type == LOGINEVENT:
-    #             pass_code = lv.get_input_text() 
-    #             lv.passcode_box.text=''
-    #             lv.passcode_box.txt_surface = lv.passcode_box.font.render(lv.passcode_box.text, True, lv.passcode_box.color)
-    #             #print(pass_code) 
-    #         if event.type == pygame.MOUSEBUTTONDOWN or event.type==pygame.MOUSEMOTION\
-    #             or event.type==pygame.MOUSEBUTTONUP or event.type==pygame.FINGERUP or event.type==pygame.FINGERDOWN:
-    #             lv.update_needed=event
-    #         else:
-    #             lv.update_needed=None
-            
-    #     lv.passcode_box.handle_event(events)  
-
-    #     lv.draw(screen)
-        
-    #     pygame.display.flip()
-    #     clock.tick(60)
 
 

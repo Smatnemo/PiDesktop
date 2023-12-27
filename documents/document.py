@@ -213,8 +213,8 @@ def document_authentication(decrypted, document):
     # check if the decrypted checksum matches the original document checksum
     page_count_match = False 
     checksum_match = False
-    cover_page_name = get_filename('dec.pdf')
-    back_page_name = get_filename('dec.pdf')
+    cover_page_name = get_filename('{}.pdf'.format(document[9]))
+    back_page_name = get_filename('blank.pdf')
     try:
         page_count = count_pdf_pages(decrypted)
         if page_count == document[8]:

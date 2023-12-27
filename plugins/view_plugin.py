@@ -130,8 +130,14 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_login_enter(self, cfg, app, win):
         LOGGER.info("Attempting to Login")
-        
-        self.login_view = win.show_login(cfg) 
+        input_label=""
+        if app.previous_state == 'wait':
+            input_label = "Enter Facility Unlock Code"
+        if app.previous_state == 'choose':
+            input_label = "Enter CO Unlock Code"
+        if app.previous_state == 'chosen':
+            input_label = "Enter Decryption Code"
+        self.login_view = win.show_login(input_label, cfg) 
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         if app.database_updated or self.query_database_timer.is_timeout():
             db = DataBase()
@@ -257,7 +263,7 @@ class ViewPlugin(object):
                 app.inmate_number = win._current_documents_foreground.view.choseninmaterow.inmate_number
             elif app.previous_state=='login':
                 app.staff = win._current_documents_foreground.view.chosenStaffRow.staff
-                print("Staff", app.staff)
+        
         next_previous_foreground_event = app.find_next_previous_event(events)
         if next_previous_foreground_event:
             win._current_documents_foreground.view.change_view = next_previous_foreground_event
@@ -266,7 +272,7 @@ class ViewPlugin(object):
     def state_choose_validate(self, cfg, app, events):
         if app.find_back_event(events):
             app.previous_state = 'choose'
-            return 'login'
+            return 'wait'
         elif app.find_lockscreen_event(events):
             app.previous_state = 'choose'
             return 'wait'
@@ -461,7 +467,7 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_lock_validate(self, cfg, app, events): 
         if self.lock_screen_timer.is_timeout():
-            return 'login' 
+            return 'wait' 
 
     # ----------------------------- PassFail State           --------------------------------
     @LDS.hookimpl
@@ -599,7 +605,7 @@ class ViewPlugin(object):
             db = DataBase()
             db.__insert__(insert_questions_answer_query, tuple(app.questions_answers))
             self.questions.pop(0)
-            return 'print' if self.questions else 'login'
+            return 'print' if self.questions else 'wait'
             
         
     @LDS.hookimpl

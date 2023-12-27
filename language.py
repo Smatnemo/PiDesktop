@@ -28,7 +28,7 @@ DEFAULT = {
         '2': "2 photos",
         '3': "3 photos",
         '4': "4 photos",
-        'capture': "capture",
+        'capture': "preview",
         'capture_photo':"Please take a photo",
         'smile': "Smile !",
         'processing': "Processing...",
