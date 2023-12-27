@@ -21,7 +21,7 @@ class InmateRow(object):
         self.inmate_rect = None
         self.row_color = None 
         self.row_text_color = BLACK
-        self.row_text_size = 32
+        self.row_text_size = 22
 
         self.row_num = row_number 
         self.row_num_coord = None
@@ -47,7 +47,7 @@ class InmateRow(object):
         self.chosen = False
 
 
-        self.font = pygame.font.Font(fonts.CURRENT, self.row_text_size)
+        self.font = pygame.font.Font(fonts.CURRENT, self.row_text_size)        
 
     def draw(self, foreground_rect, screen, event, offset):
         if self.documents and self.row_num % offset == 0:
@@ -56,37 +56,45 @@ class InmateRow(object):
             self.row_num = self.row_num % offset
 
         # Move to dict
-        gap=24
+        gap=20
         pad=5
         r_radius=20
-        r_border=15
-
-        self.inmate_rect = pygame.Rect(foreground_rect.x+gap, foreground_rect.y+60*(self.row_num), foreground_rect.width-(gap*2), self.row_height)
+        r_border=10
         
+
+        self.inmate_rect = pygame.Rect(foreground_rect.x+gap, foreground_rect.y+(self.row_height+10)*(self.row_num), foreground_rect.width-(gap*2), self.row_height+pad+2)
+        
+        if not self.documents:
+            pygame.draw.rect(screen, (101,101,103), self.inmate_rect, border_radius=r_radius)
+            pygame.draw.rect(screen, (33,33,35), self.inmate_rect, r_border, border_radius=r_radius)
+            self.row_text_color = (255,255,255)
+            
         if self.documents:
-            pygame.draw.rect(screen, 'white', self.inmate_rect)
+            pygame.draw.rect(screen, 'white', self.inmate_rect, border_radius=r_radius)            
+            pygame.draw.rect(screen, 'black', self.inmate_rect, r_border, border_radius=r_radius)
+            
             clicked = self.clicked(screen, event)
             if clicked == 'BUTTONDOWN':
-                pygame.draw.rect(screen, 'dark grey', self.inmate_rect)
+                pygame.draw.rect(screen, 'white', self.inmate_rect, border_radius=r_border)
             elif clicked == 'BUTTONUP':
-                pygame.draw.rect(screen, 'light gray', self.inmate_rect)
+                pygame.draw.rect(screen, 'light gray', self.inmate_rect, border_radius=r_border)
             
-        pygame.draw.rect(screen, 'black', self.inmate_rect, r_border, border_radius=r_radius)
+
         
-        #screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
-        screen.blit(self.text_surface(self.inmate_identifier)[0], (foreground_rect.x+gap+pad, foreground_rect.y+60*(self.row_num)))
-        screen.blit(self.text_surface(self.num)[0], ((foreground_rect.width//100)*40+gap+pad, foreground_rect.y+60*(self.row_num)))
-        total_pages_count_x = foreground_rect.width-self.text_surface(self.total_pages)[1]-14
+        
+        screen.blit(self.text_surface(self.inmate_identifier)[0], (foreground_rect.x+(gap*2), foreground_rect.y+r_border+pad+2+((60)*(self.row_num))))
+        screen.blit(self.text_surface(self.num)[0], ((foreground_rect.width//100)*30+gap+pad, foreground_rect.y+r_border+pad+2+((60)*(self.row_num))))
+        total_pages_count_x = foreground_rect.width-self.text_surface(self.total_pages)[1]-gap
         InmateRow.set_total_pages_x(foreground_rect)
         if InmateRow.total_pages_x is not None and total_pages_count_x < InmateRow.total_pages_x:
             InmateRow.total_pages_x = total_pages_count_x
-        screen.blit(self.text_surface(self.total_pages)[0], (InmateRow.total_pages_x, foreground_rect.y+60*(self.row_num)+14))
+        screen.blit(self.text_surface(self.total_pages)[0], (InmateRow.total_pages_x-(gap*2), foreground_rect.y+r_border+pad+2+((60)*(self.row_num))))
 
     def text_surface(self, text):
         text = str(text)
         text_surface = self.font.render(text, True, self.row_text_color)
         width, height = self.font.size(text)
-        return text_surface, width, 
+        return text_surface, width
 
     @classmethod
     def set_total_pages_x(cls, foreground_rect):
@@ -139,51 +147,60 @@ class DocumentRow(object):
         self.document_name = "Document Name"
         self.status = "Status"
         self.page_count = "Number of pages"
+        self.document = document
         if document:
             self.document_name = str(document[20][:13])
             self.status = document[11]
             self.row_num = row_number + 1
             self.row_num_text = self.row_num
-            self.page_count = document[8]
-
-            
-        self.document = document
+            self.page_count = document[8]            
+            self.document = document        
 
         # Change logic to write out the statement relating in the third column
-        self.row_text_size = 32
         self.row_text_color = BLACK
+        self.row_text_size = 22
         self.font = pygame.font.Font(fonts.CURRENT, self.row_text_size)
         
         self.chosen = False
         
     def draw(self, foreground_rect, screen, event, offset):
+        # Move to dict
+        gap=20
+        pad=5
+        r_radius=20
+        r_border=10  
+
         if self.document and self.row_num % offset == 0:
             self.row_num = offset 
         else:
-            self.row_num = self.row_num % offset
-        self.document_rect = pygame.Rect(foreground_rect.x, foreground_rect.y+60*(self.row_num), foreground_rect.width, self.row_height)
+            self.row_num = self.row_num % offset    
+                
+        self.document_rect = pygame.Rect(foreground_rect.x+gap, foreground_rect.y+(self.row_height+10)*(self.row_num), foreground_rect.width-(gap*2), self.row_height+pad+2)    
         
+        if not self.document:
+            pygame.draw.rect(screen, (101,101,103), self.document_rect, border_radius=r_radius)
+            pygame.draw.rect(screen, (33,33,35), self.document_rect, r_border, border_radius=r_radius)
+            self.row_text_color = (255,255,255)
+
         if self.document:
-            pygame.draw.rect(screen, 'light gray', self.document_rect)
+            pygame.draw.rect(screen, 'white', self.document_rect, border_radius=r_radius)            
+            pygame.draw.rect(screen, 'black', self.document_rect, r_border, border_radius=r_radius)            
             clicked = self.clicked(screen, event)
             if clicked == 'BUTTONDOWN':
-                pygame.draw.rect(screen, 'light gray', self.document_rect)
-            elif clicked == 'BUTTONUP':
                 pygame.draw.rect(screen, 'white', self.document_rect)
-        
-
-        pygame.draw.rect(screen, 'black', self.document_rect, 2) 
-        
-        #screen.blit(self.text_surface(self.row_num_text)[0], (foreground_rect.x+14,foreground_rect.y+60*(self.row_num)+14))
-        screen.blit(self.text_surface(self.document_name)[0], (foreground_rect.x+14, foreground_rect.y+60*(self.row_num)+14))
-        screen.blit(self.text_surface(self.status)[0], (foreground_rect.width//2, foreground_rect.y+60*(self.row_num)+14))
-        page_count_title_x = foreground_rect.width-self.text_surface(self.page_count)[1]-10
+            elif clicked == 'BUTTONUP':
+                pygame.draw.rect(screen, 'light grey', self.document_rect)
+                        
+        screen.blit(self.text_surface(self.document_name)[0], (foreground_rect.x+(gap*2), foreground_rect.y+r_border+pad+2+((60)*(self.row_num))))
+        screen.blit(self.text_surface(self.status)[0], ((foreground_rect.width//100)*30+gap+pad, foreground_rect.y+r_border+pad+2+((60)*(self.row_num))))
+        page_count_title_x = foreground_rect.width-self.text_surface(self.page_count)[1]-gap
 
         DocumentRow.set_page_count_x(foreground_rect)
         if DocumentRow.page_count_x is not None and page_count_title_x < DocumentRow.page_count_x:
             DocumentRow.page_count_x = page_count_title_x
-        screen.blit(self.text_surface(self.page_count)[0], (DocumentRow.page_count_x, foreground_rect.y+60*(self.row_num)+14))
 
+        screen.blit(self.text_surface(self.page_count)[0], (DocumentRow.page_count_x-(gap*2), foreground_rect.y+r_border+pad+2+(60)*(self.row_num)))        
+        
 
     def text_surface(self, text):
         text = str(text)
@@ -237,9 +254,11 @@ class DocumentsView(object):
         self.document_rows.insert(0, self.titlerow)
 
         self.gap = _d["h"]-_d["footer"]-_d["header"]
-        self.offset = int(self.gap//_d["row_height"])
+        #self.offset = int(self.gap//_d["row_height"])
+        self.offset = int(5)
+
         
-        self._offset = self.offset - 1
+        self._offset = self.offset - 1        
         self.start = 1
         self.end = self.start + self._offset
         self.change_view = None
@@ -298,6 +317,7 @@ class InmateDocumentsView(object):
                 
         self.gap = self._d['h']-(int(self._d["row_height"]*2)) - (int(self._d["btn_handf_y"]*2))
         self.offset = int(self.gap//self._d["row_height"])
+        self.offset = int(5)
         
         self._offset = self.offset - 1
         self.start = 1
