@@ -6,6 +6,7 @@ import LDS
 from LDS.utils import LOGGER, PoolingTimer
 from LDS.pictures import get_picture_factory
 from LDS.pictures.pool import PicturesFactoryPool
+from LDS import fonts
 
 class PicturePlugin(object):
     """Plugin to build the final picture.
@@ -52,6 +53,7 @@ class PicturePlugin(object):
         
         colors = cfg.gettuple('PICTURE', 'text_colors', 'color', len(texts))
         text_fonts = cfg.gettuple('PICTURE', 'text_fonts', str, len(texts))
+        
         alignments = cfg.gettuple('PICTURE', 'text_alignments', str, len(texts))
         if any(elem != '' for elem in texts):
             for params in zip(texts, text_fonts, colors, alignments):

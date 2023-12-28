@@ -545,7 +545,7 @@ class ViewPlugin(object):
             self.question = "Q1"
             app.questions_answers = ['' for _ in range(1)]
             self.document_name = app.chosen_document.document_name
-            self.enable_button = False
+            self.enable_button = True
             win.show_print(cfg, app.previous_picture, self.print_status, self.question, self.document_name, app.chosen_document.page_count)     
         elif not app.printer.is_ready():
             LOGGER.info("Printer status is not available")
@@ -598,7 +598,8 @@ class ViewPlugin(object):
 
         # Update the buttons to listen to events
         win._current_background.yesbutton.draw(app.update_needed)
-        win._current_background.nobutton.draw(app.update_needed)
+        if self.question != 'capture_photo':
+            win._current_background.nobutton.draw(app.update_needed)
     
        
     @LDS.hookimpl

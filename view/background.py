@@ -32,9 +32,12 @@ def multiline_text_to_surfaces(text, color, rect, align='center'):
        * bottom-right
     """
     surfaces = []
+    text = text.replace("\\n", "\n")
     lines = text.splitlines()
     font = fonts.get_pygame_font(max(lines, key=len), fonts.MONOID,
                                  rect.width, rect.height / len(lines))
+    
+
     for i, line in enumerate(lines):
         surface = font.render(line, True, color)
 
@@ -275,7 +278,7 @@ class IntroBackground(Background):
         self.message_box = self.font.render(self.message, True, self._text_color)
 
         box_width, box_height = self.font.size(self.message)
-        self.text_rect.x = self.text_rect.width//2 - box_width//2
+        self.text_rect.x = 390 - box_width//2
         self.text_rect.y = self.text_rect.height//2 - box_height//2
         
 
@@ -572,13 +575,27 @@ class PrintBackground(Background):
         
         if self.update_needed:
             self.resize_texts()
+        
+        # label for the yes button 
+        y = 0
+        if self.question=='capture_photo' and y == 0:
+            label = 'TAKE A PHOTO'
+            self.yesbutton_width  = self.yesbutton_width+self.yesbutton_width+2*self._text_border 
+            y = 1
+        else: 
+            label = 'YES'
+
+        if self._name=='capture_again':
+            label = 'YES'
+            self.yesbutton_width = self.nobutton_width
+        
         if self.yesbutton_enabled:
             self.yesbutton = PushButton((self.yesbutton_x, 
                                          self.yesbutton_y, 
                                          self.yesbutton_width, 
                                          self.yesbutton_height), 
                                          self.yesbutton_event,                                          
-                                         label='YES', 
+                                         label=label, 
                                          parent=screen, 
                                          font_color=self._c.gettyped("WINDOW", "font_secondary_color"),
                                          button_color=self._c.gettyped("WINDOW", "btn_bg_green"), 
@@ -640,7 +657,8 @@ class PrintBackground(Background):
         elif isinstance(self.question, tuple):
             
             rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
-                               self._rect.width/2 - 2 * self._text_border, 64)
+                               self._rect.width/2 - 2 * self._text_border, 96)
+            
             self._write_text(self.question[3], rect)           
 
         # hold the height of each rectangle after drawing on the screen
