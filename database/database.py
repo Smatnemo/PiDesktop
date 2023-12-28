@@ -264,7 +264,7 @@ class DataBase(object):
          
     def get_object(self, object_id=None):
         # Get objects associated with templates and products or any other item
-
+        pass
         if object_id is None:
             # Log error saying that there must be a an object id
             return
@@ -399,12 +399,24 @@ class DataBase(object):
         self.cursor.executescript(content)
         self.close()
 
+    def check_tables(self):
+        self.open()
+        query = """SELECT count(*) FROM sqlite_master WHERE type='table' AND name='Documents';"""
+        self.cursor.execute(query) 
+        check = self.cursor.fetchone()
+        if check is None:
+            return False
+        else:
+            return True
+
+
     def create_tables(self):
         # create sql tables if the don't exists
-        self.open()
-        for table in create_tables:
-            self.cursor.execute(table) 
-        self.close()
+        if not self.check_tables():
+            self.open()
+            for table in create_tables:
+                self.cursor.execute(table) 
+            self.close()
 
 
     def open(self):

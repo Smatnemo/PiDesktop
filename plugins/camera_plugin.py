@@ -46,7 +46,7 @@ class CameraPlugin(object):
         app.capture_date = None
         app.capture_nbr = None
         if app.camera:
-            app.camera.drop_captures()  # Flush previous capturesi
+            app.camera.drop_captures()  # Flush previous captures
 
 
     @LDS.hookimpl

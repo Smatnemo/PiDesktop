@@ -22,8 +22,9 @@ DEFAULT = {
         'no_staff': "No Staff",
         'No_documents': "No Documents",
         'decrypt': "Enter Decryption Key",
-        'wrong_decrypt': "Wrong Decryption Key",
+        'wrong_decrypt': "Wrong Decryption Key, waiting on redirect",
         'locked': "3 attempts: Locked for 30 seconds",
+        'intro' : " ",
         '1': "1 photo",
         '2': "2 photos",
         '3': "3 photos",
@@ -59,6 +60,7 @@ DEFAULT = {
         'code_required':"CO Unlock Code Required",
         'version':"Legal Version {}".format(LDS.__version__),
         'intro_print': "Or you can\nstill print\nthis photo",
+        'en_print_unsuccessful' : " "
     },
     'sp': {
         'Q1':"Did it print successfully?",

@@ -90,7 +90,8 @@ class ViewPlugin(object):
             elif self.failure_message == 'no_orders':
                 app.database_updated = False
                 self.failure_message = 'download_orders'
-                self.failed_view_timer = PoolingTimer(30)
+                # Expanded timer to give time to unzip files.
+                self.failed_view_timer = PoolingTimer(60)
                 return 'failsafe'
             # elif self.failure_message == 'download_orders':
             #     self.failure_message = 'oops'

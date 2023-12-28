@@ -3,6 +3,7 @@
 import os.path as osp
 import pygame
 import time 
+import textwrap
 
 from LDS import fonts, pictures
 from LDS.language import get_translated_text
@@ -32,12 +33,12 @@ def multiline_text_to_surfaces(text, color, rect, align='center'):
        * bottom-right
     """
     surfaces = []
-    text = text.replace("\\n", "\n")
-    lines = text.splitlines()
-    font = fonts.get_pygame_font(max(lines, key=len), fonts.MONOID,
-                                 rect.width, rect.height / len(lines))
+    # Split on 38 characters
+    lines = textwrap.wrap(text, 38, break_long_words=False)    
+    font = fonts.get_pygame_font(max(lines, key=len), fonts.MONOID,    
+                                 rect.width, rect.height * len(lines))
+    print("Font: ", font, max(lines, key=len), rect.width, rect.height, len(lines))
     
-
     for i, line in enumerate(lines):
         surface = font.render(line, True, color)
 
@@ -116,7 +117,7 @@ class Background(object):
         """Write a text in the given rectangle.
         """
         if not rect:
-            rect = self._rect.inflate(-self._text_border, -self._text_border)
+            rect = self._rect.inflate(-self._text_border, -self._text_border)            
         if self._show_outlines:
             self._outlines.append((self._make_outlines(rect.size), rect))
         self._texts.extend(multiline_text_to_surfaces(text, self._text_color, rect, align))
@@ -529,6 +530,8 @@ class PrintBackground(Background):
         self._d = _d
         self._c = config
         self.question = question
+        self.document_name = document_name 
+        self.num_of_pages = number_of_pages
 
         self._rect = None
         self.yesbutton = None
@@ -547,10 +550,8 @@ class PrintBackground(Background):
         self.lockbutton_height = self._d['btn_handf_y']
         
         self.lockbutton_event = pygame.USEREVENT + 19
-
         self.update_needed = None
-        self.document_name = document_name 
-        self.num_of_pages = number_of_pages
+        
 
     def __str__(self):
         """Return background final name.
@@ -580,7 +581,7 @@ class PrintBackground(Background):
         y = 0
         if self.question=='capture_photo' and y == 0:
             label = 'TAKE A PHOTO'
-            self.yesbutton_width  = self.yesbutton_width+self.yesbutton_width+2*self._text_border 
+            self.yesbutton_width  = (self.yesbutton_width*2)+(4*self._text_border)
             y = 1
         else: 
             label = 'YES'
@@ -651,13 +652,15 @@ class PrintBackground(Background):
             question_text = get_translated_text(self.question)
             if question_text:
                 rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
-                                self._rect.width/2 - 2 * self._text_border, 64)
-                self._write_text(question_text, rect)
+                                self._rect.width - (6 * self._text_border), 64)
+                # removed the divide by 2 on the self._rect.width.
+                self._write_text(question_text.title(), rect)
         
         elif isinstance(self.question, tuple):
             
             rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
-                               self._rect.width/2 - 2 * self._text_border, 96)
+                               self._rect.width - (6 * self._text_border), 64)
+            # removed the divide by 2 on the self._rect.width.
             
             self._write_text(self.question[3], rect)           
 
@@ -777,7 +780,7 @@ class NoDocumentsBackground(Background):
         self.downloadbutton_y = None
         self.downloadbutton_x = None 
         self.downloadbutton_width = 200
-        self.downloadbutton_height = 200
+        self.downloadbutton_height = 100
         self.downloadbutton_enabled = True
         self.downloadbutton_event = (BUTTONDOWN, {'download':True})
         self.update_needed = None

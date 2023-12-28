@@ -44,7 +44,7 @@ class InmateRow(object):
 
         if not self.inmate_number:
             self.inmate_identifier = "Inmate Identifier"
-            self.num = "Document count"
+            self.num = "Document Count"
             #self.row_num_text = "S/N"
             self.total_pages = "Total Pages"
 
@@ -149,7 +149,7 @@ class DocumentRow(object):
         self.row_num = row_number
         self.row_num_text = row_num_text
         self.document_name = document_name
-        self.status = status
+        self.status = status.capitalize()
         self.page_count = num_of_pages
         self.document = document 
         if document:
@@ -332,6 +332,8 @@ class DocumentsView(object):
                 row.chosen = False
 
     def update_view(self, inmate_number, blob, decrypted=None, printed=None):
+        # Failure point - IF DB on an SMB share without enabling nobrl.
+        print(self.chosendocumentrow.document) 
         doc = list(self.chosendocumentrow.document)
         if decrypted:
             doc[13] = 1

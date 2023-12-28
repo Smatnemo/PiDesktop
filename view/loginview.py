@@ -82,10 +82,14 @@ class InputBox:
                     if len(self.text) > self.max_input_length:
                         self.text = self.text[:-1]
                         self.hidden_input_text = self.hidden_input_text[:-1]
-                elif event.type==BACKSPACEBUTTON:
-                    self.text = self.text[:-1]
-                    if self.hide_text:
-                        self.hidden_input_text = self.hidden_input_text[:-1]
+                elif event.type==BACKSPACEBUTTON:                               
+                    if self.text == "Enter Facility Unlock Code" or self.text == "Enter Decryption Code" or self.text == "Enter CO Unlock Code":
+                        self.text = ""
+                        self.hidden_input_text = ""
+                    else:
+                        self.text = self.text[:-1]
+                        if self.hide_text:
+                            self.hidden_input_text = self.hidden_input_text[:-1]
                 elif event.type==CLEARBUTTON:
                     self.text = ''
                     if self.hide_text:
@@ -118,7 +122,7 @@ class InputBox:
                     self.text = ''
                     if self.hide_text:
                         self.hidden_input_text = self.text
-                elif event.key == pygame.K_BACKSPACE:
+                elif event.key == pygame.K_BACKSPACE:                    
                     self.text = self.text[:-1] 
                     if self.hide_text:
                         self.hidden_input_text = self.hidden_input_text[:-1]

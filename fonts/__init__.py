@@ -96,17 +96,23 @@ def get_pygame_font(text, font_name, max_width, max_height):
     :rtype: object
     """
     start, end = 0, int(max_height * 2)
+    print("Start/End: ", start, end)
     while start < end:
         k = (start + end) // 2
         font = pygame.font.Font(get_filename(font_name), k)
         font_size = font.size(text)
         if font_size[0] > max_width or font_size[1] > max_height:
-            end = k
+            end = k            
+            """print("End")
+            print("Font Size 0: ", font_size[0], max_width)
+            print("Font Size 1: ", font_size[1], max_height)"""
         else:
             start = k + 1
+            """print("Start")
+            print("Font Size 0: ", font_size[0], max_width)
+            print("Font Size 1: ", font_size[1], max_height)"""            
         del font  # Run garbage collector, to avoid opening too many files
     return pygame.font.Font(get_filename(font_name), start)
-
 
 CURRENT = get_filename('FiraSans-Regular')  # Dynamically set at startup
 MONOID = get_filename('FiraSans-Regular')
