@@ -1,6 +1,2 @@
+.history/
 __pycache__/
-*.pyc 
-*/__pycache__/
-*venv
-.history
-data/legal.db
