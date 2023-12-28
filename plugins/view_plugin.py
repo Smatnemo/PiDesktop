@@ -45,6 +45,8 @@ class ViewPlugin(object):
         self.query_database_timer = PoolingTimer(30)
         self.query_database_timer.start()
 
+        self.input_label = ''
+
         self.login_view = None 
         self.decrypt_view = None
 
@@ -116,6 +118,7 @@ class ViewPlugin(object):
 
     @LDS.hookimpl
     def state_wait_validate(self, cfg, app, events):
+        app.previous_state = 'wait'
         event = app.find_screen_event(events)
         if event:
             return 'login'
@@ -130,14 +133,17 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_login_enter(self, cfg, app, win):
         LOGGER.info("Attempting to Login")
-        input_label=""
+
+        if self.input_label == "Enter CO Unlock Code":
+            app.previous_state = "choose"
+
         if app.previous_state == 'wait':
-            input_label = "Enter Facility Unlock Code"
+            self.input_label = "Enter Facility Unlock Code"
         if app.previous_state == 'choose':
-            input_label = "Enter CO Unlock Code"
-        if app.previous_state == 'chosen':
-            input_label = "Enter Decryption Code"
-        self.login_view = win.show_login(input_label, cfg) 
+            self.input_label = "Enter CO Unlock Code"
+        # if app.previous_state == 'chosen':
+        #     self.input_label = "Enter Decryption Code"
+        self.login_view = win.show_login(self.input_label, cfg) 
         # write code to query database and reveal the number of documents downloaded that are yet to be printed
         if app.database_updated or self.query_database_timer.is_timeout():
             db = DataBase()
@@ -163,7 +169,10 @@ class ViewPlugin(object):
                 app.password = self.login_view.get_input_text() 
             self.login_view.passcode_box.text=''
             self.login_view.passcode_box.txt_surface = self.login_view.passcode_box.font.render(self.login_view.passcode_box.text, True, self.login_view.passcode_box.color)
-        
+        if self.input_label == "Enter CO Unlock Code":
+            win._current_background.backbutton.draw(app.update_needed)
+            win._current_background.lockbutton.draw(app.update_needed)
+
         self.login_view.update_needed = app.update_needed
         self.login_view.passcode_box.handle_event(events)
         self.login_view.draw(win.surface)
@@ -175,7 +184,6 @@ class ViewPlugin(object):
         if app.find_login_event(events):
             if app.previous_state == "choose" and app.staff:
                 app.validated = app.password==app.staff[1]
-                print("App Validated", app.validated)
             else:
                 LOGGER.info("Attempting to validate password")
                 login = LogIn()
@@ -191,9 +199,9 @@ class ViewPlugin(object):
                     app.previous_state = 'choose'
                     return 'choose'
                 app.previous_state = "login"
-                return app.previous_state if (app.previous_state=='chosen' and app.inmate_number)\
-                      or app.previous_state != 'wait' and app.previous_state != 'finish'\
-                      and app.previous_state != 'login' and app.previous_state is not None else 'choose'
+
+                app.staff = ()
+                return "choose"
             else:
                 self.count_failed_attempts += 1
                 LOGGER.info("This is failed attempt number {}".format(self.count_failed_attempts))
@@ -203,6 +211,13 @@ class ViewPlugin(object):
                 else:
                     app.previous_state = 'login'
                     return 'passfail'
+        elif app.find_back_event(events):
+            app.previous_state = 'login'
+            app.staff = ()
+            return 'choose'
+        elif app.find_lockscreen_event(events):
+            app.staff = ()
+            return 'wait'
             # Write code to return to previous state if the last state was not choose
         elif self.choose_timer.is_timeout():    
             return 'wait'
@@ -272,9 +287,11 @@ class ViewPlugin(object):
     def state_choose_validate(self, cfg, app, events):
         if app.find_back_event(events):
             app.previous_state = 'choose'
+            self.input_label = "Enter Facility Unlock Code"
             return 'wait'
         elif app.find_lockscreen_event(events):
             app.previous_state = 'choose'
+            self.input_label = "Enter Facility Unlock Code"
             return 'wait'
         elif app.inmate_number:
             return 'chosen'
@@ -467,6 +484,7 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_lock_validate(self, cfg, app, events): 
         if self.lock_screen_timer.is_timeout():
+            self.input_label = "Enter Facility Unlock Code"
             return 'wait' 
 
     # ----------------------------- PassFail State           --------------------------------
@@ -605,6 +623,7 @@ class ViewPlugin(object):
             db = DataBase()
             db.__insert__(insert_questions_answer_query, tuple(app.questions_answers))
             self.questions.pop(0)
+            self.input_label = "Enter Facility Unlock Code"
             return 'print' if self.questions else 'wait'
             
         

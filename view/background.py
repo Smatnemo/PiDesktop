@@ -287,13 +287,53 @@ class IntroBackground(Background):
 
 
 class LoginBackground(Background):
-    def __init__(self):
+    def __init__(self, input_label, _d, _c):
         Background.__init__(self, "login")
         self.time = pygame.time.get_ticks()
         self._custom_text = []
+        self._d = _d 
+        self._c = _c 
+        if input_label == "Enter CO Unlock Code":
+            self.button_enabled = True 
+        else:
+            self.button_enabled = False
+        
+        self.layout0 = self.layout0_pos = self.layout1 = self.layout1_pos = None 
+        
+        self.backbutton = self.lockbutton = None
+        self.backbutton_width = self.lockbutton_width = self._d['btn_handf_x']
+        self.backbutton_height = self.lockbutton_height = self._d['btn_handf_y']
+        
+        self.button_enabled = True
+        self.backbutton_event = BUTTONDOWN, {'back':True}
+
+        self.update_needed = None
+        self.lockbutton_event = pygame.USEREVENT + 19
         
     def resize(self, screen):
         Background.resize(self, screen)   
+        self._rect = screen.get_rect()
+        self.backbutton_x = self._d['pad'] + int(self._d['row_height']//2) + self._rect.x
+        self.lockbutton_x = self._rect.width - self._d['pad'] - int(self._d['row_height']//2) - self._d['btn_handf_x']        
+        self.lockbutton_y = self.backbutton_y = self._d['pad'] + int(self._d['row_height']//2) + self._rect.y
+ 
+        if self.button_enabled:
+            self.backbutton = PushButton((self.backbutton_x, self.backbutton_y, self.backbutton_width, self.backbutton_height), self.backbutton_event,
+                                         label='BACK', parent=screen, 
+                                         font_color=self._c.gettyped("WINDOW", "font_secondary_color"),
+                                         font_size=24,
+                                         button_color=self._c.gettyped("WINDOW", "btn_bg_green"),
+                                         button_hover_color=self._c.gettyped("WINDOW", "btn_bg_green_hover"),
+                                         border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
+            self.backbutton.enabled(True)
+
+            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.lockbutton_width, self.lockbutton_height), self.lockbutton_event,
+                                          label='LOCK SCREEN', parent=screen, 
+                                          font_size=24,
+                                          button_color=self._c.gettyped("WINDOW", "btn_bg_red"), 
+                                          button_hover_color=self._c.gettyped("WINDOW", "btn_bg_red_hover"), 
+                                          border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
+            self.lockbutton.enabled(True) 
 
     def _write_custom_text(self, text, rect=None, align='center'):
         if not rect:
@@ -637,11 +677,7 @@ class PrintBackground(Background):
         
 
     def paint(self, screen):
-        Background.paint(self, screen)
-        # if self.yesbutton:
-        #     self.yesbutton.draw()
-        # if self.nobutton:
-        #     self.nobutton.draw()       
+        Background.paint(self, screen)      
         
 
 

@@ -370,7 +370,7 @@ class PiWindow(object):
             self._update_background(background.IntroBackground(self.arrow_location, self.arrow_offset, state, count))
 
     def show_login(self, input_label, config, previous_state="UNLOCK"):
-        self._update_background(background.LoginBackground())
+        self._update_background(background.LoginBackground(input_label, self._d, config))
         # Find logic to display login
         lv = LoginView(self.surface, previous_state, self._d, config, input_label)
         return lv
