@@ -439,6 +439,16 @@ class PiWindow(object):
                                                            number_of_pages))
         if pil_image:
             self._update_foreground(pil_image, self.LEFT)  
+
+    def show_signature(self, cfg, image="sig.png"):
+        """Show signature view
+        """
+        self._update_background(background.SignatureBackground(cfg, 
+                                                           self._d,
+                                                           image
+                                                           ))
+        if image:
+            self._update_foreground(image, self.LEFT)  
             
         
 
@@ -509,7 +519,7 @@ class PiWindow(object):
         else:
             self.is_fullscreen = True  # Set before resize
             # Make an invisible cursor (don't use pygame.mouse.set_visible(False) because
-            # the mouse event will always return the window bottom-right coordinate)
+            # the mouse event will always return the window bottom-right coordinate), hiding cursor at X level, this shouldn't be required.
             pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
             self.surface = pygame.display.set_mode(self.display_size, pygame.FULLSCREEN)
 

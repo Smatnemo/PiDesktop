@@ -154,7 +154,7 @@ class DocumentRow(object):
         self.document = document 
         if document:
             self.document_name = str(document[20][:13])
-            self.status = document[11]
+            self.status = document[11].capitalize()
             self.row_num = row_number + 1
             self.row_num_text = self.row_num
             self.page_count = document[8]            

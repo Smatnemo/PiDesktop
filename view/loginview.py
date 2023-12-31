@@ -391,7 +391,7 @@ class button(object):
         
 
 class LoginView(object):
-    def __init__(self, screen, label, _d, _c, input_label='Enter CO Unlock Code'):
+    def __init__(self, screen, label, _d, _c, input_label='Enter Facility Unlock Code'):
       
         self._d = _d
         self._c=_c

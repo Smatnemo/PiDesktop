@@ -122,6 +122,7 @@ class PiApplication:
         self._machine.add_state('lock') # log out 
         self._machine.add_state('passfail')
         self._machine.add_state('failsafe')
+        self._machine.add_state('signature') # Fake for demo.
 
         # State to return to after screen is locked and logged back into
         self.previous_state = None
@@ -332,6 +333,15 @@ class PiApplication:
             except: 
                 pass
         return None 
+    
+    def find_proceed(self, events):
+        for event in events:
+            try:
+                if event.type == BUTTONDOWN and event.proceed:
+                    return event
+            except: 
+                pass
+        return None
 
     def find_touch_effects_event(self, events):
         # For keypad

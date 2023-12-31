@@ -579,19 +579,19 @@ def state_capture_exit(cfg, app, win):
 # --- Capture signature state --------------------------------------------------
 
 @hookspec
-def state_capture_signature_enter():
+def state_signature_enter(cfg, app, win):
     """Capture signature
     """
 @hookspec
-def state_capture_signature_do():
+def state_signature_do(cfg, app, win, events):
     """Keep calling it in a loop
     """
 @hookspec
-def state_capture_signature_validate():
+def state_signature_validate(cfg, app, win, events):
     """Verify conditions for the next state
     """
 @hookspec
-def state_capture_signature_exit():
+def state_signature_exit(cfg, app, win):
     """Validate for the next state
     """
 

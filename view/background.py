@@ -195,11 +195,11 @@ class Background(object):
         self._texts = []
         text = get_translated_text(self._name)
         if self._document_name:
-            text = text + ": " + str(self._document_name)
+            text = text + ": " + str(self._document_name) + "..."
         if text:
             self._write_text(text, rect, align)
         self.text_rect = pygame.Rect(self._text_border, self._text_border,
-                        self._rect.width / 2 - 2 * self._text_border,
+                        self._rect.width - (6 * self._text_border),
                         64)
 
     def countdown(self):
@@ -254,7 +254,7 @@ class IntroBackground(Background):
         """
         # if self.arrow_location == ARROW_HIDDEN:
         rect = pygame.Rect(self._text_border, self._text_border,
-                            self._rect.width / 2 - 2 * self._text_border,
+                            self._rect.width - (6 * self._text_border),
                             self._rect.height - 2 * self._text_border)
         align = 'center'
         if self._name == 'locked':
@@ -287,7 +287,7 @@ class IntroBackground(Background):
         Background.paint(self, screen)
         if self._name == 'locked':
             self.countdown()
-            screen.blit(self.message_box, (self.text_rect.x, self.text_rect.y))
+            screen.blit(self.message_box, (self.text_rect.x, self.text_rect.y))    
 
 
 class LoginBackground(Background):
@@ -538,8 +538,7 @@ class PrintBackground(Background):
         self.yesbutton_width = self.nobutton_width = self._d['question_button_width']
         self.yesbutton_height = self.nobutton_height = self._d['question_button_height']
         
-        self.yesbutton_enabled = True        
-        
+        self.yesbutton_enabled = True
         self.yesbutton_event = (BUTTONDOWN, {'question':question,'answer':True})
 
         self.nobutton = None
@@ -577,11 +576,20 @@ class PrintBackground(Background):
         if self.update_needed:
             self.resize_texts()
         
+        # dirty label for No.
+        label_no = "No"
+
         # label for the yes button 
         y = 0
         if self.question=='capture_photo' and y == 0:
             label = 'TAKE A PHOTO'
-            self.yesbutton_width  = (self.yesbutton_width*2)+(4*self._text_border)
+            self.yesbutton_width  = (self.yesbutton_width*2)+(4*self._text_border)            
+            y = 1   
+        elif self.question=="Q1" and y == 0:
+            label = 'Proceed'
+            self.yesbutton_width  = (self.yesbutton_width*2)+(4*self._text_border)   
+            self.nobutton_width = 0     
+            label_no = " "    
             y = 1
         else: 
             label = 'YES'
@@ -609,7 +617,7 @@ class PrintBackground(Background):
                                         self.nobutton_width, 
                                         self.nobutton_height), 
                                         self.nobutton_event, 
-                                        label='NO', 
+                                        label=label_no, 
                                         parent=screen, 
                                         button_color=self._c.gettyped("WINDOW", "btn_bg_red"), 
                                         button_hover_color=self._c.gettyped("WINDOW", "btn_bg_red_hover"), 
@@ -629,7 +637,7 @@ class PrintBackground(Background):
         """Update text surfaces.
         """
         rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
-                            self._rect.width / 2 - 2 * self._text_border,
+                            self._rect.width - 2 * self._text_border,
                             64)
         align = 'center'
         Background.resize_texts(self, rect, align)
@@ -642,7 +650,7 @@ class PrintBackground(Background):
 
         if pages_text:
             rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
-                            (self._rect.width / 2 - 2 * self._text_border)*0.65,
+                            (self._rect.width * 0.8 - (2 * self._text_border)),
                             64)
 
             self._write_text(pages_text, rect)
@@ -656,8 +664,7 @@ class PrintBackground(Background):
                 # removed the divide by 2 on the self._rect.width.
                 self._write_text(question_text.title(), rect)
         
-        elif isinstance(self.question, tuple):
-            
+        elif isinstance(self.question, tuple):            
             rect = pygame.Rect(self._rect.x + self._text_border, self._text_border,
                                self._rect.width - (6 * self._text_border), 64)
             # removed the divide by 2 on the self._rect.width.
@@ -685,7 +692,7 @@ class PrintBackground(Background):
             align = 'bottom-center'
             Background.resize_texts(self, rect, align)
             for text_surface, pos in self._texts:
-                pos.y = self._d['header'] + self._d['header']
+                pos.y = self._d['header'] + self._d['header'] - (self._d['pad'] * 2)
 
 
             self.yesbutton_x = self._rect.width*0.75 - self.yesbutton_width
@@ -699,6 +706,95 @@ class PrintBackground(Background):
 
     def paint(self, screen):
         Background.paint(self, screen)      
+
+
+class SignatureBackground(Background):
+    def __init__(self, config, _d, image="sig.png", question="Signature"):
+        Background.__init__(self, image, question)
+        self._d = _d
+        self._c = config
+        img = get_filename(image)
+        size = (64,64)
+        self._image = pictures.get_pygame_image(img, size, vflip=False, color=None)        
+        self._name = "Signature"
+        self._question = question
+
+        self._rect = None
+        self.yesbutton = None
+        self.yesbutton_width  = self._d['question_button_width']
+        self.yesbutton_height = self._d['question_button_height']
+        
+        self.yesbutton_enabled = True
+        self.yesbutton_event = (BUTTONDOWN, {'proceed':True})
+ 
+        self.lockbutton = None
+        self.lockbutton_width = self._d['btn_handf_x'] * 2
+        self.lockbutton_height = self._d['btn_handf_y']
+        
+        self.lockbutton_event = pygame.USEREVENT + 19
+        self.update_needed = None
+        
+
+    def __str__(self):
+        """Return background final name.
+
+        It is used in the main window to distinguish backgrounds in the cache
+        thus each background string shall be uniq.
+        """
+        return "{}({})({})".format(self.__class__.__name__, self._name, self._question)
+
+    def resize(self, screen):
+        Background.resize(self, screen)
+        button_hover_color=self._c.gettyped("WINDOW","btn_bg_num_hover")
+        button_color=self._c.gettyped("WINDOW","btn_bg_num")
+        self.yesbutton_x = self._rect.width//2 - self.yesbutton_width
+        self.yesbutton_y = self._rect.height*0.50
+
+        self.lockbutton_x = self._rect.width - self._d['pad'] - int(self._d['row_height']//2) - self._d['btn_handf_x']        
+        self.lockbutton_y = self._d['pad'] + int(self._d['row_height']//2) + self._rect.y
+        
+        if self.update_needed:
+            self.resize_texts()        
+       
+        if self.yesbutton_enabled:
+            self.yesbutton = PushButton((self.yesbutton_x, 
+                                         self.yesbutton_y, 
+                                         self.yesbutton_width, 
+                                         self.yesbutton_height), 
+                                         self.yesbutton_event,                                          
+                                         label="Proceed", 
+                                         parent=screen, 
+                                         font_color=self._c.gettyped("WINDOW", "font_secondary_color"),
+                                         button_color=self._c.gettyped("WINDOW", "btn_bg_green"), 
+                                         button_hover_color=self._c.gettyped("WINDOW", "btn_bg_green_hover"), 
+                                         border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
+            self.yesbutton.enabled(False)            
+            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.lockbutton_width, self.lockbutton_height), self.lockbutton_event,
+                                          label='LOCK SCREEN', parent=screen, 
+                                          font_size=24,
+                                          button_color=self._c.gettyped("WINDOW", "btn_bg_red"), 
+                                          button_hover_color=self._c.gettyped("WINDOW", "btn_bg_red_hover"), 
+                                          border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
+            self.lockbutton.enabled(True)    
+            self.yesbutton_enabled = False
+        if self._image:
+            screen.blit(self._image, self._image.get_rect(center=self._rect.center))
+        
+
+    def resize_texts(self, rect=None, align='center'):
+        """Update text surfaces.
+        """        
+        text = ""
+        if self._question:
+            text = text + ": " + str(self._question) + "..."
+        if text:
+            self._write_text(text, rect, align)
+        self.text_rect = pygame.Rect(self._text_border, self._text_border,
+                        self._rect.width - (6 * self._text_border),
+                        64)      
+
+    def paint(self, screen):
+        Background.paint(self, screen)              
         
 
 

@@ -74,6 +74,7 @@ class ViewPlugin(object):
         
         event = app.find_download_event(events)
         if event:
+            self.input_label = "Enter Facility Unlock Code"
             self.failure_message = 'downloading'
             
             # demo_download_document()
@@ -135,13 +136,16 @@ class ViewPlugin(object):
     def state_login_enter(self, cfg, app, win):
         LOGGER.info("Attempting to Login")
 
-        if self.input_label == "Enter CO Unlock Code":
-            app.previous_state = "choose"
+        #if self.input_label == "Enter CO Unlock Code":
+        #   app.previous_state = "choose"
 
         if app.previous_state == 'wait':
             self.input_label = "Enter Facility Unlock Code"
+
         if app.previous_state == 'choose':
             self.input_label = "Enter CO Unlock Code"
+
+        # Makes sense?     
         # if app.previous_state == 'chosen':
         #     self.input_label = "Enter Decryption Code"
         self.login_view = win.show_login(self.input_label, cfg) 
@@ -277,6 +281,7 @@ class ViewPlugin(object):
         if event:
             if app.previous_state=='choose':
                 app.inmate_number = win._current_documents_foreground.view.choseninmaterow.inmate_number
+                # Is this correct?
             elif app.previous_state=='login':
                 app.staff = win._current_documents_foreground.view.chosenStaffRow.staff
         
@@ -479,7 +484,7 @@ class ViewPlugin(object):
         win.show_locked('locked', app.attempt_count)
 
     @LDS.hookimpl
-    def state_lock_do(self, app, win, events):
+    def state_lock_do(self, app, win, events):        
         win.show_locked('locked')
             
     @LDS.hookimpl
@@ -495,9 +500,15 @@ class ViewPlugin(object):
         self.failed_view_timer.start()
         print("Previous state was {}".format(app.previous_state))
         if app.previous_state == 'decrypt':
-            message = 'wrong_decrypt'
+            message = 'wrong_decrypt'        
+        elif app.staff and app.previous_state == 'login':
+            self.input_label = "Enter Facility Unlock Code"
+            message = 'wrong_co'
         elif app.previous_state == 'login':
+            self.input_label = "Enter Facility Unlock Code"
             message = 'wrong_password'
+        elif app.previous_state == 'finish':
+            message = 'finished'
         win.show_locked(message)
             
     @LDS.hookimpl
@@ -560,7 +571,7 @@ class ViewPlugin(object):
             if self.questions:
                 self.index = 0
                 self.question = self.questions[0]
-                self.print_status = ''
+                self.print_status = '' # Goes to Do.
               
                    
     @LDS.hookimpl
@@ -578,6 +589,7 @@ class ViewPlugin(object):
             self.enable_button = True
             if answered.question == 'Q1':
                 self.question = 'capture_photo'
+                # Breaking logic here for Demo - hiding controls
                 if answered.answer==True:
                     self.print_status = "print_successful"
                 else:
@@ -626,25 +638,34 @@ class ViewPlugin(object):
             db.__insert__(insert_questions_answer_query, tuple(app.questions_answers))
             self.questions.pop(0)
             self.input_label = "Enter Facility Unlock Code"
-            return 'print' if self.questions else 'wait'
+            if self.questions:
+                return 'print'            
+            else: 
+                return 'signature'
+            
             
         
     @LDS.hookimpl
-    def state_capture_signature_enter(self):
-        """Capture signature
+    def state_signature_enter(self, cfg, app, win):
+        """Capture signature        
         """
+        self.question = "bob"                
+        win.show_signature(cfg)
     @LDS.hookimpl
-    def state_capture_signature_do(self):
+    def state_signature_do(self, cfg, app, win, events):
         """Keep calling it in a loop
-        """
+        """              
     @LDS.hookimpl
-    def state_capture_signature_validate(self):
+    def state_signature_validate(self, cfg, app, win, events):
         """Verify conditions for the next state
         """
+        print(self.question)              
     @LDS.hookimpl
-    def state_capture_signature_exit(self):
+    def state_signature_exit(self, cfg, app, win):
         """Validate for the next state
         """
+        print(self.question)      
+        return 'wait'
 
     @LDS.hookimpl
     def state_finish_enter(self, cfg, app, win):
@@ -669,8 +690,9 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_finish_validate(self, app, win, events):
         self.forgotten = app.find_capture_event(events)
+        # Change to if self.forgotten.answer == True - Approve Photo
         if self.forgotten:
-            if self.forgotten.answer == False:
+            if self.forgotten.answer == True:
                 # read image into blob
                 blob=app.convertToBinaryData(app.previous_picture_file)
                 os.remove(app.previous_picture_file)
@@ -696,9 +718,9 @@ class ViewPlugin(object):
                 app.previous_state = 'finish'
                 app.inmate_number = None               
                 win.drop_cache()
-                return 'print'
+                return 'print' #state_print_enter
             
-            elif self.forgotten.answer == True:
+            elif self.forgotten.answer == False:
                 win._current_foreground = None
                 return 'preview'
             
