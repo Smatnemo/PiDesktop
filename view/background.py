@@ -709,31 +709,31 @@ class PrintBackground(Background):
 
 
 class SignatureBackground(Background):
-    def __init__(self, config, _d, image="sig.png", question="Signature"):
-        Background.__init__(self, image, question)
+    def __init__(self, config, _d, question, image):
+        Background.__init__(self, question, image)
         self._d = _d
         self._c = config
-        img = get_filename(image)
-        size = (64,64)
-        self._image = pictures.get_pygame_image(img, size, vflip=False, color=None)        
+            
         self._name = "Signature"
         self._question = question
 
+        self._image_file = pictures.get_filename(image)
+
         self._rect = None
-        self.yesbutton = None
-        self.yesbutton_width  = self._d['question_button_width']
-        self.yesbutton_height = self._d['question_button_height']
+        self.donebutton = None
+        self.donebutton_width  = self._d['question_button_width'] * 2 +(4*self._text_border)   
+        self.donebutton_height = self._d['question_button_height']
         
-        self.yesbutton_enabled = True
-        self.yesbutton_event = (BUTTONDOWN, {'proceed':True})
- 
         self.lockbutton = None
         self.lockbutton_width = self._d['btn_handf_x'] * 2
-        self.lockbutton_height = self._d['btn_handf_y']
-        
-        self.lockbutton_event = pygame.USEREVENT + 19
+        self.lockbutton_height = self._d['btn_handf_y']   
+
+        self.donebutton_enabled = True
+        self.donebutton_event = (BUTTONDOWN, {'signature':True, 'first':True})
+        #self.yesbutton_event = (BUTTONDOWN, {'question':question,'answer':True})
+        self.lockbutton_event = pygame.USEREVENT + 19     
+                
         self.update_needed = None
-        
 
     def __str__(self):
         """Return background final name.
@@ -747,59 +747,53 @@ class SignatureBackground(Background):
         Background.resize(self, screen)
         button_hover_color=self._c.gettyped("WINDOW","btn_bg_num_hover")
         button_color=self._c.gettyped("WINDOW","btn_bg_num")
-        self.yesbutton_x = self._rect.width//2 - self.yesbutton_width
-        self.yesbutton_y = self._rect.height*0.50
+        self.donebutton_x = self._rect.width//2 - self.donebutton_width
+        self.donebutton_y = self._rect.height*0.50
 
         self.lockbutton_x = self._rect.width - self._d['pad'] - int(self._d['row_height']//2) - self._d['btn_handf_x']        
         self.lockbutton_y = self._d['pad'] + int(self._d['row_height']//2) + self._rect.y
+
+        if self._image_file:
+            self._image = pictures.get_pygame_image(
+                self._image_file, (self._rect.width, self._rect.height), crop=True, color=None)
         
         if self.update_needed:
             self.resize_texts()        
        
-        if self.yesbutton_enabled:
-            self.yesbutton = PushButton((self.yesbutton_x, 
-                                         self.yesbutton_y, 
-                                         self.yesbutton_width, 
-                                         self.yesbutton_height), 
-                                         self.yesbutton_event,                                          
+        if self.donebutton_enabled:
+            self.donebutton = PushButton((self.donebutton_x, 
+                                         self.donebutton_y, 
+                                         self.donebutton_width, 
+                                         self.donebutton_height), 
+                                         self.donebutton_event,                                          
                                          label="Proceed", 
                                          parent=screen, 
                                          font_color=self._c.gettyped("WINDOW", "font_secondary_color"),
                                          button_color=self._c.gettyped("WINDOW", "btn_bg_green"), 
                                          button_hover_color=self._c.gettyped("WINDOW", "btn_bg_green_hover"), 
                                          border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
-            self.yesbutton.enabled(False)            
-            self.lockbutton = PushButton((self.lockbutton_x, self.lockbutton_y, self.lockbutton_width, self.lockbutton_height), self.lockbutton_event,
-                                          label='LOCK SCREEN', parent=screen, 
-                                          font_size=24,
-                                          button_color=self._c.gettyped("WINDOW", "btn_bg_red"), 
-                                          button_hover_color=self._c.gettyped("WINDOW", "btn_bg_red_hover"), 
-                                          border_radius=self._c.gettyped("WINDOW", "btn_primary_radius")[0])
-            self.lockbutton.enabled(True)    
-            self.yesbutton_enabled = False
-        if self._image:
-            screen.blit(self._image, self._image.get_rect(center=self._rect.center))
+            self.donebutton_enabled = False
         
-
     def resize_texts(self, rect=None, align='center'):
         """Update text surfaces.
         """        
         text = ""
         if self._question:
-            text = text + ": " + str(self._question) + "..."
+            text = str(self._question)
         if text:
             self._write_text(text, rect, align)
         self.text_rect = pygame.Rect(self._text_border, self._text_border,
-                        self._rect.width - (6 * self._text_border),
-                        64)      
+                        self._rect.width / 2 - (6 * self._text_border),
+                        64)
 
     def paint(self, screen):
-        Background.paint(self, screen)              
-        
-
+        Background.paint(self, screen)
+        #self.resize(screen)
+        if self._image:                     
+            screen.blit(self._image, self._image.get_rect(center=self._rect.center))
+        self.donebutton.draw(self.update_needed)
 
 class FinishedBackground(Background):
-
     def __init__(self):
         Background.__init__(self, "finished")
         self.left_people = None

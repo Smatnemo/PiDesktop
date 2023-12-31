@@ -440,17 +440,15 @@ class PiWindow(object):
         if pil_image:
             self._update_foreground(pil_image, self.LEFT)  
 
-    def show_signature(self, cfg, image="sig.png"):
+    def show_signature(self, cfg, question, image):
         """Show signature view
-        """
+        """        
         self._update_background(background.SignatureBackground(cfg, 
                                                            self._d,
-                                                           image
-                                                           ))
-        if image:
-            self._update_foreground(image, self.LEFT)  
+                                                           question,
+                                                           image,                                                     
+                                                           ))     
             
-        
 
     @contextlib.contextmanager
     def flash(self, count):
@@ -495,13 +493,13 @@ class PiWindow(object):
         """
         update = False
 
-        if current_nbr is not None and self._print_number != current_nbr:
+        """if current_nbr is not None and self._print_number != current_nbr:
             self._print_number = current_nbr
             update = True
 
         if failure is not None and self._print_failure != failure:
             self._print_failure = failure
-            update = True
+            update = True"""
 
         if update:
             self._update_background(self._current_background)

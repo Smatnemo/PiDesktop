@@ -68,13 +68,13 @@ class ViewPlugin(object):
     def state_failsafe_do(self, app, win, events):
         """Create option to download documents here either from backoffice or locally
         """
+        self.input_label = "Enter Facility Unlock Code"
         app.find_touch_effects_event(events)
         if self.failure_message == 'download_orders':
             win._current_background.downloadbutton.draw(app.update_needed)
         
         event = app.find_download_event(events)
         if event:
-            self.input_label = "Enter Facility Unlock Code"
             self.failure_message = 'downloading'
             
             # demo_download_document()
@@ -82,7 +82,7 @@ class ViewPlugin(object):
 
     @LDS.hookimpl
     def state_failsafe_validate(self, app):
-        if self.failure_message == 'downloading':
+        if self.failure_message == 'downloading':            
             return 'failsafe'
         if self.failed_view_timer.is_timeout():
             if (self.failure_message == 'no_printer' or self.failure_message == 'no_camera'\
@@ -98,9 +98,11 @@ class ViewPlugin(object):
             #     self.failure_message = 'oops'
             #     return 'wait'
             elif self.failure_message == 'oops':
+                self.input_label = "Enter Facility Unlock Code"
                 self.failed_view_timer = PoolingTimer(5)
                 return 'login'
             else:
+                self.input_label = "Enter Facility Unlock Code"
                 self.failed_view_timer = PoolingTimer(5)
                 self.failure_message = 'oops'
                 return 'wait'
@@ -648,23 +650,39 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_signature_enter(self, cfg, app, win):
         """Capture signature        
-        """
-        self.question = "bob"                
-        win.show_signature(cfg)
+        """        
+        if not self.count:
+            self.count = 1
+        self.question = "Inmate Signature"                
+        win.show_signature(cfg, question=self.question, image="sig.png")
+        win._current_background.donebutton.draw(app.update_needed)
+        self.enable_button = True
     @LDS.hookimpl
     def state_signature_do(self, cfg, app, win, events):
         """Keep calling it in a loop
         """              
+        self.done = app.find_signature_event(events) 
+        if self.done and self.count == 2:
+            self.failure_message = 'finished'            
+        elif self.done and self.count == 1:
+            self.count = self.count + 1
+            self.question = "Correctional Office Signature"
+        elif self.done:     
+            self.count = self.count + 1
+        
     @LDS.hookimpl
     def state_signature_validate(self, cfg, app, win, events):
         """Verify conditions for the next state
-        """
-        print(self.question)              
+        """                
+        if self.failure_message == 'finished':         
+            return 'failsafe'
+        else:
+            return 'signature'
+
     @LDS.hookimpl
     def state_signature_exit(self, cfg, app, win):
         """Validate for the next state
-        """
-        print(self.question)      
+        """           
         return 'wait'
 
     @LDS.hookimpl

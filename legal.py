@@ -96,6 +96,7 @@ class PiApplication:
         
         logo_path = osp.join(LDS.package_dir,self.settings['watermarkpath'])
 
+        print("Logo Path: ", logo_path)
         img = pygame.image.load(logo_path)
         if not isinstance(init_size, str):
             self._window = PiWindow(title, init_size, color=init_color,
@@ -373,6 +374,12 @@ class PiApplication:
         for event in events:
             if event.type == BUTTONDOWN and event.question:
                 return event 
+        return None
+    
+    def find_signature_event(self, events):
+        for event in events:
+            if event.type == BUTTONDOWN and event.signature:
+                return event
         return None
         
     def main_loop(self):

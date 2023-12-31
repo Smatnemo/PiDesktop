@@ -30,7 +30,7 @@ DEFAULT = {
         #'3': "3 photos",
         #'4': "4 photos",
         'capture': " ",
-        'capture_photo':"Get ready to take a photo",
+        'capture_photo':"Take a photo to confirm identity",
         'smile': "  ",
         'processing': "Processing...",
         'print': "Printing Document",
