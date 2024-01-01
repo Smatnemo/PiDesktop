@@ -673,7 +673,7 @@ class ViewPlugin(object):
             self.failure_message = 'finished'            
         elif self.done and self.count == 1:
             self.count = self.count + 1
-            self.question = "Correctional Office Signature"
+            self.question = "Correctional Officer Signature"
             # After changing the question, this diplays the changed question once
             win.show_signature(cfg, question=self.question, image="sig.png")
         # this runs in a loop and continues to update the event for the button for finger down and finger up

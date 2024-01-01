@@ -712,13 +712,14 @@ class SignatureBackground(Background):
     def __init__(self, config, _d, question, image):
         Background.__init__(self, question, image)
         self._d = _d
-        self._c = config
+        self._c = config        
             
         self._name = "Signature"
         self._question = question
 
         self._image_file = pictures.get_filename(image)
-
+        self._sig = pygame.image.load(self._image_file)   
+        
         self._rect = None
         self.donebutton = None
         self.donebutton_width  = self._d['question_button_width'] * 2 +(4*self._text_border)   
@@ -729,33 +730,25 @@ class SignatureBackground(Background):
         self.lockbutton_height = self._d['btn_handf_y']   
 
         self.donebutton_enabled = True
-        self.donebutton_event = (BUTTONDOWN, {'signature':True, 'first':True})
-        #self.yesbutton_event = (BUTTONDOWN, {'question':question,'answer':True})
+        self.donebutton_event = (BUTTONDOWN, {'signature':True, 'first':True})        
         self.lockbutton_event = pygame.USEREVENT + 19     
                 
         self.update_needed = None
 
-    def __str__(self):
-        """Return background final name.
-
-        It is used in the main window to distinguish backgrounds in the cache
-        thus each background string shall be uniq.
-        """
+    def __str__(self):        
         return "{}({})({})".format(self.__class__.__name__, self._name, self._question)
 
     def resize(self, screen):
-        Background.resize(self, screen)
-        button_hover_color=self._c.gettyped("WINDOW","btn_bg_num_hover")
-        button_color=self._c.gettyped("WINDOW","btn_bg_num")
+        Background.resize(self, screen)       
         self.donebutton_x = self._rect.width//2 - self.donebutton_width//2
         self.donebutton_y = self._rect.height*0.50
 
         self.lockbutton_x = self._rect.width - self._d['pad'] - int(self._d['row_height']//2) - self._d['btn_handf_x']        
         self.lockbutton_y = self._d['pad'] + int(self._d['row_height']//2) + self._rect.y
 
-        if self._image_file:
+        if self._image_file:            
             self._image = pictures.get_pygame_image(
-                self._image_file, (self._rect.width, self._rect.height), crop=True, color=None)
+                self._image_file, (self._rect.width, self._rect.height), crop=True, color=None)        
         
         if self.update_needed:
             self.resize_texts()        
@@ -784,7 +777,7 @@ class SignatureBackground(Background):
             self.text_rect = pygame.Rect(self._text_border, self._text_border,
                             self._rect.width / 2 - (2 * self._text_border),
                             64)
-            self._write_text(text, self.text_rect)
+            self._write_text(text, self.text_rect)        
         height = 0
         for text_surface in self._texts:
             text_surface[1].x=(self._rect.width//2-text_surface[1].width//2)
@@ -795,12 +788,11 @@ class SignatureBackground(Background):
                 self.donebutton_y = text_surface[1].y+height
                 
 
-    def paint(self, screen):
-        Background.paint(self, screen)
-        #self.resize(screen)
-        if self._image:                     
-            screen.blit(self._image, self._image.get_rect(center=self._rect.center))
+    def paint(self, screen):        
+        Background.paint(self, screen)                  
         self.donebutton.draw(self.update_needed)
+        if self._sig:                                 
+            screen.blit(self._sig, (115, 100))
 
 class FinishedBackground(Background):
     def __init__(self):
