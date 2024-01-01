@@ -747,7 +747,7 @@ class SignatureBackground(Background):
         Background.resize(self, screen)
         button_hover_color=self._c.gettyped("WINDOW","btn_bg_num_hover")
         button_color=self._c.gettyped("WINDOW","btn_bg_num")
-        self.donebutton_x = self._rect.width//2 - self.donebutton_width
+        self.donebutton_x = self._rect.width//2 - self.donebutton_width//2
         self.donebutton_y = self._rect.height*0.50
 
         self.lockbutton_x = self._rect.width - self._d['pad'] - int(self._d['row_height']//2) - self._d['btn_handf_x']        
@@ -781,10 +781,19 @@ class SignatureBackground(Background):
         if self._question:
             text = str(self._question)
         if text:
-            self._write_text(text, rect, align)
-        self.text_rect = pygame.Rect(self._text_border, self._text_border,
-                        self._rect.width / 2 - (6 * self._text_border),
-                        64)
+            self.text_rect = pygame.Rect(self._text_border, self._text_border,
+                            self._rect.width / 2 - (2 * self._text_border),
+                            64)
+            self._write_text(text, self.text_rect)
+        height = 0
+        for text_surface in self._texts:
+            text_surface[1].x=(self._rect.width//2-text_surface[1].width//2)
+            text_surface[1].y=(self._rect.height//2-text_surface[1].height//2)+height-self._d['question_button_height']
+            # text_surface = list(text_surface)
+            height = text_surface[1].height + height
+            if self._texts[-1]:
+                self.donebutton_y = text_surface[1].y+height
+                
 
     def paint(self, screen):
         Background.paint(self, screen)

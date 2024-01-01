@@ -131,7 +131,6 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_wait_exit(self, win):
         self.count = 0
-        # pygame.event.clear()
         win.show_image(None)  # Clear currently displayed image
 
     @LDS.hookimpl
@@ -537,7 +536,7 @@ class ViewPlugin(object):
         if self.count >= app.capture_nbr:
             return 'processing'
         return 'preview'
-
+    
     @LDS.hookimpl
     def state_processing_enter(self, win):
         win.show_work_in_progress()
@@ -548,6 +547,10 @@ class ViewPlugin(object):
                 and app.count.remaining_duplicates > 0:
             return 'finish'
         return 'failsafe'  # Can not process photo
+    
+    @LDS.hookimpl
+    def state_processing_exit(self):
+        self.count = 0
 
     @LDS.hookimpl
     def state_print_enter(self, cfg, app, win):
@@ -650,7 +653,8 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_signature_enter(self, cfg, app, win):
         """Capture signature        
-        """        
+        """    
+        print("This is the count",self.count)    
         if not self.count:
             self.count = 1
         self.question = "Inmate Signature"                
@@ -660,30 +664,29 @@ class ViewPlugin(object):
     @LDS.hookimpl
     def state_signature_do(self, cfg, app, win, events):
         """Keep calling it in a loop
-        """              
+        """ 
+        # This assigns a touch event to app.update_needed before passing update_needed to the draw method in line 679
+        app.find_touch_effects_event(events) 
+                  
         self.done = app.find_signature_event(events) 
         if self.done and self.count == 2:
             self.failure_message = 'finished'            
         elif self.done and self.count == 1:
             self.count = self.count + 1
             self.question = "Correctional Office Signature"
-        elif self.done:     
-            self.count = self.count + 1
-        
+            # After changing the question, this diplays the changed question once
+            win.show_signature(cfg, question=self.question, image="sig.png")
+        # this runs in a loop and continues to update the event for the button for finger down and finger up
+        win._current_background.donebutton.draw(app.update_needed)
     @LDS.hookimpl
     def state_signature_validate(self, cfg, app, win, events):
         """Verify conditions for the next state
         """                
-        if self.failure_message == 'finished':         
+        if self.failure_message == 'finished':  
+            self.count = 0       
             return 'failsafe'
-        else:
-            return 'signature'
+        
 
-    @LDS.hookimpl
-    def state_signature_exit(self, cfg, app, win):
-        """Validate for the next state
-        """           
-        return 'wait'
 
     @LDS.hookimpl
     def state_finish_enter(self, cfg, app, win):

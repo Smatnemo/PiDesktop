@@ -111,12 +111,11 @@ class PiApplication:
         self._machine = StatesMachine(self._pm, self._config, self, self._window)
         self._machine.add_state('wait')
         self._machine.add_state('login')
-        self._machine.add_state('unlock') # this state is used by co to access
         self._machine.add_state('choose') # This state should be used to choose documents
         self._machine.add_state('chosen') # This state should be used after document has been chosen
         self._machine.add_state('decrypt') # State similar to login for decrypting documents
-        self._machine.add_state('preview') # This state should be used to see the chosen document
-        self._machine.add_state('capture') # This state should is either for capturing signature or image to prove that the document has been received
+        self._machine.add_state('preview') # This state is used for camera preview
+        self._machine.add_state('capture') # This state should be used either for capturing signature or image to prove that the document has been received
         self._machine.add_state('processing')
         self._machine.add_state('print')# This state should be used to print document instead
         self._machine.add_state('finish')
