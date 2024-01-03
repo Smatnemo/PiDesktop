@@ -19,8 +19,8 @@ sys.path.append(search_dir)
 
 # print(sys.path)
 
-from gpiozero import Device, ButtonBoard, LEDBoard, pi_info
-from gpiozero.exc import BadPinFactory, PinFactoryFallback
+#from gpiozero import Device, ButtonBoard, LEDBoard, pi_info
+#from gpiozero.exc import BadPinFactory, PinFactoryFallback
 
 import LDS
 from LDS import language
@@ -46,13 +46,13 @@ except ImportError:
     print("Could not Import videoplayer")  
     pass
 # Set the default pin factory to a mock factory if pibooth is not started a Raspberry Pi
-try:
+"""try:
     filterwarnings("ignore", category=PinFactoryFallback)
     GPIO_INFO = "on Raspberry pi {0}".format(pi_info().model)
 except BadPinFactory:
     from gpiozero.pins.mock import MockFactory
     Device.pin_factory = MockFactory()
-    GPIO_INFO = "without physical GPIO, fallback to GPIO mock"
+    GPIO_INFO = "without physical GPIO, fallback to GPIO mock"""
 
 
 BUTTONDOWN = pygame.USEREVENT + 1
@@ -178,8 +178,8 @@ class PiApplication:
             LOGGER.error("Signature functionality could not be set up: {}".format(ex))
             pass 
 
-        self.leds = LEDBoard(capture="BOARD" + config.get('CONTROLS', 'picture_led_pin'),
-                             printer="BOARD" + config.get('CONTROLS', 'print_led_pin'))
+        """self.leds = LEDBoard(capture="BOARD" + config.get('CONTROLS', 'picture_led_pin'),
+                             printer="BOARD" + config.get('CONTROLS', 'print_led_pin'))"""
 
         self.printer = Printer(config.get('PRINTER', 'printer_name'),
                                config.getint('PRINTER', 'max_pages'),
@@ -409,14 +409,14 @@ class PiApplication:
 
                 if not self._menu and self.find_settings_event(events):
                     self.camera.stop_preview()
-                    self.leds.off()
+                    #self.leds.off()
                     self._menu = PiConfigMenu(self._pm, self._config, self, self._window)
                     self._menu.show()
-                    self.leds.blink(on_time=0.1, off_time=1)
+                    #self.leds.blink(on_time=0.1, off_time=1)
                 elif self._menu and self._menu.is_shown():
                     self._menu.process(events)
                 elif self._menu and not self._menu.is_shown():
-                    self.leds.off()
+                    #self.leds.off()
                     self._initialize()
                     self._machine.set_state('wait')
                     self.start = time.time()
@@ -515,7 +515,7 @@ def main():
         config.save(default=True)
         plugin_manager.hook.lds_reset(cfg=config, hard=True)
     else:
-        LOGGER.info("Starting the LDS application %s", GPIO_INFO)
+        #LOGGER.info("Starting the LDS application %s", GPIO_INFO)
         print("Configuration ", config)
         app = PiApplication(config, plugin_manager)
         app.main_loop()

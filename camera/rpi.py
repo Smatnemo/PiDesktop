@@ -11,6 +11,7 @@ try:
     import picamera2
 except ImportError:
     picamera2 = None  # picamera is optional
+from libcamera import Transform
 
 try:
     import picamera
@@ -44,8 +45,7 @@ class RpiCamera(BaseCamera):
     if picamera:
         IMAGE_EFFECTS = list(picamera.PiCamera.IMAGE_EFFECTS.keys())
     else:
-        IMAGE_EFFECTS = []
-    
+        IMAGE_EFFECTS = []    
     
 
     def _specific_initialization(self):
@@ -70,7 +70,8 @@ class RpiCamera(BaseCamera):
             rect = self.get_rect()
             
             # Create an image padded to the required size (required by picamera)
-            size = (((rect.width + 31) // 32) * 32, ((rect.height + 15) // 16) * 16)
+            #size = (((rect.width + 31) // 32) * 32, ((rect.height + 15) // 16) * 16)
+            size = (((rect.height + 15) // 16) * 16), ((rect.width + 31) // 32) * 32
             image = self.build_overlay(size, str(text), alpha)
 
             self._overlay = pygame.image.fromstring(image.tobytes(), image.size, 'RGBA')
@@ -105,14 +106,14 @@ class RpiCamera(BaseCamera):
         # When a preview is initiated, pass window to the self._window parameter
         self._window = window
         window_rect = window.get_rect()
-        
-
         rect = self.get_rect()
         # Create preview window width and height
         preview_window = rect.width, rect.height
         print("Rectangle size For window preview:", rect)
         # Do this to allow the app maintain its dimensions
-        res = window_rect.width, window_rect.height
+        #res = window_rect.width, window_rect.height
+        res =  window_rect.height, window_rect.width
+
         # screen = pygame.display.set_mode(res)
         screen = self._window.surface
         
@@ -131,11 +132,15 @@ class RpiCamera(BaseCamera):
         # Start preview using defined function from Picamera2
         self._cam.preview_configuration.main.size = preview_window
         self._cam.preview_configuration.main.format = 'BGR888'
+        #self._cam.preview_configuration.transform = Transform(vflip=1, transpose=Transpose)
+
         self._cam.configure("preview")
         self._cam.start()
         
-        pos_x = res[0]/2 - preview_window[0]/2
-        pos_y = res[1]/2 - preview_window[1]/2
+        #pos_x = res[0]/2 - preview_window[0]/2
+        #pos_y = res[1]/2 - preview_window[1]/2
+        pos_y = res[0]/2 - preview_window[0]/2
+        pos_x = res[1]/2 - preview_window[1]/2
 
         # Create attributes to be accessed by other methods
         self.pos_x = pos_x 
@@ -158,6 +163,7 @@ class RpiCamera(BaseCamera):
                 break
             array = self._cam.capture_array()
             img = pygame.image.frombuffer(array.data, res, 'RGB')
+            img = pygame.transform.rotate(img, 270)            
             screen.blit(img, (x, y))
             if self._overlay:
                 screen.blit(self._overlay, (x, y))
@@ -225,16 +231,15 @@ class RpiCamera(BaseCamera):
                 self.iso = self.preview_iso
             if self.capture_rotation != self.preview_rotation:
                 self.rotation = self.preview_rotation
-
-            # # Experiment converting to grayscale
-            img = Image.open(stream)
-            # # if img.mode == 'L':
-            img = img.convert('L')
-            # # img.save(stream, format='jpeg')
-            stream2 = BytesIO()
-            img.save(stream2, format='jpeg')
             
-            self._gray_captures.append(stream2)
+            tmpimg = Image.open(stream)
+            img = tmpimg.rotate(270)
+            #stream = pygame.transform.rotate(tmpimg, 270)
+            stream = BytesIO()            
+            img.save(stream, format='jpeg')
+            stream.seek(0)
+            
+
             self._captures.append(stream)
         
         finally:

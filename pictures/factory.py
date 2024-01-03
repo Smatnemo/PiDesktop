@@ -130,7 +130,7 @@ class PictureFactory(object):
             interline = 20
 
         text_x = self._margin_text
-        text_y = self.height - self._texts_height
+        text_y = self.height - self._texts_height - 400
         total_width = self.width - 2 * self._margin_text
         total_height = self._texts_height - self._margin_text
 
@@ -419,6 +419,7 @@ class PilPictureFactory(PictureFactory):
         if self._overlay_image:
             overlay = Image.open(self._overlay_image).convert('RGBA')
             overlay, _, _ = self._image_resize_keep_ratio(overlay, self.width, self.height, True)
+            #overlay, _, _ = self._image_resize_keep_ratio(overlay, self.height, self.width, True)
             image = Image.alpha_composite(image.convert('RGBA'), overlay)
             image = image.convert('RGB')
         return image
@@ -429,8 +430,10 @@ class PilPictureFactory(PictureFactory):
         if self._background_image:
             bg = Image.open(self._background_image)
             image, _, _ = self._image_resize_keep_ratio(bg, self.width, self.height, True)
+            #image, _, _ = self._image_resize_keep_ratio(bg, self.height, self.width, True)
         else:
             image = Image.new('RGB', (self.width, self.height), color=self._background_color)
+            #image = Image.new('RGB', (self.height, self.width), color=self._background_color)
         return image
 
 
@@ -440,12 +443,16 @@ class OpenCvPictureFactory(PictureFactory):
         """See upper class description.
         """
         inter = cv2.INTER_AREA
-        height, width = image.shape[:2]
+        #height, width = image.shape[:2]
+        width, height = image.shape[:2]
 
-        source_aspect_ratio = float(width) / height
+        source_aspect_ratio = float(width) / height        
+        source_aspect_ratio = float(height) / width
         target_aspect_ratio = float(max_w) / max_h
+        target_aspect_ratio = float(max_h) / max_w
 
         if crop:
+            print("Source: ", source_aspect_ratio, target_aspect_ratio)
             if source_aspect_ratio <= target_aspect_ratio:
                 h_cropped = int(width / target_aspect_ratio)
                 x_offset = 0
@@ -453,14 +460,19 @@ class OpenCvPictureFactory(PictureFactory):
                 cropped = image[y_offset:(y_offset + h_cropped), x_offset:width]
             else:
                 w_cropped = int(height * target_aspect_ratio)
-                x_offset = int((float(width) - w_cropped) / 2)
+                x_offset = int((float(width) - w_cropped) / 2)                
                 y_offset = 0
-                cropped = image[y_offset:height, x_offset:(x_offset + w_cropped)]
+                cropped = image[y_offset:height, x_offset:(x_offset + w_cropped)]                
             image = cv2.resize(cropped, (max_w, max_h), interpolation=inter)
         else:
+            print("ELSE: ", width, height, max_w, max_h)
             width, height = sizing.new_size_keep_aspect_ratio((width, height), (max_w, max_h), 'inner')
             image = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
+        print("Shape: ", image.shape[1], image.shape[0])
+        # 2200, 1725
         return image, image.shape[1], image.shape[0]
+        #return image, image.shape[1], 1237
+        
 
     def _image_paste(self, image, dest_image, pos_x, pos_y):
         """See upper class description.
