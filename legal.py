@@ -380,6 +380,12 @@ class PiApplication:
             if event.type == BUTTONDOWN and event.signature:
                 return event
         return None
+    
+    def find_button_down_event(self, events, evt=None):
+        """Use this for all button down events 
+        :param evt:the key in each event
+        """
+        pass
         
     def main_loop(self):
         try:
@@ -483,7 +489,6 @@ def main():
 
     # Load the configuration
     config = PiConfigParser(osp.join(options.config_directory, "LDS.cfg"), plugin_manager, not options.reset)
-
     # Register plugins
     plugin_manager.load_all_plugins(config.gettuple('GENERAL', 'plugins', 'path'),
                                     config.gettuple('GENERAL', 'plugins_disabled', str))
